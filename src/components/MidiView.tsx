@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { BadgePercent, Briefcase, Check, Clock, MapPin, Share2, Sparkles, Store, X } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
+import { useNow } from "@/lib/now";
 import { WEEKDAYS } from "@/lib/quartier";
 
 // Problème 3 : « Le Midi Complice » — des raisons concrètes de venir à Saint-Roch le midi.
@@ -25,14 +26,13 @@ const OFFERS = [
   { who: "Quincaillerie du quartier", emoji: "🔧", title: "Petites réparations express le midi", percent: 10, days: [2, 4] },
 ];
 
-const todayWorkday = () => {
-  const d = new Date().getDay();
-  return d >= 1 && d <= 5 ? d : 1;
-};
 
 export function MidiView() {
   const { user } = useSession();
-  const [day, setDay] = useState(todayWorkday);
+  const now = useNow();
+  const today = now === null ? null : new Date(now).getDay();
+  const [picked, setDay] = useState<number | null>(null);
+  const day = picked ?? (today && today >= 1 && today <= 5 ? today : 1);
   const [workDays, setWorkDays] = useState<number[]>([]);
   const [seated, setSeated] = useState<string[]>([]);
   const [pass, setPass] = useState(false);
@@ -42,7 +42,7 @@ export function MidiView() {
   const items = ITEMS.filter((i) => i.days.includes(day));
   const offers = [...myOffers, ...OFFERS].filter((o) => o.days.includes(day));
   const dayLabel = WEEKDAYS.find((d) => d.id === day)!.label;
-  const isToday = day === new Date().getDay();
+  const isToday = day === today;
 
   function toggleSeat(i: Item) {
     const on = seated.includes(i.id);

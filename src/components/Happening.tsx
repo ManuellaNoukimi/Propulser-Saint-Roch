@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, Check, HandHeart, MapPin, Store } from "lucide-react";
 import { categoryOf } from "@/lib/constants";
 import { dateParts } from "@/lib/format";
+import { useNow } from "@/lib/now";
 import { IDEA_TAGS, type IdeaTagId } from "@/lib/quartier";
 import { loginHref, useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
@@ -65,7 +66,7 @@ const NEWS = [
 
 export function Happening({ ideas }: { ideas: Idea[] | null }) {
   const [filter, setFilter] = useState<FilterId>("tout");
-  const [now] = useState(() => Date.now());
+  const now = useNow() ?? 0; // 0 pendant le pré-rendu : la section se remplit dans le navigateur
 
   const upcoming = useMemo(
     () =>
