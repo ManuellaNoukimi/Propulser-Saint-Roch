@@ -80,7 +80,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
           {user ? <Avatar user={user} size={32} /> : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sep"><LogIn size={19} /></span>}
           <span className="hidden min-w-0 xl:block"><span className="block truncate text-sm font-semibold">{user ? user.displayName : "Se connecter"}</span><span className="block text-[11px] text-muted">{user ? (isEstablishment(user.accountType) ? "Ma page entreprise" : "Mon compte") : "Rejoins ton quartier"}</span></span>
         </Link>
-        <p className="hidden px-3 text-[10px] leading-relaxed text-muted xl:block">Fait pour Saint-Roch, ensemble.<br />Hackathon 2026 · Démo fictive</p>
+        <p className="hidden px-3 text-[10px] leading-relaxed text-muted xl:block">Fait pour Saint-Roch, ensemble.<br />Hackathon Saint-Roch 2026</p>
       </div>
     </nav>
   );

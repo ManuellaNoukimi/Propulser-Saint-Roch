@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { ArrowRight, CalendarDays, Check, ExternalLink, Landmark, LoaderCircle, MapPin, Mic, PackageOpen, PartyPopper, RotateCcw, Sparkles, Users } from "lucide-react";
-import { contributionOf, needOf, PLACES } from "@/lib/constants";
+import { contributionOf, isGuest, needOf, PLACES } from "@/lib/constants";
 import { localInputToIso } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
@@ -38,7 +38,7 @@ const toLocalInput = (iso: string) => {
 /** Problème 1 : « Lancer une idée » → trouver ses complices en quelques secondes, les inviter, publier. */
 export function LaunchIdea() {
   const router = useRouter();
-  const { user, refresh } = useSession();
+  const { user } = useSession();
   const canDictate = useSyncExternalStore(noop, () => !!speechCtor(), () => false);
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
@@ -51,9 +51,11 @@ export function LaunchIdea() {
   const [picked, setPicked] = useState<string[]>([]);
   const [place, setPlace] = useState("");
   const [when, setWhen] = useState("");
-  const [name, setName] = useState("");
   const [sending, setSending] = useState(false);
   const [published, setPublished] = useState<{ id: string; invited: number } | null>(null);
+
+  // Résident·e ou entreprise : publie. Invité·e ou visiteur : voit les suggestions mais doit s'inscrire pour publier.
+  const canPublish = !!user && !isGuest(user.accountType);
 
   // Analyse animée : chaque étape se coche l'une après l'autre
   useEffect(() => {
@@ -101,20 +103,8 @@ export function LaunchIdea() {
 
   async function publish() {
     if (!result) return;
+    if (!canPublish) return router.push("/inscription?next=/lancer");
     setSending(true);
-    // Connexion express intégrée : pas de mot de passe, pas de courriel
-    if (!user) {
-      const login = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(name.trim() ? { email: name.trim() } : { guest: true }),
-      }).catch(() => null);
-      if (!login?.ok) {
-        setSending(false);
-        return toast("Connexion impossible. Réessaie.");
-      }
-      await refresh();
-    }
     const res = await fetch("/api/ideas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -296,12 +286,12 @@ export function LaunchIdea() {
           {/* Barre d'action collée en bas */}
           <div className="glass-header fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom))] z-30 border-t border-line px-4 py-3 md:bottom-0 md:left-[72px] xl:left-[244px]">
             <div className="mx-auto flex max-w-[860px] flex-wrap items-center gap-2">
-              {!user && (
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ton prénom (facultatif)" aria-label="Ton prénom, facultatif" className="ig-input min-w-0 flex-1 basis-40" />
+              {!canPublish && (
+                <p className="min-w-0 flex-1 basis-48 text-xs text-muted">{user ? "En invité·e, tu ne peux pas publier." : "Pour publier, crée un compte résident ou entreprise."}</p>
               )}
               <button type="button" disabled={sending || !title.trim()} onClick={publish} className="ig-btn min-h-12 flex-[2] basis-56 text-[15px]">
                 {sending ? <LoaderCircle size={18} className="animate-spin" /> : <ArrowRight size={18} />}
-                {picked.length > 0 ? `Inviter ${picked.length} complice${picked.length > 1 ? "s" : ""} et publier` : "Publier mon idée"}
+                {!canPublish ? "Créer mon compte pour publier" : picked.length > 0 ? `Inviter ${picked.length} complice${picked.length > 1 ? "s" : ""} et publier` : "Publier mon idée"}
               </button>
             </div>
           </div>

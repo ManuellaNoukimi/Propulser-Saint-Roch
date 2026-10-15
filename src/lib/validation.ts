@@ -36,7 +36,8 @@ export const signupSchema = z.object({
 export const loginSchema = z.object({
   email: loginId.optional(), // un prénom, un pseudo ou un courriel
   password: z.string().max(100).default(""),
-  guest: z.boolean().optional(), // « Entrer en invité·e » : compte créé automatiquement
+  guest: z.boolean().optional(), // « Entrer en invité·e » : compte invité créé avec juste un nom
+  name: z.string().trim().max(60).default(""),
 });
 
 export const profileUpdateSchema = z.object(profileFields);

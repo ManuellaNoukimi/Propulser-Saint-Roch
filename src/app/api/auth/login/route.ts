@@ -6,40 +6,28 @@ import { moderate } from "@/lib/moderation";
 import { verifyPassword } from "@/lib/password";
 import { firstError, loginSchema } from "@/lib/validation";
 
-// Démo de 5 minutes, SANS mot de passe ni courriel (demande de Danny) : on entre avec un prénom ou un pseudo.
-// Pour remettre la vérification du mot de passe (avant toute mise en ligne) : COMPLICES_STRICT_AUTH=1.
-const STRICT = process.env.COMPLICES_STRICT_AUTH === "1";
-
-/** Nom affiché tiré de l'identifiant (« marie.tremblay@… » → « Marie Tremblay ») : un courriel ne s'affiche jamais. */
-function nameFromLogin(login: string): string {
-  const base = login.split("@")[0].replace(/[._\-+]+/g, " ").trim() || "Voisin·e";
-  return base
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ")
-    .slice(0, 60);
-}
-
-// POST /api/auth/login { email: prénom, pseudo ou courriel } ou { guest: true }
-// Le compte existe → on ouvre la session. Il n'existe pas → on le crée (habitant·e) et on ouvre la session.
+// POST /api/auth/login
+// - { email, password } : résident·e ou entreprise. Le courriel n'a aucun format imposé ; on accepte aussi le nom.
+//   Le mot de passe est vérifié si le compte en a un. Aucun compte n'est créé ici : on s'inscrit sur /inscription.
+// - { guest: true, name } : « Entrer en invité·e » → compte invité (juste un nom) : il voit et rejoint, mais ne publie pas.
 export async function POST(req: NextRequest) {
   const parsed = loginSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: firstError(parsed.error) }, { status: 400 });
-  const { email, password, guest } = parsed.data;
+  const { email, password, guest, name } = parsed.data;
 
-  if (!guest && !email) return Response.json({ error: "Écris ton prénom ou un pseudo." }, { status: 400 });
-  const login = guest ? `invité·e ${randomInt(1000, 9999)}` : email!;
-
-  const user = guest ? undefined : findUserByLogin(login);
-  if (!user) {
-    const displayName = guest ? `Invité·e ${login.split(" ")[1]}` : nameFromLogin(login);
+  if (guest) {
+    const displayName = name || `Invité·e ${randomInt(1000, 9999)}`;
     const mod = moderate(displayName);
     if (!mod.ok) return Response.json({ error: mod.reason }, { status: 422 });
-    const id = insertUser({ email: freeLoginFor(login), password, displayName, accountType: "habitant", sector: null, address: null, description: null });
+    const id = insertUser({ email: freeLoginFor(`invité ${displayName}`), password: "", displayName, accountType: "invite", sector: null, address: null, description: null });
     await createSession(id);
     return Response.json({ user: toSessionUser(getUserRow(id)!), created: true }, { status: 201 });
   }
-  if (STRICT && !verifyPassword(password, user.password_hash)) {
+
+  if (!email) return Response.json({ error: "Écris ton courriel (ou ton nom)." }, { status: 400 });
+  const user = findUserByLogin(email);
+  if (!user) return Response.json({ error: "Aucun compte avec ce courriel. Inscris-toi, ou entre en invité·e." }, { status: 401 });
+  if (user.password_hash.startsWith("scrypt$") && !verifyPassword(password, user.password_hash)) {
     return Response.json({ error: "Mot de passe incorrect pour ce compte." }, { status: 401 });
   }
   await createSession(user.id);

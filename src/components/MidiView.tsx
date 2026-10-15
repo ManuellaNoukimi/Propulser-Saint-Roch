@@ -174,7 +174,6 @@ export function MidiView() {
               <button type="button" onClick={shareTeam} className="ig-btn-secondary min-h-10 flex-1 text-xs"><Share2 size={14} /> À mon équipe</button>
             </div>
           </section>
-          <p className="px-1 text-[11px] text-muted">Démo : propositions, commerces et chiffres fictifs, pour illustrer la fonctionnalité.</p>
         </aside>
       </div>
 

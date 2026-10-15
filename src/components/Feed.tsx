@@ -91,7 +91,7 @@ export function Feed() {
         {!error && visible.length > 0 && <PostGrid ideas={visible} />}
       </section>
 
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-5 text-[10px] text-muted"><p>Complices · Des idées à faire ensemble.</p><p>Hackathon Saint-Roch 2026 · Publications de démo fictives</p></footer>
+      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-5 text-[10px] text-muted"><p>Complices · Des idées à faire ensemble.</p><p>Hackathon Saint-Roch 2026</p></footer>
     </div>
   );
 }

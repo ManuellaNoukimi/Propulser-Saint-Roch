@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Suspense } from "react";
+import { Suspense, ViewTransition } from "react";
 import { NavBar, NavBarWithPath } from "@/components/NavBar";
 import { Toaster } from "@/components/Toaster";
 import { TopBar } from "@/components/TopBar";
@@ -32,7 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <NavBarWithPath variant="side" />
           </Suspense>
           <a href="#contenu" className="sr-only left-4 top-4 z-[100] rounded-xl bg-bg px-4 py-3 font-semibold focus:not-sr-only focus:fixed">Aller au contenu</a>
-          <main id="contenu" className="app-main md:pl-[72px] xl:pl-[244px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8">{children}</main>
+          <main id="contenu" className="app-main md:pl-[72px] xl:pl-[244px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8">
+            {/* Transition douce entre les pages (View Transitions de React 19.3) : la navigation reste fixe, le contenu glisse en fondu */}
+            <ViewTransition default="page-swap">{children}</ViewTransition>
+          </main>
           <Suspense fallback={<NavBar variant="bottom" pathname={null} />}>
             <NavBarWithPath variant="bottom" />
           </Suspense>

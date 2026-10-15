@@ -345,3 +345,13 @@ button:disabled { cursor: wait; }
 .vac-pin { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9999px; background: #ff8a00; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.3); font-size: 17px; transition: transform .2s; }
 .vac-pin:hover { transform: scale(1.1); }
 .vac-pin--on { transform: scale(1.25); box-shadow: 0 0 0 6px color-mix(in srgb, #ff8a00 30%, transparent), 0 6px 16px rgba(0,0,0,.35); }
+
+/* ---------- Transitions entre les pages (React <ViewTransition>, voir layout.tsx) ---------- */
+::view-transition-old(.page-swap) { animation: page-out 140ms cubic-bezier(.4, 0, 1, 1) both; }
+::view-transition-new(.page-swap) { animation: page-in 260ms cubic-bezier(0, 0, .2, 1) both; }
+::view-transition-group(.page-swap) { animation-duration: 260ms; }
+@keyframes page-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.page-swap), ::view-transition-new(.page-swap) { animation: none; }
+}

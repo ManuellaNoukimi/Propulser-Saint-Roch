@@ -113,7 +113,7 @@ export function VitrinesView() {
           <button type="button" onClick={() => setSheet("commerce")} className="ig-btn-secondary mt-4 w-full text-sm"><Megaphone size={16} /> Publier une promo ou une nouveauté</button>
         </section>
       </div>
-      <p className="text-[11px] text-muted">Démo : locaux, adresses et chiffres d&apos;exemple, pour illustrer la fonctionnalité. Fond de carte © OpenStreetMap, CARTO.</p>
+      <p className="text-[11px] text-muted">Fond de carte © OpenStreetMap, CARTO.</p>
 
       {sheet === "vote" && <VoteSheet onClose={() => setSheet(null)} onVote={vote} />}
       {sheet === "book" && <BookSheet onClose={() => setSheet(null)} onBook={book} />}

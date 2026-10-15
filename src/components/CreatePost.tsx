@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MapPin } from "lucide-react";
-import { CATEGORIES, NEEDS, PLACES, actorTypeOf, type CategoryId, type NeedId } from "@/lib/constants";
+import { CATEGORIES, NEEDS, PLACES, actorTypeOf, type CategoryId, type NeedId, isGuest } from "@/lib/constants";
 import { localInputToIso } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
@@ -27,8 +27,8 @@ export function CreatePost() {
   const [error, setError] = useState<string | null>(null);
 
   if (loading) return <div className="p-10 text-center text-muted">Chargement…</div>;
-  if (!user)
-    return <AuthPrompt title="Publie ton idée pour Saint-Roch" text="Habitant·e, travailleur·euse, commerce, organisme : tout le monde peut publier. Il suffit d'un compte." next="/creer" />;
+  if (!user || isGuest(user.accountType))
+    return <AuthPrompt title="Publie ton idée pour Saint-Roch" text={user ? "En invité·e, tu vois et tu rejoins les activités, mais tu ne publies pas. Crée un compte résident ou entreprise pour publier." : "Résident·e ou entreprise : crée ton compte pour publier."} next="/creer" />;
 
   const toggleNeed = (n: NeedId) => setNeeds((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]));
 
