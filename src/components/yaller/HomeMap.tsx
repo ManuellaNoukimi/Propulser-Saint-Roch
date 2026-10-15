@@ -1,15 +1,13 @@
 "use client";
 
-import "leaflet/dist/leaflet.css";
-import type * as Leaflet from "leaflet";
+import "maplibre-gl/dist/maplibre-gl.css";
+import type { Map as MlMap, Marker } from "maplibre-gl";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, CalendarDays, ExternalLink, MapPin, Navigation, X } from "lucide-react";
-import { SAINT_ROCH_ATTRIBUTION, SAINT_ROCH_CENTER, SAINT_ROCH_GEOMETRY } from "@/lib/saint-roch-boundary";
+import { BEARING_3D, PITCH_3D, createMap3D, htmlMarker, type MapLib } from "@/lib/map3d";
 import type { GoEvent } from "@/lib/y-aller-types";
-import { addBaseTiles } from "@/lib/map-tiles";
 
-const RING = (SAINT_ROCH_GEOMETRY.coordinates[0] as readonly (readonly number[])[]).map(([lng, lat]) => [lat, lng] as [number, number]);
 const FILTERS = [
   { id: "tout", label: "Tout" },
   { id: "live", label: "🔴 En direct" },
@@ -27,17 +25,18 @@ const goHref = (ev: GoEvent) => `/y-aller?vers=${ev.lat.toFixed(6)},${ev.lng.toF
 
 /**
  * Accueil de Vie Saint-Roch : la carte des activités et événements du quartier (activités de l'app + événements de la Ville).
- * Pastilles numérotées : rouge qui pulse = en direct, violette = à venir. Chaque pastille a « Y aller ».
+ * Carte 3D (bâtiments en volume). Pastilles numérotées : rouge qui pulse = en direct, violette = à venir. Chaque pastille a « Y aller ».
  */
 export function HomeMap() {
   const box = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<Leaflet.Map | null>(null);
-  const LRef = useRef<typeof Leaflet | null>(null);
-  const pinsRef = useRef<Leaflet.LayerGroup | null>(null);
+  const mapRef = useRef<MlMap | null>(null);
+  const libRef = useRef<MapLib | null>(null);
+  const pins = useRef<Marker[]>([]);
   const [ready, setReady] = useState(false);
   const [events, setEvents] = useState<GoEvent[] | null>(null);
   const [filter, setFilter] = useState<Filter>("tout");
   const [selected, setSelected] = useState<string | null>(null);
+  const [is3d, setIs3d] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -58,60 +57,59 @@ export function HomeMap() {
 
   useEffect(() => {
     let cancelled = false;
+    let created: MlMap | null = null;
     (async () => {
-      const L = (await import("leaflet")).default;
-      if (cancelled || !box.current || mapRef.current) return;
-      LRef.current = L;
-      const touch = window.matchMedia("(pointer: coarse)").matches;
-      // Sur téléphone, on glisse la page avec un doigt : la carte se déplace en pinçant (deux doigts)
-      const map = L.map(box.current, { center: [SAINT_ROCH_CENTER[1], SAINT_ROCH_CENTER[0]], zoom: 15, minZoom: 13, maxZoom: 18, zoomControl: !touch, scrollWheelZoom: false, dragging: !touch });
-      map.attributionControl.setPrefix(false).addAttribution(SAINT_ROCH_ATTRIBUTION);
-      addBaseTiles(L, map);
-      const accent = getComputedStyle(document.documentElement).getPropertyValue("--blue").trim() || "#7552de";
-      L.polygon(RING, { color: accent, weight: 2, dashArray: "6 6", fillColor: accent, fillOpacity: 0.05, interactive: false }).addTo(map);
-      map.fitBounds(L.latLngBounds(RING), { padding: [12, 12] });
+      if (!box.current) return;
+      const { maplibregl, map } = await createMap3D(box.current, { controls: !window.matchMedia("(pointer: coarse)").matches, cooperative: true, zoom: 14.4 });
+      created = map;
+      if (cancelled) return map.remove();
+      libRef.current = maplibregl;
       map.on("click", () => setSelected(null));
-      pinsRef.current = L.layerGroup().addTo(map);
+      map.on("pitchend", () => setIs3d(map.getPitch() > 10));
+      map.easeTo({ bearing: BEARING_3D + 14, duration: 2500 }); // légère rotation à l'arrivée
       mapRef.current = map;
       setReady(true);
     })();
     return () => {
       cancelled = true;
-      mapRef.current?.remove();
+      (mapRef.current ?? created)?.remove();
       mapRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    const L = LRef.current;
-    const group = pinsRef.current;
-    if (!ready || !L || !group) return;
-    group.clearLayers();
+    const L = libRef.current;
+    const map = mapRef.current;
+    if (!ready || !L || !map) return;
+    pins.current.forEach((m) => m.remove());
+    pins.current = [];
     const seen = new Map<string, number>(); // même lieu : on décale un peu les pastilles
     for (const { ev, n } of visible) {
       const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
       const k = seen.get(key) ?? 0;
       seen.set(key, k + 1);
-      const lat = ev.lat + (k ? Math.sin(k * 2.1) * 0.00022 * Math.ceil(k / 3) : 0);
-      const lng = ev.lng + (k ? Math.cos(k * 2.1) * 0.0003 * Math.ceil(k / 3) : 0);
+      const at = { lat: ev.lat + (k ? Math.sin(k * 2.1) * 0.00022 * Math.ceil(k / 3) : 0), lng: ev.lng + (k ? Math.cos(k * 2.1) * 0.0003 * Math.ceil(k / 3) : 0) };
       const on = ev.id === selected;
-      L.marker([lat, lng], {
-        icon: L.divIcon({ html: `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${n}</span></div>`, className: "", iconSize: [34, 42], iconAnchor: [17, 38] }),
-        title: ev.title,
-        riseOnHover: true,
-        zIndexOffset: on ? 2000 : ev.status === "live" ? 1000 : 0,
-      })
-        .on("click", (e) => {
-          L.DomEvent.stopPropagation(e);
-          setSelected(ev.id);
-        })
-        .addTo(group);
+      pins.current.push(
+        htmlMarker(L, map, at, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${n}</span></div>`, {
+          title: ev.title,
+          anchor: "bottom",
+          z: on ? 30 : ev.status === "live" ? 20 : 10,
+          onClick: () => setSelected(ev.id),
+        }),
+      );
     }
   }, [ready, visible, selected]);
 
   function focus(ev: GoEvent) {
     setSelected(ev.id);
-    mapRef.current?.flyTo([ev.lat, ev.lng], Math.max(mapRef.current.getZoom(), 16), { duration: 0.6 });
+    mapRef.current?.flyTo({ center: [ev.lng, ev.lat], zoom: Math.max(mapRef.current.getZoom(), 16.4), pitch: is3d ? PITCH_3D : 0, duration: 1100 });
+  }
+
+  function toggle3d() {
+    const next = !is3d;
+    setIs3d(next);
+    mapRef.current?.easeTo({ pitch: next ? PITCH_3D : 0, bearing: next ? BEARING_3D : 0, duration: 900 });
   }
 
   return (
@@ -138,7 +136,11 @@ export function HomeMap() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="relative h-[340px] overflow-hidden rounded-3xl border border-line md:h-[420px]">
-          <div ref={box} className="absolute inset-0 z-0 bg-soft" role="application" aria-label="Carte des activités de Saint-Roch" />
+          <div ref={box} className="absolute inset-0 z-0 bg-soft" role="application" aria-label="Carte 3D des activités de Saint-Roch" />
+          <button type="button" onClick={toggle3d} aria-pressed={is3d} aria-label={is3d ? "Passer en vue 2D" : "Passer en vue 3D"}
+            className="absolute bottom-3 right-3 z-10 grid h-10 w-10 place-items-center rounded-full border border-line bg-bg/95 text-xs font-black shadow-md backdrop-blur transition active:scale-90">
+            {is3d ? "2D" : "3D"}
+          </button>
           <div className="pointer-events-none absolute left-3 top-3 z-10 flex gap-1.5 text-[11px] font-semibold">
             <span className="flex items-center gap-1.5 rounded-full bg-bg/95 px-2.5 py-1 shadow-md"><span className="h-2.5 w-2.5 rounded-full bg-ig-red" /> En direct</span>
             <span className="flex items-center gap-1.5 rounded-full bg-bg/95 px-2.5 py-1 shadow-md"><span className="h-2.5 w-2.5 rounded-full bg-ig-blue" /> À venir</span>
