@@ -17,14 +17,14 @@ export type Feature = {
 
 export const FEATURES: Feature[] = [
   {
-    slug: "idees", href: "/", problem: 1, emoji: "💡", label: "Idées", status: "live",
+    slug: "idees", href: "/vie", problem: 1, emoji: "💡", label: "Idées", status: "live",
     title: "Lancer une idée",
     problemLabel: "Les acteurs ne se connaissent pas, les bonnes idées meurent",
     pitch: "Publie ton idée pour le quartier : n'importe qui peut se proposer comme complice pour t'aider.",
     bullets: ["Publier une initiative avec des images", "Se proposer comme complice (bénévole, matériel, lieu, commandite…)", "Badges : Super voisin, Bonne personne…"],
   },
   {
-    slug: "ca-se-passe", href: "/", problem: 2, emoji: "📅", label: "Accueil", status: "live",
+    slug: "ca-se-passe", href: "/vie", problem: 2, emoji: "📅", label: "Accueil", status: "live",
     title: "Ça se passe à Saint-Roch",
     problemLabel: "On ne sait pas ce qui se passe dans le quartier",
     pitch: "Un seul endroit pour tout ce qui se passe près de chez toi, avec des filtres simples.",
@@ -85,11 +85,16 @@ export const FEATURES: Feature[] = [
     planActions: "Actions 2.3, 2.6 et 3.9 du Plan Saint-Roch",
   },
   {
-    slug: "y-aller", href: "/y-aller", problem: 8, emoji: "🚗", label: "Y aller", status: "bientot",
+    slug: "y-aller", href: "/y-aller", problem: 8, emoji: "🚗", label: "Y aller", status: "live",
     title: "Y aller facilement",
     problemLabel: "Stationnement, chantiers, tramway",
-    pitch: "Pour chaque activité : où te garer, quel bus prendre, quel trajet est éclairé, et quels commerces sont ouverts malgré les travaux.",
-    bullets: ["Stationnements municipaux et places disponibles", "Bus, vélo, à pied", "« Ouvert pendant les travaux » et « Adopte un commerce en chantier »"],
+    pitch: "D'où je pars, où je vais : le trajet en auto, en bus, en vélo ou à pied, et surtout où se garer à Saint-Roch.",
+    bullets: [
+      "Suggestions d'adresses pendant la frappe (adresses officielles de la Ville, lieux, événements)",
+      "Auto : les stationnements les plus proches (8 municipaux de la Ville + ceux d'OpenStreetMap), places et minutes à pied",
+      "Bus : la ligne du RTC à prendre et les prochains passages ; vélo : les stations àVélo en direct",
+      "Carte : stationnements, vélos, arrêts de bus, bornes et événements numérotés (rouge = en direct)",
+    ],
     planActions: "Action 3.6 du Plan Saint-Roch",
   },
   {

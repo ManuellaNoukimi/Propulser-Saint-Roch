@@ -153,3 +153,16 @@ export const needOf = (id: string) => NEEDS.find((n) => n.id === id);
 export const contributionOf = (id: string) => CONTRIBUTIONS.find((c) => c.id === id);
 
 export const MAX_IMAGES = 4;
+
+// ---------- Onglet « Entreprises » : publications des commerces, restos, entreprises, organismes ----------
+// (les ACTIVITÉS vont toujours dans « Vie Saint-Roch », jamais ici)
+export const BUSINESS_POST_TYPES = [
+  { id: "promo", label: "Promo", emoji: "🏷️", hint: "Un rabais, une offre spéciale" },
+  { id: "nouveaute", label: "Nouveauté", emoji: "✨", hint: "Un nouveau produit, menu, service" },
+  { id: "emploi", label: "Emploi", emoji: "📣", hint: "On recrute" },
+  { id: "offre", label: "On offre", emoji: "🤝", hint: "Une salle, du matériel, un coup de main pour le quartier" },
+  { id: "annonce", label: "Annonce", emoji: "📢", hint: "Horaires, fermeture, travaux, nouvelle adresse…" },
+] as const;
+export type BusinessPostTypeId = (typeof BUSINESS_POST_TYPES)[number]["id"];
+export const businessPostTypeOf = (id: string | null | undefined) => BUSINESS_POST_TYPES.find((t) => t.id === id);
+export const BUSINESS_ONLY = { error: "Seuls les comptes Entreprise (commerce, resto, entreprise, organisme) publient dans l'onglet Entreprises. Pour une activité, utilise « Vie Saint-Roch ».", code: "entreprise" } as const;

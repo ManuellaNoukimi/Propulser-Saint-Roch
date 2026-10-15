@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ACTOR_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_MOMENTS, SECTORS } from "./constants";
+import { ACTOR_TYPES, BUSINESS_POST_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_MOMENTS, SECTORS } from "./constants";
 
 const ids = <T extends readonly { id: string }[]>(list: T) => list.map((x) => x.id) as [T[number]["id"], ...T[number]["id"][]];
 
@@ -97,3 +97,14 @@ export const inviteSchema = z.object({
     .max(12),
 });
 export const answerSchema = z.object({ accept: z.boolean() });
+
+// ---------- Onglet « Entreprises » ----------
+export const businessPostSchema = z.object({
+  postType: z.enum(ids(BUSINESS_POST_TYPES), { message: "Choisis le type de publication (promo, nouveauté, emploi, offre, annonce)." }),
+  title: z.string().trim().min(1, "Donne un titre à ta publication.").max(90, "Titre : 90 caractères maximum."),
+  description: z.string().trim().max(1500, "Texte : 1500 caractères maximum.").default(""),
+  images: z
+    .array(z.string().regex(/^\/api\/uploads\/[a-f0-9-]+\.(jpg|png|webp)$/, "Image invalide."))
+    .max(MAX_IMAGES, `${MAX_IMAGES} images maximum.`)
+    .default([]),
+});

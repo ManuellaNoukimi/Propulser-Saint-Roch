@@ -15,6 +15,7 @@ import { JoinSheet } from "./JoinSheet";
 import { PostMedia } from "./PostMedia";
 import { ProfileLink } from "./ProfileLink";
 import { usePostActions } from "./usePostActions";
+import { HowToGetThere } from "./yaller/HowToGetThere";
 
 export function PostDetail({ id }: { id: string }) {
   const { user } = useSession();
@@ -117,6 +118,9 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
               <button type="button" onClick={share} aria-label="Partager cette idée" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line text-muted transition hover:bg-soft hover:text-fg"><Send size={18} /></button>
             </div>
           </section>
+
+          {/* « Y aller » : stationnements, bus et vélos près du lieu, bouton Itinéraire */}
+          <HowToGetThere place={idea.place} />
 
           {idea.isMine && idea.invitations.length > 0 && (
             <section className="surface-card p-5 md:p-6">

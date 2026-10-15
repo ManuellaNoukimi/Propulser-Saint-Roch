@@ -45,6 +45,8 @@ export type Idea = {
   images: string[]; // URLs /api/uploads/…
   createdAt: string;
   complicesCount: number;
+  kind?: "activite" | "entreprise"; // espace : Vie Saint-Roch ou Entreprises
+  postType?: string | null; // type de publication d'entreprise (promo, emploi…)
 };
 
 export type IdeaWithComplices = Idea & {

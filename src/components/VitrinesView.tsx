@@ -8,6 +8,7 @@ import { BOOKING_PROJECTS, FREQUENCIES, WISHES, wishOf } from "@/lib/quartier";
 import { SAINT_ROCH_ATTRIBUTION, SAINT_ROCH_GEOMETRY } from "@/lib/saint-roch-boundary";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
+import { addBaseTiles } from "@/lib/map-tiles";
 
 // Problème 4 : « Vitrines à remplir ». AFFICHAGE DE DÉMO : les locaux, adresses et chiffres sont des EXEMPLES fictifs
 // (la liste réelle des locaux vacants de la SDC est confidentielle et n'est pas utilisée).
@@ -249,10 +250,7 @@ function VacancyMap({ vacancies, selectedId, onSelect }: { vacancies: Vacancy[];
       const map = L.map(el.current, { zoomControl: false, scrollWheelZoom: false, minZoom: 13, maxZoom: 19 });
       L.control.zoom({ position: "bottomright" }).addTo(map);
       map.attributionControl.setPrefix(false).addAttribution(SAINT_ROCH_ATTRIBUTION);
-      L.tileLayer(dark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        subdomains: "abcd", maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      }).addTo(map);
+      addBaseTiles(L, map);
       const ring = (SAINT_ROCH_GEOMETRY.coordinates[0] as readonly (readonly number[])[]).map(([lng, lat]) => [lat, lng] as [number, number]);
       const world: [number, number][] = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
       L.polygon([world, ring], { stroke: false, fillColor: dark ? "#000" : "#252137", fillOpacity: dark ? 0.45 : 0.16, interactive: false }).addTo(map);

@@ -23,6 +23,7 @@ import { loginHref, useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
 import type { Report } from "@/lib/types";
 import { compressImage } from "./ImagePicker";
+import { addBaseTiles } from "@/lib/map-tiles";
 
 type LatLng = { lat: number; lng: number };
 type Place = { label: string | null; detail: string | null };
@@ -160,11 +161,7 @@ export function ReportMap() {
 
       // Fond détaillé (rues, parcs, commerces) en mode clair, sombre sinon
       const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, {
-        subdomains: "abcd",
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      }).addTo(map);
+      addBaseTiles(L, map);
 
       // Saint-Roch en clair, le reste grisé (masque), et le contour en bleu
       const world: [number, number][] = [[-89, -179], [-89, 179], [89, 179], [89, -179]];

@@ -1,6 +1,6 @@
-import { Feed } from "@/components/Feed";
+import { SpaceChooser } from "@/components/SpaceChooser";
 
-// Accueil = fil de publications (chargé côté client depuis /api/ideas).
+// Page d'ouverture : on choisit « Vie Saint-Roch » (activités) ou « Entreprises », puis l'espace s'affiche.
 export default function HomePage() {
-  return <Feed />;
+  return <SpaceChooser />;
 }

@@ -140,7 +140,7 @@ export function ProfileView({ id }: { id: string }) {
         <Empty title={isMe ? "Partage ta première idée" : "Aucune publication"} text={isMe ? "Quand tu publieras une idée, elle apparaîtra ici." : "Ce compte n'a encore rien publié."} cta={isMe ? { href: "/creer", label: "Publier une idée" } : undefined} />
       ))}
       {tab === "complice" && (joined.length ? <PostGrid ideas={joined} /> : (
-        <Empty title="Pas encore complice" text={isMe ? "Propose ton aide sur une publication pour la retrouver ici." : "Ce compte n'a encore rejoint aucune initiative."} cta={isMe ? { href: "/", label: "Voir le fil" } : undefined} />
+        <Empty title="Pas encore complice" text={isMe ? "Propose ton aide sur une publication pour la retrouver ici." : "Ce compte n'a encore rejoint aucune initiative."} cta={isMe ? { href: "/vie", label: "Voir les activités" } : undefined} />
       ))}
       {tab === "badges" && (
         <ul className="grid gap-2 p-4 sm:grid-cols-2">

@@ -135,6 +135,10 @@ function prepare(db: Db) {
   if (!reportCols.has("address")) db.exec(`ALTER TABLE reports ADD COLUMN address TEXT`);
   if (!reportCols.has("moment")) db.exec(`ALTER TABLE reports ADD COLUMN moment TEXT`);
   if (!reportCols.has("photos")) db.exec(`ALTER TABLE reports ADD COLUMN photos TEXT NOT NULL DEFAULT '[]'`);
+  // Deux espaces séparés : « activite » (Vie Saint-Roch) et « entreprise » (publications des commerces : promo, emploi…)
+  const ideaCols = new Set((db.prepare(`PRAGMA table_info(ideas)`).all() as { name: string }[]).map((c) => c.name));
+  if (!ideaCols.has("kind")) db.exec(`ALTER TABLE ideas ADD COLUMN kind TEXT NOT NULL DEFAULT 'activite'`);
+  if (!ideaCols.has("post_type")) db.exec(`ALTER TABLE ideas ADD COLUMN post_type TEXT`);
   db.pragma(`user_version = ${SCHEMA_VERSION}`);
   purgeDemoData(db);
 }
@@ -216,6 +220,7 @@ export function updateUser(id: string, input: ProfileUpdateInput) {
 type IdeaRow = {
   id: string; organizer_id: string; title: string; description: string; category: string; place: string;
   starts_at: string | null; needs: string; images: string; created_at: string;
+  kind?: string; post_type?: string | null;
   complices_count: number;
   o_name: string; o_type: string; o_sector: string | null; o_address: string | null; o_description: string | null;
 };
@@ -240,6 +245,8 @@ function toIdea(r: IdeaRow): Idea {
     images: JSON.parse(r.images),
     createdAt: r.created_at,
     complicesCount: r.complices_count,
+    kind: r.kind === "entreprise" ? "entreprise" : "activite",
+    postType: r.post_type ?? null,
   };
 }
 
@@ -260,9 +267,10 @@ export function purgeEndedResidentPosts(force = false): number {
 }
 
 /** Fil : les publications les plus récentes d'abord (comme un réseau social). */
-export function listIdeas(viewer: string | null): Idea[] {
+// Par défaut : seulement les ACTIVITÉS (Vie Saint-Roch). Les publications d'entreprises ne s'y mélangent jamais.
+export function listIdeas(viewer: string | null, kind: "activite" | "entreprise" = "activite"): Idea[] {
   purgeEndedResidentPosts();
-  const rows = getDb().prepare(`${IDEA_SELECT} ORDER BY i.created_at DESC`).all({ viewer: viewer ?? "" }) as IdeaRow[];
+  const rows = getDb().prepare(`${IDEA_SELECT} WHERE COALESCE(i.kind, 'activite') = @kind ORDER BY i.created_at DESC`).all({ viewer: viewer ?? "", kind }) as IdeaRow[];
   return rows.map(toIdea);
 }
 
@@ -296,6 +304,18 @@ export function insertIdea(organizerId: string, input: CreateIdeaInput): string 
     )
     .run(id, organizerId, input.title, input.description, input.category, input.place, input.startsAt,
       JSON.stringify(input.needs), JSON.stringify(input.images), new Date().toISOString());
+  return id;
+}
+
+/** Publication d'entreprise (promo, nouveauté, emploi, offre…) : va dans l'onglet « Entreprises », jamais dans Vie Saint-Roch. */
+export function insertBusinessPost(organizerId: string, p: { postType: string; title: string; description: string; images: string[]; place: string }): string {
+  const id = randomUUID();
+  getDb()
+    .prepare(
+      `INSERT INTO ideas (id, organizer_id, title, description, category, place, starts_at, needs, images, created_at, kind, post_type)
+       VALUES (?, ?, ?, ?, 'commerce', ?, NULL, '[]', ?, ?, 'entreprise', ?)`,
+    )
+    .run(id, organizerId, p.title, p.description, p.place, JSON.stringify(p.images), new Date().toISOString(), p.postType);
   return id;
 }
 

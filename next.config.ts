@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // Permet d'ouvrir l'app depuis un téléphone sur le même Wi-Fi (http://<IP-de-l'ordi>:3000)
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
+  // « Y aller » : exceljs lit le fichier Excel des événements de la Ville côté serveur (chargé tel quel par Node, pas regroupé)
+  serverExternalPackages: ["exceljs"],
   turbopack: {
     rules: {
       "*.css": {
