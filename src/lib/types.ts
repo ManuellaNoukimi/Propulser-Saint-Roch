@@ -1,4 +1,5 @@
 import type { ActorTypeId, CategoryId, ContributionId, NeedId, SectorId } from "./constants";
+import type { PublicationKindId, PublicationSource } from "./quartier";
 
 export type Badge = {
   id: "super-voisin" | "bonne-personne" | "batisseur" | "rassembleur" | "premier-complice";
@@ -44,6 +45,8 @@ export type Idea = {
   needs: NeedId[];
   images: string[]; // URLs /api/uploads/…
   createdAt: string;
+  kind: PublicationKindId | null; // F3 : seulement sur les publications d'entreprise
+  source: PublicationSource; // F3 : « manuel » par défaut, sinon page liée
   complicesCount: number;
 };
 

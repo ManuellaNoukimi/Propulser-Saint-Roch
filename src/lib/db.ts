@@ -136,6 +136,18 @@ function prepare(db: Db) {
   if (!reportCols.has("address")) db.exec(`ALTER TABLE reports ADD COLUMN address TEXT`);
   if (!reportCols.has("moment")) db.exec(`ALTER TABLE reports ADD COLUMN moment TEXT`);
   if (!reportCols.has("photos")) db.exec(`ALTER TABLE reports ADD COLUMN photos TEXT NOT NULL DEFAULT '[]'`);
+  // F3 : type de publication (promo / nouveaute / evenement) et provenance.
+  // source = manuel | facebook | instagram ; external_id = id du post chez la source (idempotence de l'import).
+  const ideaCols = new Set((db.prepare(`PRAGMA table_info(ideas)`).all() as { name: string }[]).map((c) => c.name));
+  if (!ideaCols.has("kind")) db.exec(`ALTER TABLE ideas ADD COLUMN kind TEXT`);
+  if (!ideaCols.has("source")) db.exec(`ALTER TABLE ideas ADD COLUMN source TEXT NOT NULL DEFAULT 'manuel'`);
+  if (!ideaCols.has("external_id")) db.exec(`ALTER TABLE ideas ADD COLUMN external_id TEXT`);
+  if (!ideaCols.has("hidden")) db.exec(`ALTER TABLE ideas ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`);
+  // Partielle : les publications manuelles n'ont pas d'external_id et ne se gênent pas entre elles.
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_ideas_external ON ideas(source, external_id) WHERE external_id IS NOT NULL`);
+  // F3 : pages sociales liées par un compte entreprise, ex. {"facebook":{"name":"Café du Coin","linkedAt":"…"}}
+  const userCols = new Set((db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map((c) => c.name));
+  if (!userCols.has("linked_pages")) db.exec(`ALTER TABLE users ADD COLUMN linked_pages TEXT NOT NULL DEFAULT '{}'`);
   db.pragma(`user_version = ${SCHEMA_VERSION}`);
   seedIfEmpty(db);
   seedDemoExtras(db);
@@ -145,6 +157,7 @@ function prepare(db: Db) {
 export type UserRow = {
   id: string; email: string; password_hash: string; display_name: string; account_type: string;
   sector: string | null; address: string | null; description: string | null; created_at: string;
+  linked_pages: string;
 };
 
 export function toPublicUser(r: Pick<UserRow, "id" | "display_name" | "account_type" | "sector" | "address" | "description">): PublicUser {
@@ -218,6 +231,7 @@ export function updateUser(id: string, input: ProfileUpdateInput) {
 type IdeaRow = {
   id: string; organizer_id: string; title: string; description: string; category: string; place: string;
   starts_at: string | null; needs: string; images: string; created_at: string;
+  kind: string | null; source: string; external_id: string | null; hidden: number;
   complices_count: number;
   o_name: string; o_type: string; o_sector: string | null; o_address: string | null; o_description: string | null;
 };
@@ -241,6 +255,8 @@ function toIdea(r: IdeaRow): Idea {
     needs: JSON.parse(r.needs),
     images: JSON.parse(r.images),
     createdAt: r.created_at,
+    kind: (r.kind as Idea["kind"]) ?? null,
+    source: (r.source as Idea["source"]) ?? "manuel",
     complicesCount: r.complices_count,
   };
 }
