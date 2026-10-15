@@ -1,26 +1,347 @@
 @import "tailwindcss";
 
+/* Galerie d’idées : cartes, papiers pastel et accent violet. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #ffffff;
+  --canvas: #f7f7fb;
+  --text: #252137;
+  --text-2: #777487;
+  --border: #e8e6ef;
+  --separator: #f0eef5;
+  --soft: #f4f2f8;
+  --hover: #ece8f5;
+  --blue: #7552de;
+  --blue-hover: #6040c2;
+  --link: #6246ad;
+  --red: #ff3040;
+  --green: #58c322;
+  --story: linear-gradient(135deg, #40b8b0, #7259d9);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #111214;
+    --canvas: #090a0c;
+    --text: #f5f5f5;
+    --text-2: #a1a5af;
+    --border: #2b2d33;
+    --separator: #22242a;
+    --soft: #1b1d22;
+    --hover: #24262c;
+    --link: #e0f1ff;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-bg: var(--bg);
+  --color-canvas: var(--canvas);
+  --color-fg: var(--text);
+  --color-muted: var(--text-2);
+  --color-line: var(--border);
+  --color-sep: var(--separator);
+  --color-soft: var(--soft);
+  --color-hov: var(--hover);
+  --color-ig-blue: var(--blue);
+  --color-ig-blue-hover: var(--blue-hover);
+  --color-ig-link: var(--link);
+  --color-ig-red: var(--red);
+  --color-ig-green: var(--green);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-logo: var(--font-sans);
+
+  --animate-heart-pop: heart-pop 0.9s ease-out forwards;
+  --animate-like: like-bounce 0.45s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+  --animate-sheet-up: sheet-up 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-toast: toast-in 0.25s ease-out;
+  --animate-spin-ring: spin 2.5s linear infinite;
 }
+
+@keyframes heart-pop {
+  0% { opacity: 0; transform: scale(0.2); }
+  15% { opacity: 0.95; transform: scale(1.2); }
+  30% { transform: scale(0.95); }
+  45%, 80% { opacity: 0.95; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.1) translateY(-10px); }
+}
+@keyframes like-bounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+button:not(:disabled), summary { cursor: pointer; }
+button:disabled { cursor: wait; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+::selection { background: color-mix(in srgb, var(--blue) 20%, transparent); }
+
+.app-main { min-height: calc(100dvh - 68px); }
+@media (min-width: 768px) { .app-main { min-height: 100dvh; } }
+.glass-header { background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(16px); }
+.surface-card { border: 1px solid var(--border); border-radius: 20px; background: var(--bg); }
+
+.idea-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 640px) { .idea-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .idea-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.idea-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.idea-card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--blue) 25%, var(--border)); box-shadow: 0 12px 30px #3020520d; }
+.idea-card:focus-within { border-color: var(--blue); }
+.gallery-intro { isolation: isolate; position: relative; overflow: hidden; background: linear-gradient(115deg, color-mix(in srgb, var(--bg) 84%, #d8ccff), color-mix(in srgb, var(--bg) 89%, #b6e8df)); }
+.gallery-intro::before { position: absolute; right: 12%; top: -160px; z-index: -1; width: 370px; height: 370px; border: 1px solid color-mix(in srgb, var(--blue) 9%, transparent); border-radius: 50%; box-shadow: 0 0 0 45px color-mix(in srgb, var(--blue) 3%, transparent), 0 0 0 90px color-mix(in srgb, var(--blue) 2%, transparent); content: ""; pointer-events: none; }
+
+.idea-poster { isolation: isolate; position: relative; display: flex; height: 100%; width: 100%; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 28px; }
+.idea-poster::before { position: absolute; z-index: -1; left: -45px; bottom: -90px; width: 230px; height: 230px; border: 1px solid currentColor; border-radius: 50%; opacity: .09; box-shadow: 0 0 0 30px #ffffff30; content: ""; pointer-events: none; }
+.idea-poster--compact { padding: 16px 20px; }
+.idea-poster--compact .poster-title { font-size: clamp(19px, 1.75vw, 27px); }
+
+.join-dialog { position: fixed; inset: 0; margin: auto auto 0; width: 100%; max-width: 100%; max-height: 90dvh; border: 1px solid var(--border); border-radius: 24px 24px 0 0; padding: 0; background: var(--bg); color: var(--text); overflow-y: auto; overscroll-behavior: contain; }
+.join-dialog[open] { animation: sheet-up .25s ease-out; }
+.join-dialog::backdrop { background: #0008; backdrop-filter: blur(5px); }
+@media (min-width: 768px) {
+  .join-dialog { margin: auto; width: 448px; max-width: calc(100% - 40px); border-radius: 24px; }
+  .join-dialog[open] { animation: fade-in .2s ease-out; }
+}
+
+/* Anneau dégradé des « stories » */
+.story-ring {
+  background: var(--story);
+}
+.story-gradient-text {
+  background: var(--story);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Défilement horizontal sans barre visible (stories, filtres, carrousels) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Les utilitaires Tailwind peuvent ajuster les composants selon l'écran. */
+@layer components {
+.font-logo { font-weight: 750; letter-spacing: -.06em; }
+.ig-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ig-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 12%, transparent);
+}
+.ig-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 16px;
+  transition: background .15s, transform .15s, box-shadow .15s;
+}
+.ig-btn:hover {
+  background: var(--blue-hover);
+  box-shadow: 0 4px 12px #7552de26;
+}
+.ig-btn:active { transform: scale(.98); }
+.ig-btn:disabled {
+  opacity: 0.6;
+}
+.ig-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  background: var(--separator);
+  color: var(--text);
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 16px;
+  transition: background .15s, transform .15s;
+}
+.ig-btn-secondary:hover {
+  background: var(--border);
+}
+@media (min-width: 768px) { .ig-input { font-size: 14px; } }
+}
+
+/* ---------- Carte « Signaler » (Leaflet) ---------- */
+/* Pastilles en goutte, comme les applis de cartes : --pin = vert (besoin) ou rouge (problème) */
+.rpin {
+  position: relative;
+  width: 40px;
+  height: 52px;
+  transform-origin: 50% 98%;
+  transition: transform 0.15s ease, opacity 0.15s;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+}
+.rpin svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.rpin path { fill: var(--pin); stroke: #fff; stroke-width: 2.5; }
+.rpin span { position: absolute; left: 0; right: 0; top: 7px; text-align: center; font-size: 17px; line-height: 26px; }
+.rpin:hover { transform: scale(1.08); }
+.rpin--on { transform: scale(1.25); }
+.rpin--dim { opacity: 0.4; }
+.rpin--new { animation: pin-drop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes pin-drop {
+  from { transform: translateY(-24px) scale(0.6); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Pastille centrale fixe : on déplace la carte dessous ; elle se soulève puis retombe avec un rebond */
+.center-pin {
+  position: absolute;
+  left: -24px;
+  top: -60px;
+  width: 48px;
+  height: 62px;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.28));
+  transition: transform 0.18s ease;
+}
+.center-pin svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.center-pin path { fill: var(--blue); stroke: #fff; stroke-width: 2.5; transition: fill 0.2s; }
+.center-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 9999px;
+  background: #fff;
+}
+.center-pin.is-out path { fill: #8e8e8e; }
+.center-pin.is-moving { transform: translateY(-14px); }
+.center-pin.is-landed { animation: pin-land 0.4s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes pin-land {
+  0% { transform: translateY(-14px); }
+  55% { transform: translateY(2px) scaleY(0.94); }
+  100% { transform: translateY(0); }
+}
+.center-pin-dot {
+  position: absolute;
+  left: -6px;
+  top: -4px;
+  width: 12px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s, opacity 0.18s;
+}
+.center-pin-dot.is-moving { transform: scale(1.7); opacity: 0.45; }
+
+/* « Ma position » : point bleu qui pulse */
+.me-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #1a73e8;
+  border: 3px solid #fff;
+  animation: me-pulse 2s ease-out infinite;
+}
+@keyframes me-pulse {
+  0% { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(26, 115, 232, 0.45); }
+  100% { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 18px rgba(26, 115, 232, 0); }
+}
+
+/* Coche de confirmation après l'envoi */
+.success-check { animation: check-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1); }
+@keyframes check-pop {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* Mouvement réduit : la règle globale en fin de fichier coupe déjà ces animations ; on garde aussi la pastille immobile */
+@media (prefers-reduced-motion: reduce) {
+  .center-pin.is-moving { transform: none; }
+  .me-dot { animation: none; }
+}
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--soft);
+}
+.leaflet-bar a {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--bg) 85%, transparent) !important;
+  color: var(--text-2) !important;
+  font-size: 10px;
+}
+.leaflet-control-attribution a {
+  color: var(--text-2) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .idea-card:hover { transform: none; }
+}
+
+/* ---------- Problème 1 : lancer une idée, invitations ---------- */
+.success-pop { animation: success-pop .5s cubic-bezier(.2, 1.5, .4, 1); }
+@keyframes success-pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.invite-glow { box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 10%, transparent), 0 12px 32px color-mix(in srgb, var(--blue) 14%, transparent); animation: fade-in .3s ease-out; }
+.bell-ring { transform-origin: 50% 0; animation: bell-ring 2.4s ease-in-out infinite; }
+@keyframes bell-ring { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(14deg); } 80% { transform: rotate(-12deg); } 85% { transform: rotate(8deg); } 90% { transform: rotate(-5deg); } }
+@media (prefers-reduced-motion: reduce) { .bell-ring { animation: none; } }
+
+/* ---------- Problème 2 : ça se passe à Saint-Roch ---------- */
+.live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 9999px; background: var(--red); box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 55%, transparent); animation: live-pulse 1.6s ease-out infinite; }
+@keyframes live-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 55%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+.midi-banner { background: linear-gradient(110deg, color-mix(in srgb, var(--bg) 82%, #ffd59e), color-mix(in srgb, var(--bg) 86%, #ffb3a7)); }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
+/* ---------- Problème 3 : carte travailleur (dégradé animé, impossible à copier par capture) ---------- */
+.worker-pass { background: linear-gradient(120deg, #7552de, #40b8b0, #ff8a65, #7552de); background-size: 300% 300%; animation: pass-shift 6s ease infinite; }
+@keyframes pass-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* ---------- Problème 4 : pastilles orange des locaux vides ---------- */
+.vac-pin { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9999px; background: #ff8a00; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.3); font-size: 17px; transition: transform .2s; }
+.vac-pin:hover { transform: scale(1.1); }
+.vac-pin--on { transform: scale(1.25); box-shadow: 0 0 0 6px color-mix(in srgb, #ff8a00 30%, transparent), 0 6px 16px rgba(0,0,0,.35); }
