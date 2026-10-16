@@ -86,4 +86,5 @@ export type GoEvent = LatLng & {
   url: string | null; // site de l'organisme (événements de la Ville)
   cost: string | null;
   description: string | null;
+  image: string | null; // photo publiée, sinon illustration du sujet (menu « Événements à venir »)
 };

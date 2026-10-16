@@ -16,6 +16,17 @@ function nextUrl(fallback: string) {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : fallback;
 }
 
+/** « Retour » : revient à la page d'avant (ex. l'activité où on a cliqué « Je participe »), sinon à ?next=… ou à l'accueil. */
+function BackButton() {
+  const router = useRouter();
+  return (
+    <button type="button" onClick={() => (window.history.length > 1 ? router.back() : router.push(nextUrl("/")))}
+      className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-xl px-2 text-sm font-semibold text-muted transition hover:bg-soft hover:text-fg">
+      <ArrowLeft size={18} /> Retour
+    </button>
+  );
+}
+
 function Card({ children }: { children: React.ReactNode }) {
   return <div className="w-full rounded-3xl border border-line bg-bg px-6 py-7 shadow-[0_4px_24px_#00000003] sm:px-8">{children}</div>;
 }
@@ -47,6 +58,7 @@ export function LoginForm() {
 
   return (
     <div className="auth-page mx-auto flex max-w-[480px] flex-col items-center gap-4 px-4 py-6 sm:py-12">
+      <BackButton />
       <Card>
         <h1 className="text-center font-logo text-[42px] leading-tight">Complices<span className="text-ig-blue">.</span></h1>
         <p className="mb-7 mt-2 text-center text-sm text-muted">Ton quartier a hâte de te retrouver.</p>
@@ -61,12 +73,12 @@ export function LoginForm() {
         <div className="my-5 flex items-center gap-4 text-xs font-semibold text-muted">
           <span className="h-px flex-1 bg-line" /> OU <span className="h-px flex-1 bg-line" />
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); enter({ guest: true, name: guestName.trim() }, "invite"); }} className="space-y-2">
+        <form onSubmit={(e) => { e.preventDefault(); if (guestName.trim()) enter({ guest: true, name: guestName.trim() }, "invite"); }} className="space-y-2">
           <p className="text-sm font-semibold"> Juste visiter ?</p>
-          <p className="text-xs text-muted">En invité·e, tu vois les publications et tu rejoins les activités, mais tu ne publies pas.</p>
+          <p className="text-xs text-muted">En invité·e, tu vois les publications et tu rejoins les activités, mais tu ne publies pas. Ton nom est demandé pour que les organisateurs sachent qui vient.</p>
           <div className="flex gap-2">
-            <input aria-label="Ton nom (invité·e)" maxLength={60} value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Ton nom" className="ig-input min-w-0 flex-1" />
-            <button type="submit" disabled={!!sending} className="ig-btn-secondary shrink-0 text-sm">
+            <input aria-label="Ton nom (invité·e)" required maxLength={60} value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Ton prénom et ton nom" className="ig-input min-w-0 flex-1" />
+            <button type="submit" disabled={!!sending || !guestName.trim()} className="ig-btn-secondary shrink-0 text-sm">
               {sending === "invite" && <LoaderCircle size={16} className="animate-spin" />}Entrer
             </button>
           </div>
@@ -129,6 +141,7 @@ export function SignupForm() {
 
   return (
     <div className="auth-page mx-auto flex max-w-[480px] flex-col items-center gap-4 px-4 py-6 sm:py-10">
+      <BackButton />
       <Card>
         <h1 className="text-center font-logo text-[42px] leading-tight">Complices<span className="text-ig-blue">.</span></h1>
         <p className="mb-6 mt-2 text-center text-sm text-muted">Une petite idée. De belles rencontres.</p>

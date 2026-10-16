@@ -3,6 +3,7 @@
 import { ViewTransition, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { NavBar } from "./NavBar";
+import { SpaceGuard } from "./SpaceGuard";
 import "./interface-motion.css";
 
 export function PageShell({ children, topBar }: { children: ReactNode; topBar: ReactNode }) {
@@ -11,6 +12,7 @@ export function PageShell({ children, topBar }: { children: ReactNode; topBar: R
 
   return (
     <>
+      <SpaceGuard />
       {!standalone && topBar}
       {!standalone && <NavBar variant="side" pathname={pathname} />}
       <a href="#contenu" className="sr-only left-4 top-4 z-[100] rounded-xl bg-bg px-4 py-3 font-semibold focus:not-sr-only focus:fixed">Aller au contenu</a>

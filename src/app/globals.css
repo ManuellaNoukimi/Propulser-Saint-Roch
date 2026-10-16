@@ -696,3 +696,28 @@ h1, h2, h3, h4, p, li, dd, dt, label, blockquote { overflow-wrap: anywhere; }
 @media (max-width: 359px) {
   .mobile-nav-label { font-size: 9.5px; letter-spacing: -0.01em; overflow-wrap: normal; white-space: nowrap; }
 }
+
+/* ---------- Accueil : « En direct » (point vert qui pulse, comme le prototype HACKATHON26) ---------- */
+.live-now-dot { display: inline-block; width: 10px; height: 10px; flex-shrink: 0; border-radius: 9999px; background: var(--green); animation: live-now-pulse 1.6s ease-in-out infinite; }
+@keyframes live-now-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* ---------- Fil du quartier : dépliage fluide des événements ---------- */
+.feed-row-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 320ms cubic-bezier(.2, .7, .2, 1), opacity 220ms ease;
+}
+.feed-row[data-open="true"] > .feed-row-panel { grid-template-rows: 1fr; opacity: 1; }
+.feed-row-panel-inner { min-height: 0; overflow: hidden; }
+.feed-row-chevron { transition: transform 320ms cubic-bezier(.2, .7, .2, 1); }
+.feed-row[data-open="true"] .feed-row-chevron { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .feed-row-panel, .feed-row-chevron { transition: none; }
+}
+
+/* ---------- Fil du quartier : fermeture complète au deuxième clic ---------- */
+.feed-row-panel[hidden] { display: none; }
+@starting-style {
+  .feed-row[data-open="true"] > .feed-row-panel { grid-template-rows: 0fr; opacity: 0; }
+}

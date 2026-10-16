@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BadgeCheck, ExternalLink, MapPin, Navigation, Store } from "lucide-react";
+import { ArrowLeft, BadgeCheck, MapPin, Navigation, Store } from "lucide-react";
 
 // Fiche publique d'un commerce ou organisme de la liste SDC (sans compte Complices).
 type Entry = {
@@ -43,7 +43,7 @@ export function SdcEntryView({ id }: { id: string }) {
         )}
         <div className="mt-5 flex flex-wrap gap-2">
           {go && <Link href={go} className="ig-btn"><Navigation size={16} /> Y aller</Link>}
-          <a href={entry.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ig-btn-secondary"><ExternalLink size={16} /> Google Maps</a>
+          {/* Bouton « Google Maps » retiré (16 oct., Danny) : « Y aller » suffit */}
         </div>
       </section>
       {!entry.accountId && (

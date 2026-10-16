@@ -72,6 +72,7 @@ export const PUBLICATION_SOURCES = [
   { id: "manuel", label: "Publié dans Complices" },
   { id: "facebook", label: "via Facebook" },
   { id: "instagram", label: "via Instagram" },
+  { id: "linkedin", label: "via LinkedIn" },
 ] as const;
 export type PublicationSource = (typeof PUBLICATION_SOURCES)[number]["id"];
 export const publicationSourceOf = (id: string) => PUBLICATION_SOURCES.find((s) => s.id === id);

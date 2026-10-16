@@ -44,7 +44,9 @@ export function ProfileView({ id }: { id: string }) {
       </div>
     );
 
-  const { user, stats, badges, allBadges, ideas, joined, isMe } = profile;
+  const { user, stats, badges, allBadges, ideas, joined: allJoined, isMe } = profile;
+  // Un compte entreprise ne voit pas les activités des résident·e·s, même sur une page (16 oct., Danny)
+  const joined = me && isEstablishment(me.accountType) ? allJoined.filter((i) => isEstablishment(i.organizer.accountType)) : allJoined;
   const earned = new Set(badges.map((b) => b.id));
   const type = actorTypeOf(user.accountType);
   const sector = sectorOf(user.sector);

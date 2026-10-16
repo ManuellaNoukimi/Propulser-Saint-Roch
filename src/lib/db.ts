@@ -144,6 +144,11 @@ function prepare(db: Db) {
   if (!reportCols.has("address")) db.exec(`ALTER TABLE reports ADD COLUMN address TEXT`);
   if (!reportCols.has("moment")) db.exec(`ALTER TABLE reports ADD COLUMN moment TEXT`);
   if (!reportCols.has("photos")) db.exec(`ALTER TABLE reports ADD COLUMN photos TEXT NOT NULL DEFAULT '[]'`);
+  // « Signaler » V3 (16 oct.) : précision de la catégorie et suivi par la SDC (reçu → en traitement → réglé)
+  if (!reportCols.has("subtype")) db.exec(`ALTER TABLE reports ADD COLUMN subtype TEXT`);
+  if (!reportCols.has("status")) db.exec(`ALTER TABLE reports ADD COLUMN status TEXT NOT NULL DEFAULT 'recu'`);
+  if (!reportCols.has("status_note")) db.exec(`ALTER TABLE reports ADD COLUMN status_note TEXT`);
+  if (!reportCols.has("updated_at")) db.exec(`ALTER TABLE reports ADD COLUMN updated_at TEXT`);
   // Deux espaces séparés : « activite » (Vie Saint-Roch) et « entreprise » (publications des commerces : promo, emploi…)
   const ideaCols = new Set((db.prepare(`PRAGMA table_info(ideas)`).all() as { name: string }[]).map((c) => c.name));
   if (!ideaCols.has("kind")) db.exec(`ALTER TABLE ideas ADD COLUMN kind TEXT NOT NULL DEFAULT 'activite'`);
@@ -468,8 +473,9 @@ export function listScheduledIdeas(): { title: string; starts_at: string }[] {
 
 // ---------- Signalements (privés) ----------
 export type ReportRow = {
-  id: string; user_id: string; kind: string; category: string; description: string;
+  id: string; user_id: string; kind: string; category: string; subtype: string | null; description: string;
   moment: string | null; address: string | null; photos: string; lat: number; lng: number; created_at: string;
+  status: string; status_note: string | null; updated_at: string | null;
 };
 
 export function listReportsByUser(userId: string): ReportRow[] {
@@ -478,16 +484,18 @@ export function listReportsByUser(userId: string): ReportRow[] {
 
 export function insertReport(
   userId: string,
-  r: { kind: string; category: string; description: string; moment: string | null; address: string | null; photos: string[]; lat: number; lng: number },
+  r: { category: string; subtype: string | null; description: string; moment: string | null; address: string | null; photos: string[]; lat: number; lng: number },
 ): ReportRow {
+  const now = new Date().toISOString();
   const row: ReportRow = {
-    id: randomUUID(), user_id: userId, kind: r.kind, category: r.category, description: r.description,
-    moment: r.moment, address: r.address, photos: JSON.stringify(r.photos), lat: r.lat, lng: r.lng, created_at: new Date().toISOString(),
+    id: randomUUID(), user_id: userId, kind: "probleme", category: r.category, subtype: r.subtype, description: r.description,
+    moment: r.moment, address: r.address, photos: JSON.stringify(r.photos), lat: r.lat, lng: r.lng, created_at: now,
+    status: "recu", status_note: null, updated_at: now,
   };
   getDb()
     .prepare(
-      `INSERT INTO reports (id, user_id, kind, category, description, moment, address, photos, lat, lng, created_at)
-       VALUES (@id, @user_id, @kind, @category, @description, @moment, @address, @photos, @lat, @lng, @created_at)`,
+      `INSERT INTO reports (id, user_id, kind, category, subtype, description, moment, address, photos, lat, lng, created_at, status, status_note, updated_at)
+       VALUES (@id, @user_id, @kind, @category, @subtype, @description, @moment, @address, @photos, @lat, @lng, @created_at, @status, @status_note, @updated_at)`,
     )
     .run(row);
   return row;
@@ -500,6 +508,25 @@ export function deleteOwnReport(id: string, userId: string): string[] | null {
   if (!row) return null;
   db.prepare(`DELETE FROM reports WHERE id = ? AND user_id = ?`).run(id, userId);
   return JSON.parse(row.photos || "[]");
+}
+
+/** Vue SDC : tous les signalements, les plus récents d'abord (sans l'identité de leurs auteurs). */
+export function listAllReports(): ReportRow[] {
+  return getDb().prepare(`SELECT * FROM reports ORDER BY created_at DESC LIMIT 500`).all() as ReportRow[];
+}
+
+/** Vue SDC : fait avancer un signalement. Renvoie la ligne à jour, ou null s'il n'existe pas. */
+export function updateReportStatus(id: string, status: string, note: string | null): ReportRow | null {
+  const db = getDb();
+  const done = db.prepare(`UPDATE reports SET status = ?, status_note = ?, updated_at = ? WHERE id = ?`).run(status, note, new Date().toISOString(), id);
+  return done.changes ? (db.prepare(`SELECT * FROM reports WHERE id = ?`).get(id) as ReportRow) : null;
+}
+
+/** Chiffres anonymes du quartier (aucun lieu, aucune personne) : signalements par catégorie et par statut depuis `sinceIso`. */
+export function reportCounts(sinceIso: string): { category: string; status: string; n: number }[] {
+  return getDb()
+    .prepare(`SELECT category, status, COUNT(*) AS n FROM reports WHERE created_at >= ? GROUP BY category, status`)
+    .all(sinceIso) as { category: string; status: string; n: number }[];
 }
 
 /** Cette photo appartient-elle à un des signalements de cette personne ? (les photos ne sont jamais publiques) */

@@ -49,7 +49,8 @@ export function BusinessDashboard() {
     ]).catch(() => { setError(true); return [null, null, null] as const; });
     if (!d) return;
     setData(d as Dashboard);
-    setInvitations((inv as { received: Invitation[] }).received);
+    // Seulement les invitations venant d'une entreprise : un compte entreprise ne voit pas les activités des résident·e·s (16 oct., Danny)
+    setInvitations((inv as { received: Invitation[] }).received.filter((i) => isEstablishment(i.from.accountType)));
     setMessages((msg as { received: Message[] }).received);
     if ((msg as { unread?: number }).unread) void fetch("/api/contacts/lu", { method: "POST" }).catch(() => {});
   }, []);
@@ -88,7 +89,7 @@ export function BusinessDashboard() {
   const tiles = [
     { n: s.publicationsWeek, label: "publications cette semaine", icon: Sparkles },
     { n: s.complicesWeek, label: "nouveaux complices cette semaine", icon: Users },
-    { n: s.pendingInvitations, label: "invitations en attente", icon: Inbox },
+    { n: invitations.filter((i) => i.status === "pending").length, label: "invitations en attente", icon: Inbox },
     { n: s.messagesWeek, label: "messages reçus cette semaine", icon: MessageSquare },
     { n: s.complicesTotal, label: "complices au total", icon: Check },
   ];
@@ -121,7 +122,7 @@ export function BusinessDashboard() {
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="surface-card p-5">
           <h2 className="flex items-center gap-2 font-bold"><Inbox size={18} className="text-ig-blue" /> Invitations reçues {pending.length > 0 && <span className="rounded-md bg-ig-red px-1.5 text-xs font-bold text-white">{pending.length}</span>}</h2>
-          {pending.length === 0 && answered.length === 0 && <p className="mt-3 text-sm text-muted">Aucune invitation pour l&apos;instant. Quand quelqu&apos;un lance une idée et pense à toi, elle arrive ici.</p>}
+          {pending.length === 0 && answered.length === 0 && <p className="mt-3 text-sm text-muted">Aucune invitation pour l&apos;instant. Quand une entreprise du quartier lance une activité et pense à toi, elle arrive ici.</p>}
           <ul className="mt-3 space-y-3">
             {pending.map((inv) => (
               <li key={inv.id} className="rounded-xl border border-line p-3">

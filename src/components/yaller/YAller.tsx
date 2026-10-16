@@ -225,12 +225,24 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
           {!to && upcoming.length > 0 && (
             <details className="ya-quiet-details mt-4">
               <summary>Événements à venir</summary>
-              <div className="ya-chips -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
-                {upcoming.map((ev, i) => (
+              {/* Petites cartes : image, en direct ou jour et heure, titre, lieu (16 oct., Danny : « trop vague, fade ») */}
+              <div className="ya-chips no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:overflow-visible md:px-0">
+                {upcoming.map((ev) => (
                   <button key={ev.id} type="button" onClick={() => pickTo({ label: ev.title, detail: ev.place, lat: ev.lat, lng: ev.lng, kind: "evenement" })}
-                    className="flex max-w-[240px] shrink-0 items-center gap-2 rounded-full border border-line bg-bg py-1.5 pl-1.5 pr-3 text-left text-xs font-semibold transition hover:bg-soft active:scale-95">
-                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white ${ev.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}>{i + 1}</span>
-                    <span className="truncate">{ev.title}</span>
+                    className="flex w-[260px] shrink-0 snap-start items-center gap-3 rounded-lg border border-line bg-bg p-2 text-left transition hover:border-ig-blue/40 hover:bg-soft active:scale-[0.98] md:w-full">
+                    <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-soft">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {ev.image && <img src={ev.image} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      {ev.status === "live" ? (
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-ig-red"><span className="live-dot" aria-hidden /> En direct</span>
+                      ) : ev.startsAt ? (
+                        <span className="block text-xs font-semibold capitalize text-ig-blue">{new Intl.DateTimeFormat("fr-CA", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(ev.startsAt))}</span>
+                      ) : null}
+                      <span className="mt-0.5 line-clamp-2 text-sm font-semibold leading-snug">{ev.title}</span>
+                      <span className="flex items-center gap-1 truncate text-xs text-muted"><MapPin size={12} className="shrink-0" aria-hidden /> <span className="truncate">{ev.place}</span></span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -368,8 +380,8 @@ function Stat({ value, label, icon, color, on, onClick }: { value: string; label
 function Legend() {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-2xl bg-soft p-3 text-[11px] text-muted">
-      <span className="flex items-center gap-2"><span className="ya-evt is-legend is-live"><span>1</span></span> En direct</span>
-      <span className="flex items-center gap-2"><span className="ya-evt is-legend"><span>2</span></span> À venir</span>
+      <span className="flex items-center gap-2"><span className="ya-evt is-legend is-live"><span /></span> En direct</span>
+      <span className="flex items-center gap-2"><span className="ya-evt is-legend"><span /></span> À venir</span>
       <span className="flex items-center gap-2"><span className="ya-p is-legend" style={{ "--c": PARKING_COLOR.ville } as React.CSSProperties}><b>P</b></span> Municipal</span>
       <span className="flex items-center gap-2"><span className="ya-p is-legend" style={{ "--c": PARKING_COLOR.public } as React.CSSProperties}><b>P</b></span> Public</span>
       <span className="flex items-center gap-2"><span className="ya-bike is-legend"><span><InterfaceIcon symbol="🚲" size={12} /></span><b>5</b></span> Vélos libres</span>
@@ -551,7 +563,7 @@ function SelectedCard({ sel, canPark, onClose, onGo, onPark, panelRef }: { sel: 
     }
     case "event": {
       const e = sel.item;
-      icon = <span className={`grid h-11 w-11 place-items-center rounded-full text-base font-black text-white ${e.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}>{sel.n}</span>;
+      icon = <span className={`grid h-11 w-11 place-items-center rounded-full text-base font-black text-white ${e.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}><CalendarDays size={20} aria-hidden /></span>;
       title = e.title;
       lines = [e.status === "live" ? " En direct" : e.startsAt ? ` ${new Intl.DateTimeFormat("fr-CA", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }).format(new Date(e.startsAt))}` : null, ` ${e.place}`, e.type, e.cost ? ` ${e.cost}` : null];
       actions = (

@@ -6,10 +6,11 @@ import type { LinkedPages as LinkedPagesState } from "@/lib/db";
 import { PUBLICATION_SOURCES } from "@/lib/quartier";
 import { toast } from "@/lib/toast";
 
-type Source = "facebook" | "instagram";
+type Source = "facebook" | "instagram" | "linkedin";
 const SOURCES: { id: Source; label: string; emoji: string; action: string }[] = [
   { id: "facebook", label: "Page Facebook", emoji: "📘", action: "Lier ma page Facebook" },
   { id: "instagram", label: "Compte Instagram", emoji: "📸", action: "Lier mon compte Instagram" },
+  { id: "linkedin", label: "Page LinkedIn", emoji: "💼", action: "Lier ma page LinkedIn" },
 ];
 
 /**

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ACTOR_TYPES, BUSINESS_POST_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_MOMENTS, SECTORS } from "./constants";
+import { ACTOR_TYPES, BUSINESS_POST_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_DESCRIPTION_MIN, REPORT_MOMENTS, REPORT_STATUSES, SECTORS, reportSubtypeOf } from "./constants";
 import { PUBLICATION_KINDS } from "./quartier";
 
 const ids = <T extends readonly { id: string }[]>(list: T) => list.map((x) => x.id) as [T[number]["id"], ...T[number]["id"][]];
@@ -72,13 +72,26 @@ export const joinSchema = z.object({
 
 
 // Signalement : une catégorie (qui détermine besoin ou problème), une explication, une position dans Saint-Roch.
-export const reportSchema = z.object({
-  category: z.enum(ids(REPORT_CATEGORIES), { message: "Choisis une catégorie de signalement dans la liste." }),
-  description: z.string().trim().max(500, "Explication : 500 caractères maximum.").default(""), // facultative (démo sans contrainte)
-  moment: z.enum(ids(REPORT_MOMENTS)).nullable().optional().transform((v) => v ?? null), // facultatif
-  address: optionalText(160, "Adresse"), // libellé trouvé par la carte (ex. « 295, boulevard Charest Est »)
-  lat: z.number().min(46.7).max(46.9),
-  lng: z.number().min(-71.4).max(-71.1),
+export const reportSchema = z
+  .object({
+    category: z.enum(ids(REPORT_CATEGORIES), { message: "Choisis une catégorie de signalement." }),
+    subtype: z.string().trim().max(40).nullable().optional().transform((v) => v || null), // précision (facultative)
+    description: z
+      .string({ message: "Décris la situation." })
+      .trim()
+      .min(REPORT_DESCRIPTION_MIN, `Décris la situation en quelques mots (${REPORT_DESCRIPTION_MIN} caractères minimum).`)
+      .max(500, "Description : 500 caractères maximum."),
+    moment: z.enum(ids(REPORT_MOMENTS)).nullable().optional().transform((v) => v ?? null), // facultatif
+    address: optionalText(160, "Adresse"), // libellé trouvé par la carte (ex. « 295, boulevard Charest Est »)
+    lat: z.number().min(46.7).max(46.9),
+    lng: z.number().min(-71.4).max(-71.1),
+  })
+  .refine((r) => !r.subtype || !!reportSubtypeOf(r.category, r.subtype), { message: "Précision inconnue pour cette catégorie.", path: ["subtype"] });
+
+// Vue SDC : faire avancer un signalement (reçu → en traitement → réglé), avec un mot pour l'auteur
+export const reportStatusSchema = z.object({
+  status: z.enum(ids(REPORT_STATUSES), { message: "Statut inconnu." }),
+  note: z.string().trim().max(300, "Message : 300 caractères maximum.").nullable().optional().transform((v) => v || null),
 });
 export type ReportInput = z.infer<typeof reportSchema>;
 

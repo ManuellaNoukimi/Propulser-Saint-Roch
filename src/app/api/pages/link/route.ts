@@ -10,7 +10,7 @@ import { firstError } from "@/lib/validation";
 // L'import est SIMULÉ (voir src/lib/social-import.ts) : l'accès réel aux pages
 // d'autres commerces demande App Review + vérification d'entreprise chez Meta.
 
-const bodySchema = z.object({ source: z.enum(["facebook", "instagram"]) });
+const bodySchema = z.object({ source: z.enum(["facebook", "instagram", "linkedin"]) });
 const ONLY_ESTABLISHMENTS = { error: "Seuls les comptes commerce, entreprise ou organisme peuvent lier une page." } as const;
 
 /** GET : l'état des liaisons du compte connecté. */
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const { source } = parsed.data;
 
   linkPage(me.id, source, me.display_name);
-  const imported = normalizePosts(fetchPosts(source));
+  const imported = normalizePosts(fetchPosts(source, { id: me.id, accountType: me.account_type, sector: me.sector }));
   // Les publications importées héritent du lieu du commerce ; « commerce » est leur catégorie de fil.
   const added = insertImportedIdeas(me.id, source, imported, "commerce", me.address || "Saint-Roch");
 

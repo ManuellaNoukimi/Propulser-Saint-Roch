@@ -1,0 +1,40 @@
+/* ---------- Page d'ouverture « Bienvenue » (Welcome.tsx) ---------- */
+.welcome { background: #1f3a4d; transition: opacity 0.42s ease, transform 0.42s ease; }
+.welcome.is-leaving { opacity: 0; transform: scale(1.04); }
+
+/* Mosaïque de photos qui dérive lentement */
+.welcome-mosaic {
+  position: fixed; inset: -10%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+  animation: welcome-drift 40s ease-in-out infinite alternate;
+}
+.welcome-mosaic img { width: 100%; height: 100%; min-height: 45vh; object-fit: cover; border-radius: 8px; animation: welcome-photo-in 1.2s ease forwards; opacity: 0; }
+.welcome-mosaic img:nth-child(2n) { animation-delay: 0.15s; }
+.welcome-mosaic img:nth-child(3n) { animation-delay: 0.3s; }
+.welcome-veil { position: fixed; inset: 0; background: linear-gradient(110deg, #1f3a4d 0%, rgba(31, 58, 77, 0.92) 45%, rgba(31, 58, 77, 0.7) 100%); }
+@keyframes welcome-drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-4%, -6%, 0) scale(1.08); } }
+@keyframes welcome-photo-in { to { opacity: 1; } }
+
+/* Apparition en cascade */
+.welcome-in { opacity: 0; transform: translateY(18px); animation: welcome-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes welcome-in { to { opacity: 1; transform: translateY(0); } }
+
+/* Mot qui change : « Ici, on se rencontre. » */
+.welcome-word { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; }
+.welcome-word-inner { display: inline-block; animation: welcome-word 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes welcome-word { from { opacity: 0; transform: translateY(70%); } to { opacity: 1; transform: translateY(0); } }
+
+.welcome-card { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(6px); transition: background 0.2s, transform 0.2s; }
+.welcome-card:hover { background: rgba(255, 255, 255, 0.13); transform: translateY(-2px); }
+.welcome-cta { transition: background 0.15s, transform 0.15s, box-shadow 0.15s; box-shadow: 0 10px 30px rgba(122, 182, 72, 0.35); }
+.welcome-cta:hover { background: var(--green-hover, #6da33f); transform: translateY(-1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-mosaic, .welcome-mosaic img, .welcome-in, .welcome-word-inner { animation: none; opacity: 1; transform: none; }
+}
+
+/* ---------- Connexion / Inscription : fond de l'accueil (AuthBackdrop.tsx), cartes blanches inchangées ---------- */
+.auth-glass { background: #1f3a4d; }
+.auth-glass .auth-page > div { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); }
+/* « Retour » est posé sur le fond bleu nuit : en blanc pour rester lisible */
+.auth-glass .auth-page > button, .auth-glass .auth-page > a { color: rgba(255, 255, 255, 0.92); }
+.auth-glass .auth-page > button:hover, .auth-glass .auth-page > a:hover { color: #ffffff; background: rgba(255, 255, 255, 0.12); }

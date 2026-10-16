@@ -4,12 +4,14 @@ import path from "node:path";
 import { getCurrentUser } from "@/lib/auth";
 import { ownsReportPhoto, REPORT_PHOTO_DIR } from "@/lib/db";
 import { PHOTO_FILE_RE, PHOTO_TYPES, REPORT_PHOTO_ROUTE } from "@/lib/reports";
+import { isSdc } from "@/lib/vacancies";
 
-// GET /api/report-photos/<id>.<ext> : photo d'un signalement, servie SEULEMENT à son auteur (sinon 404, comme si elle n'existait pas).
+// GET /api/report-photos/<id>.<ext> : photo d'un signalement, servie SEULEMENT à son auteur et à la SDC qui le traite
+// (sinon 404, comme si elle n'existait pas).
 export async function GET(_req: NextRequest, ctx: RouteContext<"/api/report-photos/[file]">) {
   const { file } = await ctx.params;
   const me = await getCurrentUser();
-  if (!me || !PHOTO_FILE_RE.test(file) || !ownsReportPhoto(me.id, `${REPORT_PHOTO_ROUTE}${file}`)) {
+  if (!me || !PHOTO_FILE_RE.test(file) || !(isSdc(me.id) || ownsReportPhoto(me.id, `${REPORT_PHOTO_ROUTE}${file}`))) {
     return new Response("Introuvable", { status: 404 });
   }
   try {

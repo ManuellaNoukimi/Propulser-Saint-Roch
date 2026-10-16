@@ -32,3 +32,16 @@ la même commande avec l'adresse du serveur. Un compte qui existe déjà est sau
 - **7 messages** « Contacter » entre Café, Entraide, Studio, Friperie et la SDC (avec réponses) ;
 - **11 votes** « Ce que je veux ici » et **3 demandes d'occupation** de locaux vacants (visibles dans la Vue SDC) ;
 - **3 besoins des résidents** (épicerie, garderie, librairie) et **5 soutiens** « Moi aussi ».
+
+## Activités « En direct » (16 oct., ~10 h 45, 2e version avec photos)
+
+`node scripts/activites-direct.mjs http://localhost:3000` publie, par les vraies routes de l'app et avec les comptes ci-dessus,
+**10 activités qui commencent autour du moment où on lance le script** (de −45 min à +3 h 15), **chacune avec SA photo**
+(envoyée par `/api/upload` ; 10 photos libres de droits différentes, crédits dans `scripts/photos-direct/CREDITS.md`), et **29 complices** :
+clinique vélo (Marc, 10 h), heure du conte (Camille, 10 h 15), marché de quartier (Entraide, 10 h 30), corvée au jardin (Nathalie, 11 h 30),
+café-rencontre des travailleurs (Studio Pixel, 12 h 30), jeux en famille (Sophie, 13 h), dessin en plein air (Nathalie, 13 h 15),
+atelier nichoirs (Marc, 13 h 30), dégustation de bouchées (Café La Petite Pause, 13 h 45), fête de quartier (Entraide, 14 h).
+Une activité est « en direct » pendant 2 h après son début : 3 en direct vers 11 h, **6 à 14 h 30** (présentation).
+La 1re version (7 activités sans photo) a été masquée par ses auteurs. Relançable sans doublon ; pour une autre journée,
+relancer le script le jour même (les heures suivent le moment du lancement).
+Dans « En direct », une activité sans photo montre son affiche avec son titre : une même photo n'y apparaît jamais deux fois.

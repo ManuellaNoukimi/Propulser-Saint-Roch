@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/ComingSoon";
-import { featureBySlug } from "@/lib/features";
+import { SignalerView } from "@/components/signaler/SignalerView";
 
-export const metadata: Metadata = { title: `${featureBySlug("signaler").title} · Complices` };
+export const metadata: Metadata = { title: "Signaler · Complices" };
 
-// Fonctionnalité retirée de l'app par l'équipe (16 oct.) : présentée seulement, comme les autres « Bientôt ».
-// L'ancien écran reste dans le code (ReportMap.tsx, /api/reports/*) pour pouvoir le remettre.
+// « Signaler » (remis le 16 oct., V3) : itinérance, propreté, infraction, dégât, vandalisme, avec description.
+// Privé : jamais dans les publications. La SDC suit les signalements (onglet « Suivi SDC »), sans voir qui les a faits.
 export default function ReportPage() {
-  return <ComingSoon slug="signaler" />;
+  return <SignalerView />;
 }

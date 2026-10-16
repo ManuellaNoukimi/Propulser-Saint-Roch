@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   distDir: process.env.COMPLICES_DIST_DIR || ".next",
   cacheComponents: true,
   partialPrefetching: true,
+  // Pas de bouton « N » de Next.js à l'écran pendant `npm run dev` (16 oct., Danny) ; les erreurs s'affichent toujours.
+  devIndicators: false,
   // Permet d'ouvrir l'app depuis un téléphone sur le même Wi-Fi (http://<IP-de-l'ordi>:3000)
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
   // « Y aller » : exceljs lit le fichier Excel des événements de la Ville côté serveur (chargé tel quel par Node, pas regroupé)

@@ -55,6 +55,11 @@ export async function createMap3D(
       "AttributionControl.ToggleAttribution": "Sources cartographiques",
     },
   });
+  // Crédits repliés derrière le petit bouton « i » dès l'ouverture (16 oct., Danny) : on clique pour les lire.
+  // (Les licences d'OpenStreetMap et de la Ville demandent que la source reste accessible : on ne la supprime pas.)
+  const foldCredits = () => container.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+  map.once("style.load", foldCredits);
+  map.once("idle", foldCredits);
   if (opts.controls) map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
   try {
     // On continue dès que le STYLE est prêt (« style.load ») : inutile d'attendre toutes les tuiles (« load »), qui

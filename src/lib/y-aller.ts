@@ -1,6 +1,7 @@
 import "server-only";
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { activityVisual } from "./activity-visual";
 import { cityEvents } from "./city-events";
 import { listIdeas } from "./db";
 import { isInSaintRoch } from "./geo";
@@ -380,7 +381,7 @@ export async function goEvents(now: Date): Promise<GoEvent[]> {
     if (end < t) continue;
     const at = await locate(idea.place);
     if (!at) continue;
-    out.push({ id: `app-${idea.id}`, ...at, title: idea.title, place: idea.place, startsAt: idea.startsAt, endsAt: null, status: start <= t ? "live" : "upcoming", source: "app", type: null, href: `/p/${idea.id}`, url: null, cost: null, description: idea.description.slice(0, 220) });
+    out.push({ id: `app-${idea.id}`, ...at, title: idea.title, place: idea.place, startsAt: idea.startsAt, endsAt: null, status: start <= t ? "live" : "upcoming", source: "app", type: null, href: `/p/${idea.id}`, url: null, cost: null, description: idea.description.slice(0, 220), image: idea.images[0] ?? activityVisual(idea) });
   }
   for (const ev of await cityEvents()) {
     const start = new Date(ev.startsAt).getTime();
@@ -389,7 +390,7 @@ export async function goEvents(now: Date): Promise<GoEvent[]> {
     const site = ev.sites.find((s) => knownPlace(s)) ?? ev.sites[0] ?? "";
     const at = knownPlace(site) ?? (site ? await locate(site) : null);
     if (!at) continue;
-    out.push({ id: ev.id, ...at, title: ev.title, place: ev.sites.join(" · ") || site, startsAt: ev.startsAt, endsAt: ev.endsAt, status: start <= t ? "live" : "upcoming", source: "ville", type: ev.type, href: null, url: ev.url, cost: ev.cost, description: ev.description });
+    out.push({ id: ev.id, ...at, title: ev.title, place: ev.sites.join(" · ") || site, startsAt: ev.startsAt, endsAt: ev.endsAt, status: start <= t ? "live" : "upcoming", source: "ville", type: ev.type, href: null, url: ev.url, cost: ev.cost, description: ev.description, image: activityVisual({ title: ev.title, category: "culturel" }) });
   }
   return out.sort((a, b) => (a.status === b.status ? (a.startsAt ?? "").localeCompare(b.startsAt ?? "") : a.status === "live" ? -1 : 1));
 }

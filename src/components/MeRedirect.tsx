@@ -7,6 +7,7 @@ import { isEstablishment } from "@/lib/constants";
 import { useSession } from "@/lib/session";
 import { ResidentProgressView } from "./ResidentProgressView";
 import { AuthPrompt } from "./AuthPrompt";
+import { ProfileActivityLink } from "./ProfileActivityLink";
 
 // Les résidents ont un espace privé ; les établissements conservent leur page publique.
 export function MeRedirect() {
@@ -16,6 +17,11 @@ export function MeRedirect() {
     if (user && !isResidentAccount(user.accountType)) router.replace(isEstablishment(user.accountType) ? `/u/${user.id}` : "/moi/modifier");
   }, [user, router]);
   if (loading || (user && !isResidentAccount(user.accountType))) return <div className="p-10 text-center text-muted">Chargement…</div>;
-  if (user) return <ResidentProgressView key={user.id} />;
+  if (user) return (
+    <>
+      <div className="mx-auto max-w-5xl px-5 pt-5 sm:px-8 sm:pt-8"><ProfileActivityLink card /></div>
+      <ResidentProgressView key={user.id} />
+    </>
+  );
   return <AuthPrompt title="Ton profil complice" text="Crée ton compte pour publier, te proposer comme complice et gagner des badges." next="/moi" />;
 }

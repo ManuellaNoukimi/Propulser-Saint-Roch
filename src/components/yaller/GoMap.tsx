@@ -225,7 +225,7 @@ export function GoMap({
     events.forEach((ev, i) => {
       const on = ev.id === selectedId;
       eventMarkers.current.push(
-        htmlMarker(L, map, ev, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${i + 1}</span></div>`, {
+        htmlMarker(L, map, ev, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span></div>`, {
           title: ev.title,
           anchor: "center",
           z: on ? 30 : ev.status === "live" ? 20 : 10,

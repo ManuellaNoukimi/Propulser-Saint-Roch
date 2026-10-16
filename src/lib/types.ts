@@ -99,10 +99,13 @@ export type PublicProfile = {
 export type Report = {
   id: string;
   ref: string; // numéro lisible, ex. « SR-4F2A9C » (comme un numéro de requête 311)
-  kind: "besoin" | "probleme";
-  category: string;
+  category: string; // itinerance, proprete, infraction, degat, vandalisme
+  subtype: string | null; // précision dans la catégorie (ex. « lampadaire »)
   description: string;
-  moment: string | null; // jour, soir, nuit, toujours
+  status: string; // recu, en-cours, regle
+  statusNote: string | null; // mot de la SDC pour l'auteur
+  updatedAt: string | null;
+  moment: string | null; // maintenant, jour, soir, nuit, toujours
   address: string | null; // ex. « 295, boulevard Charest Est »
   photos: string[]; // /api/report-photos/… (servies seulement à l'auteur)
   lat: number;

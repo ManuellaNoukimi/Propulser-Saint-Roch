@@ -87,10 +87,10 @@ export function HomeMap() {
     if (!ready || !L || !map) return;
     pins.current.forEach((m) => m.remove());
     pins.current = [];
-    for (const { ev, n } of visible) {
+    for (const { ev } of visible) {
       const on = ev.id === selected;
       pins.current.push(
-        htmlMarker(L, map, ev, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${n}</span></div>`, {
+        htmlMarker(L, map, ev, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span></div>`, {
           title: ev.title,
           anchor: "center",
           z: on ? 30 : ev.status === "live" ? 20 : 10,
@@ -171,7 +171,7 @@ export function HomeMap() {
           {sel && (
             <div className="ya-card-pop absolute inset-x-3 bottom-3 z-20 rounded-2xl border border-line bg-bg p-4 shadow-2xl md:inset-x-auto md:left-3 md:w-[340px]" role="dialog" aria-label={sel.ev.title}>
               <div className="flex items-start gap-3">
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black text-white ${sel.ev.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}>{sel.n}</span>
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black text-white ${sel.ev.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}><CalendarDays size={18} aria-hidden /></span>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold leading-snug">{sel.ev.title}</p>
                   <p className="mt-0.5 text-xs text-muted">{sel.ev.status === "live" ? " " : " "}{when(sel.ev)}</p>
@@ -199,11 +199,11 @@ export function HomeMap() {
               {filter === "live" ? "Rien en direct pour l'instant." : "Aucune activité à venir pour l'instant."}
             </li>
           )}
-          {visible.map(({ ev, n }) => (
+          {visible.map(({ ev }) => (
             <li key={ev.id} className="w-[260px] shrink-0 lg:w-auto">
               <button type="button" onClick={() => focus(ev)} aria-pressed={ev.id === selected}
                 className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[.99] ${ev.id === selected ? "border-ig-blue bg-ig-blue/5" : "border-line bg-bg hover:bg-soft"}`}>
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-black text-white ${ev.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}>{n}</span>
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-black text-white ${ev.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}><CalendarDays size={17} aria-hidden /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{ev.title}</span>
                   <span className="block truncate text-xs text-muted">{when(ev)}</span>

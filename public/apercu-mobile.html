@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aperçu mobile</title>
+<!-- Outil de travail : affiche l'app dans un cadre de téléphone, à ouvrir dans VS Code (« Simple Browser: Show »)
+     à côté du code : http://localhost:3000/apercu-mobile.html. Se met à jour tout seul à chaque enregistrement. -->
+<style>
+  :root { color-scheme: light; --bg: #eef0f4; --bar: #ffffff; --line: #d9dde5; --fg: #1f2937; --muted: #6b7280; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); font: 13px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--fg); }
+  body { display: flex; flex-direction: column; }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: var(--bar); border-bottom: 1px solid var(--line); }
+  .bar select, .bar input, .bar button { height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--fg); font: inherit; padding: 0 8px; }
+  .bar input { flex: 1; min-width: 90px; }
+  .bar button { cursor: pointer; }
+  .bar button:hover { background: #f3f4f6; }
+  .stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; padding: 12px; }
+  .scaler { transform-origin: center center; }
+  .phone { position: relative; background: #111; border-radius: var(--r); padding: var(--b); box-shadow: 0 0 0 2px #3a3a3c, 0 24px 60px rgba(0,0,0,.25); }
+  .screen { position: relative; overflow: hidden; border-radius: calc(var(--r) - var(--b)); background: #fff; }
+  .screen iframe { display: block; border: 0; width: 100%; height: 100%; background: #fff; }
+  .island { position: absolute; top: calc(var(--b) + 10px); left: 50%; width: 110px; height: 32px; margin-left: -55px; border-radius: 20px; background: #000; z-index: 2; pointer-events: none; }
+  .landscape .island { top: 50%; left: calc(var(--b) + 10px); width: 32px; height: 110px; margin: -55px 0 0 0; }
+  .info { color: var(--muted); font-size: 12px; padding: 0 4px; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <select id="device" aria-label="Appareil"></select>
+    <button id="rotate" type="button" title="Tourner l'écran">⟲ Tourner</button>
+    <input id="path" value="/" aria-label="Page" title="Page à afficher (Entrée pour y aller)" />
+    <button id="reload" type="button" title="Recharger">↻</button>
+    <span class="info" id="info"></span>
+  </div>
+  <div class="stage" id="stage">
+    <div class="scaler" id="scaler">
+      <div class="phone" id="phone">
+        <div class="island" id="island"></div>
+        <div class="screen" id="screen"><iframe id="frame" title="Application"></iframe></div>
+      </div>
+    </div>
+  </div>
+<script>
+  // Tailles d'écran en points CSS (ce que voit le site), bord du téléphone et rayon des coins
+  const DEVICES = [
+    { id: "iphone15pro", label: "iPhone 15 Pro", w: 393, h: 852, island: true, r: 55, b: 12 },
+    { id: "iphone15promax", label: "iPhone 15 Pro Max", w: 430, h: 932, island: true, r: 58, b: 12 },
+    { id: "iphonese", label: "iPhone SE", w: 375, h: 667, island: false, r: 36, b: 14 },
+    { id: "iphone13mini", label: "iPhone 13 mini", w: 375, h: 812, island: false, r: 48, b: 12 },
+    { id: "pixel8", label: "Pixel 8", w: 412, h: 915, island: false, r: 40, b: 10 },
+    { id: "galaxys23", label: "Galaxy S23", w: 360, h: 780, island: false, r: 36, b: 10 },
+    { id: "ipadmini", label: "iPad mini", w: 744, h: 1133, island: false, r: 30, b: 16 },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const saved = (k, d) => { try { return localStorage.getItem("apercu:" + k) ?? d; } catch { return d; } };
+  const save = (k, v) => { try { localStorage.setItem("apercu:" + k, v); } catch {} };
+
+  for (const d of DEVICES) $("device").add(new Option(d.label, d.id));
+  $("device").value = saved("device", "iphone15pro");
+  let landscape = saved("landscape", "0") === "1";
+  $("path").value = saved("path", "/");
+
+  function layout() {
+    const d = DEVICES.find((x) => x.id === $("device").value) || DEVICES[0];
+    const w = landscape ? d.h : d.w, h = landscape ? d.w : d.h;
+    const phone = $("phone");
+    phone.style.setProperty("--r", d.r + "px");
+    phone.style.setProperty("--b", d.b + "px");
+    phone.classList.toggle("landscape", landscape);
+    $("island").style.display = d.island ? "" : "none";
+    $("screen").style.width = w + "px";
+    $("screen").style.height = h + "px";
+    // On réduit le téléphone pour qu'il tienne dans la fenêtre (le site, lui, voit toujours la vraie taille)
+    const stage = $("stage").getBoundingClientRect();
+    const scale = Math.min(1, (stage.width - 24) / (w + 2 * d.b), (stage.height - 24) / (h + 2 * d.b));
+    $("scaler").style.transform = `scale(${scale})`;
+    $("info").textContent = `${w} × ${h} · ${Math.round(scale * 100)} %`;
+  }
+  function go() {
+    let p = $("path").value.trim() || "/";
+    if (!p.startsWith("/")) p = "/" + p;
+    save("path", p);
+    $("frame").src = location.origin + p;
+  }
+
+  $("device").onchange = () => { save("device", $("device").value); layout(); };
+  $("rotate").onclick = () => { landscape = !landscape; save("landscape", landscape ? "1" : "0"); layout(); };
+  $("reload").onclick = () => { try { $("frame").contentWindow.location.reload(); } catch { go(); } };
+  $("path").onkeydown = (e) => { if (e.key === "Enter") go(); };
+  // Quand on navigue dans l'app, la barre suit la page affichée
+  $("frame").onload = () => {
+    try { const l = $("frame").contentWindow.location; $("path").value = l.pathname + l.search; save("path", $("path").value); } catch {}
+  };
+  new ResizeObserver(layout).observe($("stage"));
+  layout();
+  go();
+</script>
+</body>
+</html>

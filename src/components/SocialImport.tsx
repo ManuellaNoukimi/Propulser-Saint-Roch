@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { LinkedPages } from "./LinkedPages";
 
-// « Importer depuis tes réseaux » (comptes Entreprise). Facebook et Instagram : liaison et import de Stelle
+// « Importer depuis tes réseaux » (comptes Entreprise). Facebook, Instagram et LinkedIn : liaison et import de Stelle
 // (LinkedPages, /api/pages/link) ; les autres réseaux sont affichés seulement (« Bientôt disponible »).
 // But : le commerce publie déjà ailleurs ; il connecte ses comptes une fois et ses publications arrivent ici toutes seules.
 // Ce qu'il faudrait pour le brancher (accès officiels, approbations) est résumé dans le panneau de chaque réseau.
@@ -86,7 +86,7 @@ export function SocialImport({ onChange }: { onChange?: () => void } = {}) {
                   </li>
                 ))}
               </ol>
-              {open.id === "facebook" || open.id === "instagram" ? (
+              {open.id === "facebook" || open.id === "instagram" || open.id === "linkedin" ? (
                 <LinkedPages only={open.id} onChange={onChange} />
               ) : (
                 <>

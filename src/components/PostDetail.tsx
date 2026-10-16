@@ -20,6 +20,7 @@ import { ProfileLink } from "./ProfileLink";
 import { usePostActions } from "./usePostActions";
 import { HowToGetThere } from "./yaller/HowToGetThere";
 import { InterfaceIcon } from "@/components/InterfaceIcon";
+import { isEstablishment } from "@/lib/constants";
 
 export function PostDetail({ id }: { id: string }) {
   const { user } = useSession();
@@ -48,6 +49,16 @@ export function PostDetail({ id }: { id: string }) {
     );
   }
   if (!idea) return <DetailSkeleton />;
+  // Un compte entreprise ne voit que les publications et activités des entreprises (16 oct., Danny)
+  if (user && isEstablishment(user.accountType) && !isEstablishment(idea.organizer.accountType)) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <p className="text-xl font-bold">Cette activité n&apos;est pas dans ton espace.</p>
+        <p className="mt-2 text-sm text-muted">L&apos;espace Entreprises montre les publications et les activités des entreprises du quartier.</p>
+        <Link href="/entreprises" className="ig-btn mt-6 text-sm">Retour à l&apos;espace Entreprises</Link>
+      </div>
+    );
+  }
   return <PostDetailView idea={idea} reload={load} />;
 }
 

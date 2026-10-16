@@ -20,9 +20,12 @@ export const reportRef = (id: string) => `SR-${id.replace(/-/g, "").slice(0, 6).
 export const toReport = (r: ReportRow): Report => ({
   id: r.id,
   ref: reportRef(r.id),
-  kind: r.kind as Report["kind"],
   category: r.category,
+  subtype: r.subtype,
   description: r.description,
+  status: r.status || "recu",
+  statusNote: r.status_note,
+  updatedAt: r.updated_at,
   moment: r.moment,
   address: r.address,
   photos: JSON.parse(r.photos || "[]"),

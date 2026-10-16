@@ -81,40 +81,93 @@ export const PLACES = [
   "Îlot Fleurie",
 ] as const;
 
-// Signalements sur la carte : un BESOIN (ce qui manque) ou un PROBLÈME (ce qui ne va pas).
-// On signale des lieux et des besoins, jamais des personnes.
-export const REPORT_KINDS = [
-  { id: "besoin", label: "Un besoin", emoji: "🙋", hint: "Ce qui manque ici" },
-  { id: "probleme", label: "Un problème", emoji: "⚠️", hint: "Ce qui ne va pas ici" },
+// Signalements (« Signaler ») : 5 catégories, chacune avec ses précisions. PRIVÉS : jamais dans les publications.
+// On signale une situation à un endroit, jamais une personne (pas de nom, pas de description physique, pas de photo de personne).
+// help : qui appeler quand c'est urgent (le signalement ne remplace pas le 911).
+export const REPORT_CATEGORIES = [
+  {
+    id: "itinerance", label: "Itinérance", color: "#7c5cff", photos: false,
+    hint: "Une personne semble avoir besoin d'aide",
+    help: "Une personne en danger : appelle le 911. Pour l'orienter vers de l'aide (hébergement, repas) : 211.",
+    placeholder: "Ex. : une personne dort dans l'entrée d'un commerce fermé depuis ce matin, sans manteau.",
+    subtypes: [
+      { id: "aide", label: "Personne qui semble avoir besoin d'aide" },
+      { id: "froid", label: "Personne exposée au froid ou à la chaleur" },
+      { id: "abri", label: "Abri ou campement" },
+      { id: "materiel", label: "Matériel laissé sur place" },
+    ],
+  },
+  {
+    id: "proprete", label: "Propreté", color: "#22a06b", photos: true,
+    hint: "Déchets, poubelle pleine, dépôt sauvage…",
+    help: "Seringue à terre : n'y touche pas, signale-la ici avec l'endroit exact.",
+    placeholder: "Ex. : la poubelle du coin de la rue déborde depuis deux jours, les sacs sont sur le trottoir.",
+    subtypes: [
+      { id: "dechets", label: "Déchets au sol" },
+      { id: "poubelle", label: "Poubelle pleine" },
+      { id: "depot", label: "Dépôt sauvage (meubles, matelas…)" },
+      { id: "seringue", label: "Seringue ou matériel souillé" },
+      { id: "excrements", label: "Excréments" },
+      { id: "autre", label: "Autre" },
+    ],
+  },
+  {
+    id: "infraction", label: "Infraction", color: "#e8590c", photos: true,
+    hint: "Stationnement interdit, bruit, règlement non respecté",
+    help: "Un crime en cours ou une personne en danger : appelle le 911.",
+    placeholder: "Ex. : une auto est garée sur la piste cyclable tous les matins vers 8 h.",
+    subtypes: [
+      { id: "stationnement", label: "Stationnement interdit" },
+      { id: "passage", label: "Trottoir ou piste cyclable bloqué" },
+      { id: "bruit", label: "Bruit excessif" },
+      { id: "affichage", label: "Affichage illégal" },
+      { id: "animal", label: "Animal sans laisse" },
+      { id: "autre", label: "Autre" },
+    ],
+  },
+  {
+    id: "degat", label: "Dégât", color: "#1a73e8", photos: true,
+    hint: "Nid-de-poule, lampadaire éteint, trottoir abîmé…",
+    help: "Un danger immédiat (fil électrique tombé, fuite importante) : appelle le 911.",
+    placeholder: "Ex. : un gros nid-de-poule devant l'arrêt de bus, les vélos doivent faire un écart.",
+    subtypes: [
+      { id: "chaussee", label: "Nid-de-poule ou chaussée abîmée" },
+      { id: "trottoir", label: "Trottoir abîmé" },
+      { id: "lampadaire", label: "Lampadaire éteint" },
+      { id: "feu", label: "Feu de circulation en panne" },
+      { id: "mobilier", label: "Banc, poubelle ou mobilier brisé" },
+      { id: "eau", label: "Fuite d'eau" },
+      { id: "arbre", label: "Arbre ou branche tombée" },
+    ],
+  },
+  {
+    id: "vandalisme", label: "Vandalisme", color: "#d6336c", photos: true,
+    hint: "Graffiti, vitre brisée, bien endommagé",
+    help: "Quelqu'un est en train de casser quelque chose : appelle le 911.",
+    placeholder: "Ex. : la vitrine du local vide a été brisée cette nuit, il y a du verre sur le trottoir.",
+    subtypes: [
+      { id: "graffiti", label: "Graffiti ou tag" },
+      { id: "vitre", label: "Vitre ou vitrine brisée" },
+      { id: "mobilier", label: "Mobilier urbain endommagé" },
+      { id: "velo", label: "Vélo ou support à vélo vandalisé" },
+      { id: "autre", label: "Autre" },
+    ],
+  },
 ] as const;
 
-export const REPORT_CATEGORIES = [
-  // Besoins
-  { id: "epicerie", kind: "besoin", label: "Épicerie / alimentation", emoji: "🛒", color: "#22a06b" },
-  { id: "commerce", kind: "besoin", label: "Commerce de proximité", emoji: "🏪", color: "#22a06b" },
-  { id: "bancs", kind: "besoin", label: "Bancs / mobilier", emoji: "🪑", color: "#22a06b" },
-  { id: "toilettes", kind: "besoin", label: "Toilettes publiques", emoji: "🚻", color: "#22a06b" },
-  { id: "eau", kind: "besoin", label: "Point d'eau", emoji: "🚰", color: "#22a06b" },
-  { id: "verdure", kind: "besoin", label: "Verdure / arbres", emoji: "🌳", color: "#22a06b" },
-  { id: "jeux", kind: "besoin", label: "Jeux pour enfants", emoji: "🛝", color: "#22a06b" },
-  { id: "velo", kind: "besoin", label: "Stationnement vélo / auto", emoji: "🚲", color: "#22a06b" },
-  { id: "accessibilite", kind: "besoin", label: "Accessibilité", emoji: "♿", color: "#22a06b" },
-  { id: "activites", kind: "besoin", label: "Activités / culture", emoji: "🎭", color: "#22a06b" },
-  { id: "autre-besoin", kind: "besoin", label: "Autre besoin", emoji: "✨", color: "#22a06b" },
-  // Problèmes
-  { id: "lumiere", kind: "probleme", label: "Manque de lumière", emoji: "💡", color: "#ff3040" },
-  { id: "salete", kind: "probleme", label: "Saleté / déchets", emoji: "🗑️", color: "#ff3040" },
-  { id: "vol", kind: "probleme", label: "Vol / vandalisme", emoji: "🔓", color: "#ff3040" },
-  { id: "insecurite", kind: "probleme", label: "Sentiment d'insécurité", emoji: "😟", color: "#ff3040" },
-  { id: "chaussee", kind: "probleme", label: "Trottoir / chaussée abîmé", emoji: "🕳️", color: "#ff3040" },
-  { id: "chantier", kind: "probleme", label: "Chantier / accès bloqué", emoji: "🚧", color: "#ff3040" },
-  { id: "bruit", kind: "probleme", label: "Bruit", emoji: "🔊", color: "#ff3040" },
-  { id: "graffiti", kind: "probleme", label: "Graffiti", emoji: "🖍️", color: "#ff3040" },
-  { id: "autre-probleme", kind: "probleme", label: "Autre problème", emoji: "❓", color: "#ff3040" },
+// Suivi d'un signalement : la SDC (Vue SDC) le fait avancer ; l'auteur voit où il en est.
+export const REPORT_STATUSES = [
+  { id: "recu", label: "Reçu", hint: "Ton signalement est bien arrivé." },
+  { id: "en-cours", label: "En traitement", hint: "Quelqu'un s'en occupe." },
+  { id: "regle", label: "Réglé", hint: "La situation est réglée." },
 ] as const;
+export type ReportStatusId = (typeof REPORT_STATUSES)[number]["id"];
+export const reportStatusOf = (id: string | null | undefined) => REPORT_STATUSES.find((s) => s.id === id) ?? REPORT_STATUSES[0];
+export const REPORT_DESCRIPTION_MIN = 10;
 
 // « Quand est-ce que ça arrive ? » (facultatif) : utile pour la Ville (ex. manque de lumière le soir).
 export const REPORT_MOMENTS = [
+  { id: "maintenant", label: "En ce moment", emoji: "⏱️" },
   { id: "jour", label: "Le jour", emoji: "☀️" },
   { id: "soir", label: "Le soir", emoji: "🌆" },
   { id: "nuit", label: "La nuit", emoji: "🌙" },
@@ -124,9 +177,11 @@ export type ReportMomentId = (typeof REPORT_MOMENTS)[number]["id"];
 export const reportMomentOf = (id: string | null | undefined) => REPORT_MOMENTS.find((m) => m.id === id);
 export const MAX_REPORT_PHOTOS = 3;
 
-export type ReportKindId = (typeof REPORT_KINDS)[number]["id"];
 export type ReportCategoryId = (typeof REPORT_CATEGORIES)[number]["id"];
-export const reportCategoryOf = (id: string) => REPORT_CATEGORIES.find((c) => c.id === id);
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
+export const reportCategoryOf = (id: string | null | undefined): ReportCategory | undefined => REPORT_CATEGORIES.find((c) => c.id === id);
+export const reportSubtypeOf = (category: string | null | undefined, subtype: string | null | undefined) =>
+  reportCategoryOf(category)?.subtypes.find((s) => s.id === subtype);
 
 export const DATE_FILTERS = [
   { id: "a-venir", label: "À venir" },

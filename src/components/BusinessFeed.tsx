@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BriefcaseBusiness, Handshake, MapPin, Megaphone, Plus, RefreshCw, Search, Send, Sparkles, Store, Tag, X } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Handshake, MapPin, Megaphone, Plus, RefreshCw, Search, Send, Sparkles, Store, Tag, X } from "lucide-react";
 import { BUSINESS_POST_TYPES, SECTORS, businessPostTypeOf, isEstablishment, sectorOf } from "@/lib/constants";
 import { publicationSourceOf } from "@/lib/quartier"; // « via Facebook » sur une publication importée (F3, Stelle)
-import { normalizeSearch, timeAgo } from "@/lib/format";
+import { formatDate, normalizeSearch, timeAgo } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { usePostActions } from "./usePostActions";
 import type { Idea } from "@/lib/types";
@@ -31,9 +31,13 @@ export function BusinessFeed() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    fetch("/api/entreprises", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { posts: Idea[] }) => setPosts(d.posts))
+    // Publications des entreprises + activités organisées par des entreprises (jamais celles des résident·e·s : 16 oct., Danny)
+    Promise.all([
+      fetch("/api/entreprises", { cache: "no-store" }).then((r) => (r.ok ? r.json() : Promise.reject())),
+      fetch("/api/ideas", { cache: "no-store" }).then((r) => (r.ok ? r.json() : { ideas: [] })),
+    ])
+      .then(([d, a]: [{ posts: Idea[] }, { ideas: Idea[] }]) =>
+        setPosts([...d.posts, ...a.ideas.filter((i) => isEstablishment(i.organizer.accountType))].sort((x, y) => y.createdAt.localeCompare(x.createdAt))))
       .catch(() => setError(true));
   }, [user?.id]);
 
@@ -41,7 +45,7 @@ export function BusinessFeed() {
     const q = normalizeSearch(query.trim());
     return (posts ?? []).filter(
       (p) =>
-        (type === "tous" || p.postType === type) &&
+        (type === "tous" || (type === "activite" ? p.kind !== "entreprise" : p.postType === type)) &&
         (sector === "tous" || p.organizer.sector === sector) &&
         (!q || normalizeSearch(`${p.title} ${p.description} ${p.organizer.displayName}`).includes(q)),
     );
@@ -61,7 +65,6 @@ export function BusinessFeed() {
     <div className="feed-page business-feed mx-auto max-w-[1240px] space-y-8 px-4 py-7 md:px-8 md:py-10 lg:px-10">
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <h1 className="text-2xl font-bold md:text-3xl">Entreprises</h1>
-        <Link href="/" className="inline-flex min-h-10 items-center gap-2 text-xs font-medium text-muted hover:text-fg"><ArrowLeft size={14} /> Changer d&apos;espace</Link>
       </header>
 
       <section aria-label="Rechercher et filtrer les publications" className="feed-toolbar flex items-center gap-3">
@@ -71,7 +74,7 @@ export function BusinessFeed() {
           {query && <button type="button" aria-label="Effacer" onClick={() => setQuery("")} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-soft"><X size={14} /></button>}
         </div>
         <FeedFilters count={filterCount} onReset={() => { setType("tous"); setSector("tous"); }} fields={[
-          { label: "Type de publication", value: type, onChange: setType, options: [{ id: "tous", label: "Tous les types" }, ...BUSINESS_POST_TYPES] },
+          { label: "Type de publication", value: type, onChange: setType, options: [{ id: "tous", label: "Tous les types" }, { id: "activite", label: "Activité" }, ...BUSINESS_POST_TYPES] },
           ...(sectorOptions.length > 1 ? [{ label: "Secteur", value: sector, onChange: setSector, options: [{ id: "tous", label: "Tous les secteurs" }, ...sectorOptions] }] : []),
         ]} />
       </section>
@@ -126,9 +129,10 @@ function BusinessPostCard({ post }: { post: Idea }) {
       <div className="publication-body flex flex-1 flex-col gap-4">
         <div className="business-post-meta">
           {t && <span className="publication-tag business-post-type" data-type={t.id}><TypeIcon size={14} aria-hidden="true" />{t.label}</span>}
+          {post.kind !== "entreprise" && <span className="publication-tag business-post-type"><CalendarDays size={14} aria-hidden="true" />Activité{post.startsAt ? ` · ${formatDate(post.startsAt)}` : ""}</span>}
           <span className="business-post-time">{post.source && post.source !== "manuel" ? `${publicationSourceOf(post.source)?.label} · ` : ""}{timeAgo(post.createdAt)}</span>
         </div>
-        <h2 className="publication-title">{post.title}</h2>
+        <h2 className="publication-title">{post.kind !== "entreprise" ? <Link href={`/p/${post.id}`} className="hover:text-ig-blue">{post.title}</Link> : post.title}</h2>
         {post.description && (
           <p className="business-post-description whitespace-pre-line text-sm leading-relaxed text-muted">
             {open || !long ? post.description : `${post.description.slice(0, 180)}… `}

@@ -2,28 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
-import { BookOpen, CalendarDays, Compass, Handshake, House, LayoutDashboard, LogIn, MapPin, Navigation, ShieldCheck, Sparkles, SquarePlus, Store } from "lucide-react";
+import { BookOpen, Building2, Handshake, House, LayoutDashboard, LogIn, MapPin, Navigation, ShieldCheck, Sparkles, SquarePlus, Store, Users } from "lucide-react";
 import { isEstablishment } from "@/lib/constants";
 import { useSession } from "@/lib/session";
-import { rememberSpace, spaceOfPath, useSpace } from "@/lib/space";
 import { useIsSdc } from "@/lib/use-sdc";
-import { ActivityBell } from "./ActivityBell";
 import { Avatar } from "./Avatar";
+import { PendingDot } from "./ProfileActivityLink";
 
-type Item = { href: string; label: string; icon: typeof House; desktopOnly?: boolean };
-// Chaque espace a SA navigation (choisi sur la page d'ouverture « / », retenu sur l'appareil).
+type Item = { href: string; label: string; short?: string; icon: typeof House; desktopOnly?: boolean }; // short : libellé du menu du bas (téléphone)
+// Chaque espace a SA navigation. L'espace dépend du compte (16 oct., Danny) : entreprise → Entreprises ; sinon Vie Saint-Roch.
+// « Accueil » ramène à la page de bienvenue (/) ; l'ancien « Accueil » s'appelle « Vie à Saint-Roch » (16 oct., Danny).
 const VIE_ITEMS: Item[] = [
-  { href: "/vie", label: "Accueil", icon: House },
+  { href: "/", label: "Accueil", icon: House },
+  { href: "/vie", label: "Vie à Saint-Roch", short: "Vie St-Roch", icon: Users },
   { href: "/lancer", label: "Lancer", icon: Sparkles },
   { href: "/y-aller", label: "Y aller", icon: Navigation },
-  { href: "/evenements", label: "Événements", icon: CalendarDays },
+  // « Événements » retiré du menu (16 oct., Danny) : l'accueil montre déjà « En direct » et le fil ; la page /evenements reste
   { href: "/vitrines", label: "Vitrines", icon: Store },
+  // « Signaler » en pause (16 oct., Danny) : pas de bouton ; la page /signaler reste dans le code
   { href: "/annuaire", label: "Annuaire", icon: BookOpen, desktopOnly: true },
-  { href: "/fonctionnalites", label: "À découvrir", icon: Compass, desktopOnly: true },
+  // « À découvrir » retiré du menu (16 oct., Danny) : doublon avec l'annuaire ; la page /fonctionnalites reste
 ];
 const BUSINESS_ITEMS: Item[] = [
-  { href: "/entreprises", label: "Accueil", icon: House },
+  { href: "/", label: "Accueil", icon: House, desktopOnly: true }, // sur téléphone : le logo en haut y mène
+  { href: "/entreprises", label: "Entreprises", icon: Building2 },
   { href: "/entreprises/publier", label: "Publier", icon: SquarePlus },
   { href: "/entreprises/collaborer", label: "Collaborer", icon: Handshake },
   { href: "/entreprises/tableau", label: "Tableau de bord", icon: LayoutDashboard },
@@ -33,17 +35,12 @@ const BUSINESS_ITEMS: Item[] = [
 const SDC_ITEM: Item = { href: "/sdc/vitrines", label: "Vue SDC", icon: ShieldCheck };
 const ESTABLISHMENT_ONLY = new Set(["/entreprises/publier", "/entreprises/collaborer", "/entreprises/tableau"]);
 const PRIMARY = new Set(["/lancer", "/entreprises/publier"]); // bouton mis en avant (couleur d'accent)
-const SPACE_HOMES = new Set(["/vie", "/entreprises"]);
+const SPACE_HOMES = new Set(["/", "/vie", "/entreprises"]);
 const isActive = (path: string | null, href: string) => path !== null && (path === href || (!SPACE_HOMES.has(href) && path.startsWith(`${href}/`)));
 
 export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; pathname: string | null }) {
   const { user } = useSession();
-  // Espace actuel : déduit de l'adresse (/vie, /entreprises…) ou, sinon, l'espace retenu (agenda, publication, profil…).
-  const space = useSpace(pathname);
-  useEffect(() => {
-    const fromPath = spaceOfPath(pathname);
-    if (fromPath) rememberSpace(fromPath);
-  }, [pathname]);
+  const space = user && isEstablishment(user.accountType) ? "entreprises" : "vie";
   const canPublish = !!user && isEstablishment(user.accountType);
   const isSdc = useIsSdc();
   const items = [
@@ -57,20 +54,20 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
   if (variant === "bottom") return (
     <nav aria-label="Navigation mobile" className="glass-header fixed inset-x-0 bottom-0 z-40 border-t border-line pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="flex h-[68px] items-center justify-around px-1">
-        {items.filter((i) => !i.desktopOnly).map(({ href, label, icon: Icon }) => {
+        {items.filter((i) => !i.desktopOnly).map(({ href, label, short, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
             <li key={href} className="min-w-0 flex-1">
               <Link href={href} aria-label={label} aria-current={active ? "page" : undefined} className={`flex h-[60px] flex-col items-center justify-center gap-1 rounded-xl transition active:scale-90 ${active ? "text-fg" : "text-muted"}`}>
                 <span className={`grid h-8 w-10 place-items-center rounded-xl ${PRIMARY.has(href) ? "bg-ig-green text-[#173045] shadow-sm" : active ? "bg-sep" : ""}`}><Icon size={23} strokeWidth={active ? 2.4 : 1.8} /></span>
-                <span className={`mobile-nav-label ${active ? "font-bold" : "font-medium"}`}>{label}</span>
+                <span className={`mobile-nav-label ${active ? "font-bold" : "font-medium"}`}>{short ?? label}</span>
               </Link>
             </li>
           );
         })}
         <li className="min-w-0 flex-1">
           <Link href={profileHref} aria-label={user ? "Mon profil" : "Se connecter"} aria-current={profileActive ? "page" : undefined} className={`flex h-[60px] flex-col items-center justify-center gap-1 rounded-xl transition active:scale-90 ${profileActive ? "text-fg" : "text-muted"}`}>
-            <span className="grid h-8 place-items-center">{user ? <span className={`rounded-full ${profileActive ? "ring-2 ring-fg ring-offset-2 ring-offset-bg" : ""}`}><Avatar user={user} size={25} /></span> : <LogIn size={23} strokeWidth={1.8} />}</span>
+            <span className="relative grid h-8 place-items-center">{user ? <span className={`rounded-full ${profileActive ? "ring-2 ring-fg ring-offset-2 ring-offset-bg" : ""}`}><Avatar user={user} size={25} /></span> : <LogIn size={23} strokeWidth={1.8} />}{user && space === "vie" && <PendingDot />}</span>
             <span className="mobile-nav-label font-medium">{user ? "Profil" : "Connexion"}</span>
           </Link>
         </li>
@@ -84,7 +81,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
         <span className="story-ring grid h-10 w-10 shrink-0 place-items-center rounded-[14px] font-logo text-3xl text-white shadow-sm xl:hidden">C</span>
         <span className="hidden font-logo text-[28px] leading-none xl:block">Complices<span className="text-ig-blue">.</span></span>
       </Link>
-      <Link href="/" className="mb-8 hidden items-center gap-1.5 px-3 text-[11px] font-medium text-muted hover:text-fg xl:flex"><MapPin size={12} /> {space === "entreprises" ? "Espace Entreprises" : "Vie Saint-Roch"} · changer</Link>
+      <Link href="/" className="mb-8 hidden items-center gap-1.5 px-3 text-[11px] font-medium text-muted hover:text-fg xl:flex"><MapPin size={12} /> {space === "entreprises" ? "Espace Entreprises" : "Vie Saint-Roch"}</Link>
       <ul className="flex flex-col gap-2">
         {items.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
@@ -97,7 +94,6 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
             </li>
           );
         })}
-        <li><ActivityBell withLabel active={pathname === "/activite"} /></li>
       </ul>
       <div className="mt-auto space-y-5 pt-8">
         {(space !== "entreprises" || canPublish) && <div className="hidden rounded-2xl bg-soft p-4 xl:block">
@@ -110,7 +106,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
           )}
         </div>}
         <Link href={profileHref} aria-label={user ? "Mon profil" : "Se connecter"} title={user ? "Mon profil" : "Se connecter"} aria-current={profileActive ? "page" : undefined} className={`flex items-center justify-center gap-3 rounded-xl p-2.5 transition hover:bg-soft xl:justify-start ${profileActive ? "bg-soft" : ""}`}>
-          {user ? <Avatar user={user} size={32} /> : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sep"><LogIn size={19} /></span>}
+          {user ? <span className="relative shrink-0"><Avatar user={user} size={32} />{space === "vie" && <PendingDot />}</span> : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sep"><LogIn size={19} /></span>}
           <span className="hidden min-w-0 xl:block"><span className="block truncate text-sm font-semibold">{user ? user.displayName : "Se connecter"}</span><span className="block text-[11px] text-muted">{user ? (isEstablishment(user.accountType) ? "Ma page entreprise" : "Mon compte") : "Rejoins ton quartier"}</span></span>
         </Link>
         <p className="hidden px-3 text-[10px] leading-relaxed text-muted xl:block">Fait pour Saint-Roch, ensemble.<br />Hackathon Saint-Roch 2026</p>

@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { randomInt } from "node:crypto";
 import { createSession } from "@/lib/auth";
 import { findUserByLogin, freeLoginFor, getUserRow, insertUser, toSessionUser } from "@/lib/db";
 import { moderate } from "@/lib/moderation";
@@ -16,7 +15,9 @@ export async function POST(req: NextRequest) {
   const { email, password, guest, name } = parsed.data;
 
   if (guest) {
-    const displayName = name || `Invité·e ${randomInt(1000, 9999)}`;
+    // Le nom est obligatoire : les organisateurs doivent savoir qui vient (pas d'invité·e anonyme)
+    const displayName = name.trim();
+    if (!displayName) return Response.json({ error: "Écris ton nom pour entrer en invité·e." }, { status: 400 });
     const mod = moderate(displayName);
     if (!mod.ok) return Response.json({ error: mod.reason }, { status: 422 });
     const id = insertUser({ email: freeLoginFor(`invité ${displayName}`), password: "", displayName, accountType: "invite", sector: null, address: null, description: null });

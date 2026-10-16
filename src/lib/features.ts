@@ -55,15 +55,15 @@ export const FEATURES: Feature[] = [
     planActions: "Actions 2.8, 3.5 et 3.10 du Plan Saint-Roch",
   },
   {
-    slug: "signaler", href: "/signaler", problem: 6, emoji: "📍", label: "Signaler", status: "bientot",
-    title: "Signaler un besoin ou un problème",
-    problemLabel: "Les besoins des habitants (épicerie qui manque, coin sombre, saleté…) ne sont localisés nulle part",
-    pitch: "Dis ce qui manque ou ce qui ne va pas dans le quartier, à l'endroit exact : regroupés par secteur, les signalements montrent où sont les besoins.",
+    slug: "signaler", href: "/signaler", problem: 6, emoji: "📍", label: "Signaler", status: "bientot", // en pause (16 oct.)
+    title: "Signaler un problème",
+    problemLabel: "Itinérance, propreté, infractions, dégâts, vandalisme : rien n'est localisé ni suivi",
+    pitch: "Dis ce qui ne va pas dans le quartier, à l'endroit exact. La SDC reçoit le signalement, sans ton nom, et tu suis chaque étape.",
     bullets: [
-      "Carte de Saint-Roch : cherche une adresse ou utilise ta position",
-      "Un besoin (épicerie, bancs, toilettes, verdure…) ou un problème (lumière, saleté…), le moment et des photos",
-      "Un numéro de suivi ; tes signalements restent privés",
-      "Les besoins regroupés par secteur pour la Ville",
+      "5 catégories : itinérance, propreté, infraction, dégât, vandalisme, avec une précision",
+      "Carte de Saint-Roch : cherche une adresse, utilise ta position ou glisse l'épingle",
+      "Une description, le moment et des photos (jamais de photo de personne)",
+      "Un numéro de suivi : reçu, en traitement, réglé ; jamais dans les publications",
     ],
     planActions: "Actions 1.6, 1.10, 1.15 et 3.5 du Plan Saint-Roch",
   },
