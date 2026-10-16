@@ -1,4 +1,5 @@
 import type { ActorTypeId, CategoryId, ContributionId, NeedId, SectorId } from "./constants";
+import type { PublicationSource } from "./quartier";
 
 export type Badge = {
   id: "super-voisin" | "bonne-personne" | "batisseur" | "rassembleur" | "premier-complice";
@@ -44,6 +45,7 @@ export type Idea = {
   needs: NeedId[];
   images: string[]; // URLs /api/uploads/…
   createdAt: string;
+  source: PublicationSource; // F3 : « manuel » par défaut, sinon page liée (le type promo / nouveauté est dans postType)
   complicesCount: number;
   kind?: "activite" | "entreprise"; // espace : Vie Saint-Roch ou Entreprises
   postType?: string | null; // type de publication d'entreprise (promo, emploi…)

@@ -2,8 +2,10 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { LinkedPages } from "./LinkedPages";
 
-// « Importer depuis tes réseaux » (comptes Entreprise) : AFFICHAGE SEULEMENT, rien n'est branché.
+// « Importer depuis tes réseaux » (comptes Entreprise). Facebook et Instagram : liaison et import de Stelle
+// (LinkedPages, /api/pages/link) ; les autres réseaux sont affichés seulement (« Bientôt disponible »).
 // But : le commerce publie déjà ailleurs ; il connecte ses comptes une fois et ses publications arrivent ici toutes seules.
 // Ce qu'il faudrait pour le brancher (accès officiels, approbations) est résumé dans le panneau de chaque réseau.
 
@@ -32,7 +34,7 @@ const STEPS = [
   { title: "C'est automatique", text: "Chaque nouvelle publication arrive ici toute seule, avec ses photos." },
 ];
 
-export function SocialImport() {
+export function SocialImport({ onChange }: { onChange?: () => void } = {}) {
   const [open, setOpen] = useState<Network | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId();
@@ -84,11 +86,16 @@ export function SocialImport() {
                   </li>
                 ))}
               </ol>
-              <p className="text-xs text-muted">Accès prévu : {open.access}.</p>
-              <button type="button" disabled className="w-full rounded-xl py-2.5 text-sm font-semibold text-white opacity-60" style={{ background: open.color }}>
-                Se connecter avec {open.name}
-              </button>
-              <p className="text-center text-xs text-muted">Bientôt disponible : concept présenté pour la démo.</p>
+              {open.id === "facebook" || open.id === "instagram" ? (
+                <LinkedPages only={open.id} onChange={onChange} />
+              ) : (
+                <>
+                  <button type="button" disabled className="w-full rounded-xl py-2.5 text-sm font-semibold text-white opacity-60" style={{ background: open.color }}>
+                    Se connecter avec {open.name}
+                  </button>
+                  <p className="text-center text-xs text-muted">Bientôt disponible.</p>
+                </>
+              )}
             </div>
           </div>
         </dialog>

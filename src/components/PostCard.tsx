@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowUpRight, CalendarDays, Copy, MapPin, Send, Users } from "lucide-react";
-import { categoryOf } from "@/lib/constants";
+import { ArrowUpRight, CalendarDays, Copy, EyeOff, MapPin, Send, Users } from "lucide-react";
+import { businessPostTypeOf, categoryOf } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
+import { publicationSourceOf } from "@/lib/quartier";
+import { toast } from "@/lib/toast";
 import { loginHref, useSession } from "@/lib/session";
 import type { Idea } from "@/lib/types";
 import { Avatar } from "./Avatar";
@@ -22,6 +24,24 @@ export function PostCard({ idea }: { idea: Idea }) {
   const [complices, setComplices] = useState(idea.complicesCount);
   const category = categoryOf(idea.category);
   const mine = user?.id === idea.organizer.id;
+  const [hidden, setHidden] = useState(false);
+  const kind = businessPostTypeOf(idea.postType); // F3 : promo / nouveauté… (publications d'entreprise)
+  const imported = idea.source !== "manuel"; // F3 : arrivée d'une page liée
+
+  // F3 : masquer une publication importée qu'on ne veut pas voir dans Complices.
+  async function hide() {
+    const r = await fetch(`/api/ideas/${idea.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hidden: true }),
+    });
+    if (r.ok) {
+      setHidden(true);
+      toast("Publication masquée");
+    } else toast("Impossible de masquer cette publication.");
+  }
+
+  if (hidden) return null;
 
   return (
     <article className="idea-card group/card flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-bg">
@@ -39,6 +59,9 @@ export function PostCard({ idea }: { idea: Idea }) {
 
       <div className="flex flex-1 flex-col px-5 pb-4 pt-4">
         <Link href={`/p/${idea.id}`} className="hover:text-ig-blue"><h2 className="line-clamp-2 min-h-[44px] text-[16px] font-bold leading-snug tracking-tight">{idea.title}</h2></Link>
+        {kind && (
+          <p className="mt-2"><span className="inline-flex items-center gap-1 rounded-md bg-soft px-2 py-0.5 text-[10px] font-semibold">{kind.emoji} {kind.label}</span></p>
+        )}
         <p className="mt-1.5 line-clamp-1 min-h-[17px] text-[11px] leading-relaxed text-muted">{idea.description || "Une idée pour faire bouger Saint-Roch."}</p>
 
         <div className="mb-4 mt-3 space-y-1.5 text-[11px] text-muted">
@@ -48,6 +71,15 @@ export function PostCard({ idea }: { idea: Idea }) {
 
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-sep pt-3">
           <ProfileLink user={idea.organizer} className="flex min-w-0 flex-1 items-center gap-2 hover:text-ig-blue"><Avatar user={idea.organizer} size={23} /><span className="truncate text-[10px] font-medium">{idea.organizer.displayName}</span></ProfileLink>
+          {imported && (
+            <span className="shrink-0 text-[9px] text-muted">
+              {publicationSourceOf(idea.source)?.label}
+            </span>
+          )}
+          {mine && imported && (
+            <button type="button" onClick={hide} aria-label="Masquer cette publication" title="Masquer"
+              className="shrink-0 text-muted transition hover:text-fg"><EyeOff size={14} /></button>
+          )}
         </div>
 
         <div className="mt-3 flex items-center gap-2">

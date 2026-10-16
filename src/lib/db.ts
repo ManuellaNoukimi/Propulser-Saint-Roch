@@ -11,6 +11,8 @@ import { ACTOR_TYPES, isEstablishment } from "./constants";
 import { hashPassword, NO_PASSWORD } from "./password";
 import type { CreateIdeaInput, JoinInput, ProfileUpdateInput, SignupInput } from "./validation";
 import type { Idea, PublicUser, SessionUser } from "./types";
+import type { PublicationSource } from "./quartier";
+import type { ImportedPost } from "./social-import";
 
 // Base SQLite locale : data/complices.db (persiste entre les redémarrages, non versionnée).
 // COMPLICES_DATA_DIR permet d'utiliser une autre base (ex. pour les tests) sans toucher aux vraies données.
@@ -146,6 +148,17 @@ function prepare(db: Db) {
   const ideaCols = new Set((db.prepare(`PRAGMA table_info(ideas)`).all() as { name: string }[]).map((c) => c.name));
   if (!ideaCols.has("kind")) db.exec(`ALTER TABLE ideas ADD COLUMN kind TEXT NOT NULL DEFAULT 'activite'`);
   if (!ideaCols.has("post_type")) db.exec(`ALTER TABLE ideas ADD COLUMN post_type TEXT`);
+  // F3 (Stelle) : provenance de la publication. Le type promo / nouveauté d'une publication d'entreprise va dans
+  // post_type (comme celles écrites dans l'app) ; un événement importé est une activité (kind = 'activite').
+  // source = manuel | facebook | instagram ; external_id = id du post chez la source (idempotence de l'import).
+  if (!ideaCols.has("source")) db.exec(`ALTER TABLE ideas ADD COLUMN source TEXT NOT NULL DEFAULT 'manuel'`);
+  if (!ideaCols.has("external_id")) db.exec(`ALTER TABLE ideas ADD COLUMN external_id TEXT`);
+  if (!ideaCols.has("hidden")) db.exec(`ALTER TABLE ideas ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`);
+  // Partielle : les publications manuelles n'ont pas d'external_id et ne se gênent pas entre elles.
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_ideas_external ON ideas(source, external_id) WHERE external_id IS NOT NULL`);
+  // F3 : pages sociales liées par un compte entreprise, ex. {"facebook":{"name":"Café du Coin","linkedAt":"…"}}
+  const userCols = new Set((db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map((c) => c.name));
+  if (!userCols.has("linked_pages")) db.exec(`ALTER TABLE users ADD COLUMN linked_pages TEXT NOT NULL DEFAULT '{}'`);
   db.pragma(`user_version = ${SCHEMA_VERSION}`);
   purgeDemoData(db);
 }
@@ -154,6 +167,7 @@ function prepare(db: Db) {
 export type UserRow = {
   id: string; email: string; password_hash: string; display_name: string; account_type: string;
   sector: string | null; address: string | null; description: string | null; created_at: string;
+  linked_pages: string;
 };
 
 export function toPublicUser(r: Pick<UserRow, "id" | "display_name" | "account_type" | "sector" | "address" | "description">): PublicUser {
@@ -228,6 +242,7 @@ type IdeaRow = {
   id: string; organizer_id: string; title: string; description: string; category: string; place: string;
   starts_at: string | null; needs: string; images: string; created_at: string;
   kind?: string; post_type?: string | null;
+  source: string; external_id: string | null; hidden: number;
   complices_count: number;
   o_name: string; o_type: string; o_sector: string | null; o_address: string | null; o_description: string | null;
 };
@@ -238,6 +253,9 @@ const IDEA_SELECT = `
          (SELECT COUNT(*) FROM complices c WHERE c.idea_id = i.id) AS complices_count,
          u.display_name AS o_name, u.account_type AS o_type, u.sector AS o_sector, u.address AS o_address, u.description AS o_description
   FROM ideas i JOIN users u ON u.id = i.organizer_id`;
+
+// F3 : une publication masquée par son auteur disparaît du fil, mais lui la voit encore.
+const VISIBLE = `(i.hidden = 0 OR i.organizer_id = @viewer)`;
 
 function toIdea(r: IdeaRow): Idea {
   return {
@@ -251,6 +269,7 @@ function toIdea(r: IdeaRow): Idea {
     needs: JSON.parse(r.needs),
     images: JSON.parse(r.images),
     createdAt: r.created_at,
+    source: (r.source as Idea["source"]) ?? "manuel",
     complicesCount: r.complices_count,
     kind: r.kind === "entreprise" ? "entreprise" : "activite",
     postType: r.post_type ?? null,
@@ -278,24 +297,24 @@ export function purgeEndedResidentPosts(force = false): number {
 // Par défaut : seulement les ACTIVITÉS (Vie Saint-Roch). Les publications d'entreprises ne s'y mélangent jamais.
 export function listIdeas(viewer: string | null, kind: "activite" | "entreprise" = "activite"): Idea[] {
   purgeEndedResidentPosts();
-  const rows = getDb().prepare(`${IDEA_SELECT} WHERE COALESCE(i.kind, 'activite') = @kind ORDER BY i.created_at DESC`).all({ viewer: viewer ?? "", kind }) as IdeaRow[];
+  const rows = getDb().prepare(`${IDEA_SELECT} WHERE COALESCE(i.kind, 'activite') = @kind AND ${VISIBLE} ORDER BY i.created_at DESC`).all({ viewer: viewer ?? "", kind }) as IdeaRow[];
   return rows.map(toIdea);
 }
 
 export function listIdeasByOrganizer(userId: string, viewer: string | null): Idea[] {
-  return (getDb().prepare(`${IDEA_SELECT} WHERE i.organizer_id = @user ORDER BY i.created_at DESC`).all({ viewer: viewer ?? "", user: userId }) as IdeaRow[]).map(toIdea);
+  return (getDb().prepare(`${IDEA_SELECT} WHERE i.organizer_id = @user AND ${VISIBLE} ORDER BY i.created_at DESC`).all({ viewer: viewer ?? "", user: userId }) as IdeaRow[]).map(toIdea);
 }
 
 export function listIdeasJoinedBy(userId: string, viewer: string | null): Idea[] {
   return (
     getDb()
-      .prepare(`${IDEA_SELECT} WHERE i.id IN (SELECT idea_id FROM complices WHERE user_id = @user) ORDER BY i.created_at DESC`)
+      .prepare(`${IDEA_SELECT} WHERE i.id IN (SELECT idea_id FROM complices WHERE user_id = @user) AND ${VISIBLE} ORDER BY i.created_at DESC`)
       .all({ viewer: viewer ?? "", user: userId }) as IdeaRow[]
   ).map(toIdea);
 }
 
 export function getIdea(id: string, viewer: string | null): Idea | undefined {
-  const row = getDb().prepare(`${IDEA_SELECT} WHERE i.id = @id`).get({ viewer: viewer ?? "", id }) as IdeaRow | undefined;
+  const row = getDb().prepare(`${IDEA_SELECT} WHERE i.id = @id AND ${VISIBLE}`).get({ viewer: viewer ?? "", id }) as IdeaRow | undefined;
   return row && toIdea(row);
 }
 
@@ -303,13 +322,15 @@ export function ideaExists(id: string): boolean {
   return !!getDb().prepare(`SELECT 1 FROM ideas WHERE id = ?`).get(id);
 }
 
-export function insertIdea(organizerId: string, input: CreateIdeaInput): string {
+export function insertIdea(organizerId: string, input: Omit<CreateIdeaInput, "kind">): string { // « kind » (F3) n'est pas stocké : une idée reste une activité
   const id = randomUUID();
   getDb()
     .prepare(
-      `INSERT INTO ideas (id, organizer_id, title, description, category, place, starts_at, needs, images, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ideas (id, organizer_id, title, description, category, place, starts_at, needs, images, created_at, kind, source)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activite', 'manuel')`,
     )
+    // Toujours une activité de Vie Saint-Roch (séparation des espaces) : le champ « kind » de createIdeaSchema
+    // (promo / nouveauté / événement, F3) n'est pas stocké ici ; les promos passent par insertBusinessPost.
     .run(id, organizerId, input.title, input.description, input.category, input.place, input.startsAt,
       JSON.stringify(input.needs), JSON.stringify(input.images), new Date().toISOString());
   syncResidentBadges(getDb(),organizerId);
@@ -489,4 +510,82 @@ function purgeDemoData(db: Db) {
     db.prepare(`DELETE FROM users WHERE email LIKE '%@complices.local'`).run();
     db.prepare(`INSERT INTO meta (key, value) VALUES (?, ?)`).run(DEMO_PURGE_KEY, new Date().toISOString());
   })();
+}
+
+// ---------- F3 : pages sociales liées et import simulé ----------
+
+/** État de la liaison d'un compte : { facebook: { name, linkedAt }, … } */
+export type LinkedPage = { name: string; linkedAt: string };
+export type LinkedPages = Partial<Record<Exclude<PublicationSource, "manuel">, LinkedPage>>;
+
+export function getLinkedPages(userId: string): LinkedPages {
+  const row = getDb().prepare(`SELECT linked_pages FROM users WHERE id = ?`).get(userId) as { linked_pages: string } | undefined;
+  if (!row) return {};
+  try {
+    return JSON.parse(row.linked_pages || "{}") as LinkedPages;
+  } catch {
+    return {}; // base d'une version précédente : on repart d'aucune liaison
+  }
+}
+
+function setLinkedPages(userId: string, pages: LinkedPages) {
+  getDb().prepare(`UPDATE users SET linked_pages = ? WHERE id = ?`).run(JSON.stringify(pages), userId);
+}
+
+export function linkPage(userId: string, source: Exclude<PublicationSource, "manuel">, name: string) {
+  setLinkedPages(userId, { ...getLinkedPages(userId), [source]: { name, linkedAt: new Date().toISOString() } });
+}
+
+/** Délier : la liaison tombe et les publications venues de cette source repartent. */
+export function unlinkPage(userId: string, source: Exclude<PublicationSource, "manuel">): number {
+  const pages = getLinkedPages(userId);
+  delete pages[source];
+  setLinkedPages(userId, pages);
+  return getDb().prepare(`DELETE FROM ideas WHERE organizer_id = ? AND source = ?`).run(userId, source).changes;
+}
+
+/**
+ * Insère un lot importé. `INSERT OR IGNORE` + l'index unique (source, external_id)
+ * rendent l'opération idempotente : relier deux fois n'ajoute rien de plus.
+ * Renvoie le nombre de publications réellement ajoutées.
+ */
+export function insertImportedIdeas(
+  organizerId: string,
+  source: Exclude<PublicationSource, "manuel">,
+  posts: ImportedPost[],
+  category: string,
+  place: string,
+): number {
+  const stmt = getDb().prepare(
+    `INSERT OR IGNORE INTO ideas (id, organizer_id, title, description, category, place, starts_at, needs, images, created_at, kind, post_type, source, external_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?, ?, ?, ?, ?)`,
+  );
+  const run = getDb().transaction((batch: ImportedPost[]) => {
+    let added = 0;
+    for (const p of batch) {
+      // Séparation des espaces : une promo ou une nouveauté va dans Entreprises (post_type) ; un événement daté
+      // est une activité de Vie Saint-Roch, comme si le commerce l'avait publiée dans l'app.
+      const event = p.kind === "evenement";
+      added += stmt.run(randomUUID(), organizerId, p.title, p.description, category, place, p.startsAt, p.createdAt,
+        event ? "activite" : "entreprise", event ? null : p.kind, source, p.externalId).changes;
+    }
+    return added;
+  });
+  return run(posts);
+}
+
+/** Masquer ou réafficher une publication. Seul son auteur peut le faire. */
+export function setIdeaHidden(ideaId: string, userId: string, hidden: boolean): boolean {
+  return getDb().prepare(`UPDATE ideas SET hidden = ? WHERE id = ? AND organizer_id = ?`).run(hidden ? 1 : 0, ideaId, userId).changes > 0;
+}
+
+/** F1 « Nouveau dans le quartier » : les promos et nouveautés récentes des entreprises. */
+export function listNewInQuartier(viewer: string | null, limit = 6): Idea[] {
+  const rows = getDb()
+    .prepare(
+      `${IDEA_SELECT} WHERE COALESCE(i.kind, 'activite') = 'entreprise' AND i.post_type IN ('promo', 'nouveaute') AND ${VISIBLE}
+       ORDER BY i.created_at DESC LIMIT @limit`,
+    )
+    .all({ viewer: viewer ?? "", limit }) as IdeaRow[];
+  return rows.map(toIdea);
 }

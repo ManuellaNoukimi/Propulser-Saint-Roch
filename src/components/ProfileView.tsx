@@ -19,6 +19,7 @@ export function ProfileView({ id }: { id: string }) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("publications");
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     fetch(`/api/users/${id}`, { cache: "no-store" })
@@ -28,7 +29,7 @@ export function ProfileView({ id }: { id: string }) {
         setProfile(d);
       })
       .catch((e) => setError(e instanceof Error && e.message ? e.message : "Chargement impossible."));
-  }, [id, me?.id]);
+  }, [id, me?.id, reload]);
 
   if (error) return <p className="p-10 text-center font-semibold">{error}</p>;
   if (!profile)
@@ -123,7 +124,9 @@ export function ProfileView({ id }: { id: string }) {
         })}
       </div>
 
-      {isMe && isEstablishment(user.accountType) && <div className="mb-6"><SocialImport /></div>}
+      {/* F3 : lier ses pages (seulement sur son propre profil d'établissement). Facebook et Instagram : liaison de Stelle
+          (LinkedPages, dans le panneau du réseau) ; les publications importées s'ajoutent au profil (rechargé). */}
+      {isMe && isEstablishment(user.accountType) && <div className="mb-6"><SocialImport onChange={() => setReload((n) => n + 1)} /></div>}
 
       {/* Onglets */}
       <nav aria-label="Contenu du profil" className="mb-2 flex justify-around border-t border-line md:justify-center md:gap-14">

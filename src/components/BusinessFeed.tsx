@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, MapPin, Plus, RefreshCw, Search, Store, X } from "lucide-react";
 import { BUSINESS_POST_TYPES, SECTORS, businessPostTypeOf, isEstablishment, sectorOf } from "@/lib/constants";
+import { publicationSourceOf } from "@/lib/quartier"; // « via Facebook » sur une publication importée (F3, Stelle)
 import { normalizeSearch, timeAgo } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { usePostActions } from "./usePostActions";
@@ -98,7 +99,7 @@ function BusinessPostCard({ post }: { post: Idea }) {
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-center justify-between gap-2">
           {t && <span className="rounded-full bg-soft px-2.5 py-1 text-[11px] font-semibold">{t.emoji} {t.label}</span>}
-          <span className="text-[11px] text-muted">{timeAgo(post.createdAt)}</span>
+          <span className="text-[11px] text-muted">{post.source && post.source !== "manuel" ? `${publicationSourceOf(post.source)?.label} · ` : ""}{timeAgo(post.createdAt)}</span>
         </div>
         <h3 className="text-lg font-bold leading-snug">{post.title}</h3>
         {post.description && (
