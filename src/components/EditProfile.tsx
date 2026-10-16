@@ -42,7 +42,7 @@ function EditProfileForm({ user }: { user: SessionUser }) {
     if (!res?.ok) return setError(d?.error ?? "Enregistrement impossible.");
     await refresh();
     toast("Profil mis à jour");
-    router.push(`/u/${user.id}`);
+    router.push(isEstablishment(accountType) ? `/u/${user.id}` : "/moi");
   }
 
   const row = "grid gap-1.5 md:grid-cols-[160px_1fr] md:items-center md:gap-8";

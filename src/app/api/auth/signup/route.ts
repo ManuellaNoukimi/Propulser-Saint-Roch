@@ -1,6 +1,8 @@
+import { isResidentAccount } from "@/lib/resident-points";
+import { referralInviter, registerResidentReferral } from "@/lib/resident-progress";
 import type { NextRequest } from "next/server";
 import { createSession } from "@/lib/auth";
-import { freeLoginFor, getUserRow, insertUser, toSessionUser } from "@/lib/db";
+import { getDb, freeLoginFor, getUserRow, insertUser, toSessionUser } from "@/lib/db";
 import { moderate } from "@/lib/moderation";
 import { firstError, signupSchema } from "@/lib/validation";
 
@@ -15,7 +17,14 @@ export async function POST(req: NextRequest) {
   const mod = moderate(displayName, address, description);
   if (!mod.ok) return Response.json({ error: mod.reason }, { status: 422 });
 
-  const id = insertUser({ ...parsed.data, email: freeLoginFor(email || displayName) });
+  const code = parsed.data.referralCode;
+  const inviter = code ? referralInviter(code) : null;
+  if (code && (!inviter || !isResidentAccount(parsed.data.accountType))) return Response.json({error:"Code d’invitation invalide ou réservé aux résidents."},{status:400});
+  const id = getDb().transaction(() => {
+    const created = insertUser({ ...parsed.data, email: freeLoginFor(email || displayName) });
+    if(inviter) registerResidentReferral(created,inviter);
+    return created;
+  }).immediate();
   await createSession(id);
   return Response.json({ user: toSessionUser(getUserRow(id)!) }, { status: 201 });
 }

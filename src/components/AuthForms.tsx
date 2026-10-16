@@ -97,6 +97,7 @@ export function LoginForm() {
 }
 
 export function SignupForm() {
+  const [referralCode,setReferralCode] = useState("");
   const router = useRouter();
   const { refresh } = useSession();
   const [group, setGroup] = useState<"personnel" | "etablissement" | null>(null);
@@ -120,6 +121,7 @@ export function SignupForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         displayName, accountType,
+        referralCode: establishment ? undefined : referralCode || new URLSearchParams(window.location.search).get("ref") || undefined,
         sector: establishment ? sector || null : null,
         address: establishment ? address : "",
         description,
@@ -169,6 +171,7 @@ export function SignupForm() {
             </button>
             <input aria-label={establishment ? "Nom de l’établissement" : "Ton prénom ou ton nom"} autoComplete={establishment ? "organization" : "name"} required maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)}
               placeholder={establishment ? "Nom de l'établissement" : "Ton prénom ou ton nom"} className="ig-input" />
+            {!establishment && <input aria-label="Code d’invitation facultatif" placeholder="Code d’invitation (facultatif)" className="ig-input" maxLength={64} value={referralCode} onChange={e=>setReferralCode(e.target.value)} />}
             {establishment && (
               <>
                 <select aria-label="Secteur d’activité, facultatif" value={sector} onChange={(e) => setSector(e.target.value as SectorId)} className="ig-input">

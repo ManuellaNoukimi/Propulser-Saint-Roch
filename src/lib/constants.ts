@@ -22,7 +22,7 @@ export const ACTOR_TYPES = [
 ] as const;
 
 export const ACCOUNT_GROUPS = [
-  { id: "personnel", label: "Résident·e", emoji: "🏠", description: "Tu publies une activité (bénévolat, aide, vide-grenier…). Pas de profil : on voit seulement ton nom, et ta publication disparaît après l'événement." },
+  { id: "personnel", label: "Résident·e", emoji: "🏠", description: "Tu publies une activité (bénévolat, aide, vide-grenier…). Ton profil est privé ; tu peux choisir de partager ton niveau et tes badges. Ta publication disparaît après l'événement." },
   { id: "etablissement", label: "Entreprise", emoji: "🏪", description: "Commerce, restaurant, entreprise ou organisme : tu as une page publique avec toutes tes publications." },
 ] as const;
 

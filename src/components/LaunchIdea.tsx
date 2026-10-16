@@ -1,4 +1,5 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -140,6 +141,7 @@ export function LaunchIdea() {
     setSending(false);
     setPublished({ id: d.id, invited });
     setPhase("done");
+    notifyResidentProgress();
     window.scrollTo({ top: 0, behavior: "smooth" });
     navigator.vibrate?.(30);
   }

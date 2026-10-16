@@ -1,4 +1,5 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -207,6 +208,7 @@ export function InvitationBanner({ invitation, onAnswered }: { invitation: Invit
     setSending(null);
     if (!res?.ok) return toast("Réponse non envoyée. Réessaie.");
     toast(accept ? "🎉 Tu es maintenant complice !" : "Merci d'avoir répondu");
+    if (accept) notifyResidentProgress();
     onAnswered();
   }
 

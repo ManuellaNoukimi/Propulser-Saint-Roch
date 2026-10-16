@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { NavBar, NavBarWithPath } from "@/components/NavBar";
+import { ResidentPointFeedback } from "@/components/ResidentPointFeedback";
 import { Toaster } from "@/components/Toaster";
 import { TopBar } from "@/components/TopBar";
 import { SessionProvider } from "@/lib/session";
@@ -23,8 +24,10 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  // Des extensions injectent des attributs sur <html> avant React (ex. data-scribe-recorder-ready).
+  // La tolérance concerne uniquement cette racine, pas les composants enfants.
   return (
-    <html lang="fr" className="h-full antialiased">
+    <html lang="fr" data-scroll-behavior="smooth" suppressHydrationWarning className="h-full antialiased">
       <body className="min-h-full">
         <SessionProvider>
           <TopBar />
@@ -37,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <NavBarWithPath variant="bottom" />
           </Suspense>
           <Toaster />
+          <ResidentPointFeedback />
         </SessionProvider>
       </body>
     </html>

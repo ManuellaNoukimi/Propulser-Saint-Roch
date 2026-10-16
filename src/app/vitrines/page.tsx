@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { VitrinesView } from "@/components/VitrinesView";
+import { ResidentNeedsView } from "@/components/ResidentNeedsView";
 
-export const metadata: Metadata = { title: "Vitrines à remplir · Complices" };
+export const metadata: Metadata = {
+  title: "Vitrine · Les besoins des résidents · Complices",
+  description: "Exprime ce qui manque dans ton secteur et soutiens les besoins de tes voisins à Saint-Roch.",
+};
 
-// Problème 4 : « Vitrines à remplir » (affichage de démo, locaux d'exemple).
 export default function Page() {
-  return <VitrinesView />;
+  return <ResidentNeedsView />;
 }

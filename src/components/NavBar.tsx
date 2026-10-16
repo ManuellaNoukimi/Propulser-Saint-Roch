@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Compass, House, LogIn, MapPin, MapPinPlus, Search, Sparkles } from "lucide-react";
+import { CalendarDays, Compass, House, LogIn, MapPin, MapPinPlus, Search, Sparkles, Store } from "lucide-react";
 import { isEstablishment } from "@/lib/constants";
 import { useSession } from "@/lib/session";
 import { ActivityBell } from "./ActivityBell";
@@ -15,14 +15,15 @@ const ITEMS: Item[] = [
   { href: "/lancer", label: "Lancer", icon: Sparkles },
   { href: "/signaler", label: "Signaler", icon: MapPinPlus },
   { href: "/evenements", label: "Événements", icon: CalendarDays },
+  { href: "/vitrines", label: "Vitrines", icon: Store },
   { href: "/fonctionnalites", label: "À découvrir", icon: Compass, desktopOnly: true },
 ];
 const isActive = (path: string | null, href: string) => path !== null && (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`));
 
 export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; pathname: string | null }) {
   const { user } = useSession();
-  // Entreprise : sa page publique. Résident·e : son compte (pas de profil public).
-  const profileHref = user ? (isEstablishment(user.accountType) ? `/u/${user.id}` : "/moi/modifier") : "/connexion";
+  // Entreprise : sa page publique. Résident·e : son espace privé de progression.
+  const profileHref = user ? (isEstablishment(user.accountType) ? `/u/${user.id}` : "/moi") : "/connexion";
   const profileActive = pathname !== null && (pathname === profileHref || pathname.startsWith("/moi") || (!user && ["/connexion", "/inscription"].includes(pathname)));
 
   if (variant === "bottom") return (
