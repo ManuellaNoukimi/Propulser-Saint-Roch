@@ -1,4 +1,5 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -192,6 +193,7 @@ function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
       body: JSON.stringify({ contribution, message: "" }),
     }).catch(() => null);
     if (!res || (!res.ok && res.status !== 409)) return toast("Impossible pour l'instant. Réessaie.");
+    if (res.ok) notifyResidentProgress();
     if (contribution === "participer") {
       setGoing(true);
       toast("📅 C'est noté, tu y vas !");

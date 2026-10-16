@@ -28,6 +28,7 @@ const profileFields = {
 
 // Démo SANS mot de passe ni courriel (demande de Danny) : le courriel/identifiant et le mot de passe sont facultatifs.
 export const signupSchema = z.object({
+  referralCode: z.string().trim().max(64).optional(),
   email: z.string().trim().toLowerCase().max(120).default(""),
   password: z.string().max(100).default(""),
   ...profileFields,

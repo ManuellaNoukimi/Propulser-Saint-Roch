@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeft, Check, LoaderCircle } from "lucide-react";
 import { ACCOUNT_GROUPS, SECTORS, isEstablishment, isGuest, type ActorTypeId, type SectorId } from "@/lib/constants";
+import { isResidentAccount } from "@/lib/resident-progress-options";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
 
@@ -80,6 +81,7 @@ export function LoginForm() {
 }
 
 export function SignupForm() {
+  const [referralCode, setReferralCode] = useState("");
   const router = useRouter();
   const { refresh } = useSession();
   const [accountType, setAccountType] = useState<ActorTypeId | null>(null);
@@ -94,6 +96,7 @@ export function SignupForm() {
 
   const establishment = accountType ? isEstablishment(accountType) : false;
   const guest = accountType ? isGuest(accountType) : false;
+  const resident = accountType ? isResidentAccount(accountType) : false; // seuls les habitant·e·s gagnent des points
   const choice = ACCOUNT_GROUPS.find((g) => (guest ? g.id === "invite" : establishment ? g.id === "etablissement" : g.id === "personnel"));
 
   async function submit(e: React.FormEvent) {
@@ -108,6 +111,8 @@ export function SignupForm() {
         displayName, accountType,
         email: guest ? "" : email,
         password: guest ? "" : password,
+        // Code d'invitation (progression des résidents) : champ ou lien /inscription?ref=CODE
+        referralCode: resident ? referralCode || new URLSearchParams(window.location.search).get("ref") || undefined : undefined,
         sector: establishment ? sector || null : null,
         address: establishment ? address : "",
         description: establishment ? description : "",
@@ -166,6 +171,7 @@ export function SignupForm() {
                   placeholder="Mot de passe" className="ig-input" />
               </>
             )}
+            {resident && <input aria-label="Code d’invitation facultatif" placeholder="Code d’invitation (facultatif)" className="ig-input" maxLength={64} value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />}
             {establishment && (
               <>
                 <select aria-label="Secteur d’activité, facultatif" value={sector} onChange={(e) => setSector(e.target.value as SectorId)} className="ig-input">

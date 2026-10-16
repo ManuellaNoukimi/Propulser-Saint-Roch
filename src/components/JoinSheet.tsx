@@ -1,4 +1,5 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
@@ -60,6 +61,7 @@ export function JoinSheet({
     }
     setMessage("");
     toast("🎉 Tu es maintenant complice !");
+    notifyResidentProgress();
     onJoined?.();
     onClose();
   }

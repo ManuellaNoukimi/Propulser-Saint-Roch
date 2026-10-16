@@ -18,5 +18,13 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/ideas/[id]/
   if (alreadyJoined(id, me.id, parsed.data.contribution)) {
     return Response.json({ error: "Tu t'es déjà proposé·e de cette façon pour cette idée." }, { status: 409 });
   }
-  return Response.json({ id: insertComplice(id, me.id, parsed.data) }, { status: 201 });
+  try {
+    return Response.json({ id: insertComplice(id, me.id, parsed.data) }, { status: 201 });
+  } catch (error) {
+    // Another request can have inserted the same contribution after the initial check.
+    if (error && typeof error === "object" && "code" in error && error.code === "SQLITE_CONSTRAINT_UNIQUE" && alreadyJoined(id,me.id,parsed.data.contribution)) {
+      return Response.json({error:"Tu t'es déjà proposé·e de cette façon pour cette idée."},{status:409});
+    }
+    throw error;
+  }
 }

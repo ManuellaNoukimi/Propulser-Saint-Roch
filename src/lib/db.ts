@@ -1,5 +1,9 @@
 import "server-only";
 import Database from "better-sqlite3";
+import { prepareVacancies } from "./vacancy-schema";
+import { prepareResidentProgress } from "./resident-progress-schema";
+import { awardResidentPoints, syncResidentBadges } from "./resident-points";
+import { prepareResidentNeeds } from "./resident-needs-schema";
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -130,6 +134,9 @@ function prepare(db: Db) {
     -- Petites informations sur la base (ex. lots de données de démo déjà ajoutés)
     CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `);
+  prepareVacancies(db);
+  prepareResidentNeeds(db);
+  prepareResidentProgress(db);
   // Migrations douces (sans effacer la base) : colonnes ajoutées aux signalements après coup.
   const reportCols = new Set((db.prepare(`PRAGMA table_info(reports)`).all() as { name: string }[]).map((c) => c.name));
   if (!reportCols.has("address")) db.exec(`ALTER TABLE reports ADD COLUMN address TEXT`);
@@ -261,9 +268,10 @@ export function purgeEndedResidentPosts(force = false): number {
   return getDb()
     .prepare(
       `DELETE FROM ideas WHERE starts_at IS NOT NULL AND starts_at < ?
-       AND organizer_id IN (SELECT id FROM users WHERE account_type IN (${RESIDENT_TYPES.map(() => "?").join(",")}))`,
+       AND organizer_id IN (SELECT id FROM users WHERE account_type IN (${RESIDENT_TYPES.map(() => "?").join(",")}))
+       AND NOT EXISTS (SELECT 1 FROM vacancy_bookings b WHERE b.idea_id = ideas.id AND b.status = 'confirmed' AND b.ends_on > ?)`,
     )
-    .run(cutoff, ...RESIDENT_TYPES).changes;
+    .run(cutoff, ...RESIDENT_TYPES, new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())).changes;
 }
 
 /** Fil : les publications les plus récentes d'abord (comme un réseau social). */
@@ -304,6 +312,7 @@ export function insertIdea(organizerId: string, input: CreateIdeaInput): string 
     )
     .run(id, organizerId, input.title, input.description, input.category, input.place, input.startsAt,
       JSON.stringify(input.needs), JSON.stringify(input.images), new Date().toISOString());
+  syncResidentBadges(getDb(),organizerId);
   return id;
 }
 
@@ -341,11 +350,18 @@ export function alreadyJoined(ideaId: string, userId: string, contribution: stri
 }
 
 export function insertComplice(ideaId: string, userId: string, input: JoinInput): string {
-  const id = randomUUID();
-  getDb()
-    .prepare(`INSERT INTO complices (id, idea_id, user_id, contribution, message, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
-    .run(id, ideaId, userId, input.contribution, input.message, new Date().toISOString());
-  return id;
+  const db = getDb();
+  return db.transaction(() => {
+    const id = randomUUID();
+    db.prepare(`INSERT INTO complices(id,idea_id,user_id,contribution,message,created_at) VALUES(?,?,?,?,?,?)`).run(id,ideaId,userId,input.contribution,input.message,new Date().toISOString());
+    const idea = db.prepare("SELECT organizer_id FROM ideas WHERE id=?").get(ideaId) as {organizer_id:string};
+    if (idea.organizer_id !== userId) awardResidentPoints(db,userId,"join",ideaId);
+    const {n} = db.prepare("SELECT COUNT(DISTINCT user_id) AS n FROM complices WHERE idea_id=? AND user_id<>?").get(ideaId,idea.organizer_id) as {n:number};
+    if(n>=2) awardResidentPoints(db,idea.organizer_id,"idea",ideaId);
+    syncResidentBadges(db,userId);
+    syncResidentBadges(db,idea.organizer_id);
+    return id;
+  }).immediate();
 }
 
 // ---------- Invitations (problème 1 : « Inviter mes complices ») ----------

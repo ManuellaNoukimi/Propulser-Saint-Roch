@@ -1,4 +1,5 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -45,6 +46,7 @@ export function CreatePost() {
     setSending(false);
     if (!res?.ok) return setError(d?.error ?? "Publication impossible. Vérifie ta connexion.");
     toast("🎉 Ta publication a été partagée !");
+    notifyResidentProgress();
     refresh();
     router.push(`/p/${d.id}`);
   }

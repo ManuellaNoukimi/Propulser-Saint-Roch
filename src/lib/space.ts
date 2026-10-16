@@ -39,7 +39,7 @@ export function rememberSpace(space: Space) {
 export function spaceOfPath(path: string | null): Space | null {
   if (!path) return null;
   if (path === "/entreprises" || path.startsWith("/entreprises/")) return "entreprises";
-  if (path === "/vie" || ["/explorer", "/lancer", "/signaler", "/y-aller", "/fonctionnalites", "/creer"].some((p) => path === p || path.startsWith(`${p}/`))) return "vie";
+  if (path === "/vie" || ["/explorer", "/lancer", "/signaler", "/y-aller", "/vitrines", "/checkin", "/fonctionnalites", "/creer"].some((p) => path === p || path.startsWith(`${p}/`))) return "vie";
   return null;
 }
 
