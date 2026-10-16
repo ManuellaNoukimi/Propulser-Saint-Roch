@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
+import { TopBarProfile } from "./TopBarProfile";
 
 export function TopBar() {
   return (
@@ -7,7 +8,7 @@ export function TopBar() {
       <Link href="/" aria-label="Complices, accueil" className="font-logo text-[26px] leading-none">Complices<span className="text-ig-blue">.</span></Link>
       <span className="hidden items-center gap-1 text-[10px] font-medium text-muted min-[380px]:flex"><MapPin size={11} /> Saint-Roch</span>
       {/* « À découvrir » et « Activité » retirés de l'en-tête (16 oct., Danny) : l'activité est dans le profil */}
-      <span className="w-10" aria-hidden />
+      <TopBarProfile />
     </header>
   );
 }

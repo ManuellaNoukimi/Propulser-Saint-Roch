@@ -81,18 +81,8 @@ export function ProfileView({ id }: { id: string }) {
     { n: badges.length, label: "badges" },
   ];
 
-  return (
-    <div className="mx-auto max-w-[1200px] px-4 pb-6 md:px-7 md:pt-9">
-      {/* En-tête */}
-      <header className="flex items-start gap-5 px-4 pt-4 md:gap-20 md:px-10">
-        <div className="shrink-0 md:pl-6">
-          <span className="md:hidden"><Avatar user={user} size={77} /></span>
-          <span className="hidden md:inline"><Avatar user={user} size={120} /></span>
-        </div>
-        <div className="min-w-0 flex-1 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="mr-2 break-words text-xl font-semibold tracking-tight md:text-2xl">{user.displayName}</h1>
-            {isMe ? (
+  // Boutons du profil : à côté du nom sur ordinateur, sur leur propre ligne en pleine largeur sur téléphone (16 oct., Danny)
+  const actions = isMe ? (
               <>
                 <Link href="/moi/modifier" className="ig-btn-secondary text-sm">Modifier le profil</Link>
                 <Link href="/moi/modifier" aria-label="Paramètres" className="p-1"><Settings size={22} /></Link>
@@ -106,7 +96,20 @@ export function ProfileView({ id }: { id: string }) {
                 )}
                 <button type="button" onClick={shareProfile} className="ig-btn-secondary text-sm">Partager le profil</button>
               </>
-            )}
+            );
+
+  return (
+    <div className="mx-auto max-w-[1200px] px-4 pb-6 md:px-7 md:pt-9">
+      {/* En-tête */}
+      <header className="flex items-start gap-5 px-4 pt-4 md:gap-20 md:px-10">
+        <div className="shrink-0 md:pl-6">
+          <span className="md:hidden"><Avatar user={user} size={77} /></span>
+          <span className="hidden md:inline"><Avatar user={user} size={120} /></span>
+        </div>
+        <div className="min-w-0 flex-1 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="mr-2 break-words text-2xl font-semibold tracking-tight">{user.displayName}</h1>
+            <div className="hidden flex-wrap items-center gap-2 md:flex">{actions}</div>
           </div>
           <ul className="hidden gap-10 md:flex">
             {statItems.map((s) => (
@@ -117,6 +120,7 @@ export function ProfileView({ id }: { id: string }) {
         </div>
       </header>
       <div className="px-4 pt-4 md:hidden">{bio}</div>
+      <div className="profile-actions-mobile flex flex-wrap gap-2 px-4 pt-4 md:hidden">{actions}</div>
 
       {/* Statistiques (mobile) */}
       <ul className="mt-4 grid grid-cols-3 border-y border-sep py-3 text-center md:hidden">

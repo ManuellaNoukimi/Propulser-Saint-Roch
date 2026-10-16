@@ -20,7 +20,7 @@ const VIE_ITEMS: Item[] = [
   // « Événements » retiré du menu (16 oct., Danny) : l'accueil montre déjà « En direct » et le fil ; la page /evenements reste
   { href: "/vitrines", label: "Vitrines", icon: Store },
   // « Signaler » en pause (16 oct., Danny) : pas de bouton ; la page /signaler reste dans le code
-  { href: "/annuaire", label: "Annuaire", icon: BookOpen, desktopOnly: true },
+  { href: "/annuaire", label: "Annuaire", icon: BookOpen }, // téléphone : à la place du profil (passé en haut, 16 oct.)
   // « À découvrir » retiré du menu (16 oct., Danny) : doublon avec l'annuaire ; la page /fonctionnalites reste
 ];
 const BUSINESS_ITEMS: Item[] = [
@@ -65,12 +65,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
             </li>
           );
         })}
-        <li className="min-w-0 flex-1">
-          <Link href={profileHref} aria-label={user ? "Mon profil" : "Se connecter"} aria-current={profileActive ? "page" : undefined} className={`flex h-[60px] flex-col items-center justify-center gap-1 rounded-xl transition active:scale-90 ${profileActive ? "text-fg" : "text-muted"}`}>
-            <span className="relative grid h-8 place-items-center">{user ? <span className={`rounded-full ${profileActive ? "ring-2 ring-fg ring-offset-2 ring-offset-bg" : ""}`}><Avatar user={user} size={25} /></span> : <LogIn size={23} strokeWidth={1.8} />}{user && space === "vie" && <PendingDot />}</span>
-            <span className="mobile-nav-label font-medium">{user ? "Profil" : "Connexion"}</span>
-          </Link>
-        </li>
+        {/* Profil : en haut à droite de l'en-tête sur téléphone (TopBarProfile) */}
       </ul>
     </nav>
   );

@@ -721,3 +721,7 @@ h1, h2, h3, h4, p, li, dd, dt, label, blockquote { overflow-wrap: anywhere; }
 @starting-style {
   .feed-row[data-open="true"] > .feed-row-panel { grid-template-rows: 0fr; opacity: 0; }
 }
+
+/* ---------- Profil entreprise sur téléphone (16 oct., Danny) : boutons en pleine largeur, faciles à toucher ---------- */
+.profile-actions-mobile > a, .profile-actions-mobile > button { flex: 1 1 auto; min-height: 44px; justify-content: center; }
+.profile-actions-mobile > a[aria-label="Paramètres"] { flex: 0 0 auto; display: grid; place-items: center; min-width: 44px; border: 1px solid var(--border); border-radius: 8px; }

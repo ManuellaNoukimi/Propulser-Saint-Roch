@@ -52,15 +52,15 @@ export function SocialImport({ onChange }: { onChange?: () => void } = {}) {
   const close = () => setOpen(null);
 
   return (
-    <section className="rounded-2xl border border-line p-4">
-      <p className="text-sm font-semibold">Tu publies déjà ailleurs ?</p>
-      <p className="mt-0.5 text-xs text-muted">Connecte tes comptes une fois : tes publications arrivent ici toutes seules. Rien à refaire.</p>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <section className="rounded-lg border border-line bg-bg p-5">
+      <p className="text-lg font-semibold">Tu publies déjà ailleurs ?</p>
+      <p className="mt-1 text-sm leading-relaxed text-muted">Connecte tes comptes une fois : tes publications arrivent ici toutes seules. Rien à refaire.</p>
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
         {NETWORKS.map((n) => (
           <button key={n.id} type="button" onClick={() => setOpen(n)}
-            className="flex items-center gap-2 rounded-xl border border-line px-3 py-2 text-left text-sm transition hover:bg-soft active:scale-[0.98]">
-            <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-bold text-white" style={{ background: n.color }}>{n.mark}</span>
-            <span className="truncate">{n.name}</span>
+            className="flex min-h-14 items-center gap-2.5 rounded-lg border border-line bg-bg px-3 py-2 text-left font-medium leading-tight transition hover:border-ig-blue/40 hover:bg-soft active:scale-[0.98]">
+            <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: n.color }}>{n.mark}</span>
+            <span className="min-w-0">{n.name}</span>
           </button>
         ))}
       </div>
