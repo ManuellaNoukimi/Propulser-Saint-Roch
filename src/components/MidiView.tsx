@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { BadgePercent, Briefcase, Check, Clock, MapPin, Share2, Sparkles, Store, X } from "lucide-react";
-import { useSession } from "@/lib/session";
+import { useState } from "react";
+import { Check, Clock, MapPin } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useNow } from "@/lib/now";
 import { WEEKDAYS } from "@/lib/quartier";
@@ -28,19 +26,14 @@ const OFFERS = [
 
 
 export function MidiView() {
-  const { user } = useSession();
   const now = useNow();
   const today = now === null ? null : new Date(now).getDay();
   const [picked, setDay] = useState<number | null>(null);
   const day = picked ?? (today && today >= 1 && today <= 5 ? today : 1);
-  const [workDays, setWorkDays] = useState<number[]>([]);
   const [seated, setSeated] = useState<string[]>([]);
-  const [pass, setPass] = useState(false);
-  const [offerOpen, setOfferOpen] = useState(false);
-  const [myOffers, setMyOffers] = useState<typeof OFFERS>([]);
 
   const items = ITEMS.filter((i) => i.days.includes(day));
-  const offers = [...myOffers, ...OFFERS].filter((o) => o.days.includes(day));
+  const offers = OFFERS.filter((o) => o.days.includes(day));
   const dayLabel = WEEKDAYS.find((d) => d.id === day)!.label;
   const isToday = day === today;
 
@@ -48,20 +41,6 @@ export function MidiView() {
     const on = seated.includes(i.id);
     setSeated((s) => (on ? s.filter((x) => x !== i.id) : [...s, i.id]));
     if (!on) toast(i.kind === "table" ? `🍽️ Place réservée : ${i.title}` : `🎯 À tout à l'heure : ${i.title}`);
-  }
-
-  async function shareTeam() {
-    const url = `${window.location.origin}/midi`;
-    const text = "Rendez nos jours au bureau plus attirants : tables complices, pauses actives et rabais travailleurs à Saint-Roch.";
-    try {
-      if (navigator.share) await navigator.share({ title: "Le Midi Complice", text, url });
-      else {
-        await navigator.clipboard.writeText(`${text} ${url}`);
-        toast("Lien copié : colle-le dans le canal de ton équipe");
-      }
-    } catch {
-      /* partage annulé */
-    }
   }
 
   return (
@@ -80,16 +59,14 @@ export function MidiView() {
             <button key={d.id} type="button" role="tab" aria-selected={day === d.id} onClick={() => setDay(d.id)}
               className={`relative min-h-11 rounded-xl text-sm font-semibold transition ${day === d.id ? "bg-bg shadow-sm" : "text-muted hover:text-fg"}`}>
               {d.short}
-              {workDays.includes(d.id) && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-ig-blue" />}
             </button>
           ))}
         </div>
-        <button type="button" onClick={() => setPass(true)} className="ig-btn min-h-11 text-sm"><BadgePercent size={17} /> Ma carte travailleur</button>
       </div>
 
       <h2 className="text-xl font-bold tracking-tight">{isToday ? "Aujourd'hui midi" : `${dayLabel.charAt(0).toUpperCase()}${dayLabel.slice(1)} midi`} à Saint-Roch</h2>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="space-y-6">
         <div className="space-y-6">
           {(["table", "pause"] as const).map((kind) => {
             const list = items.filter((i) => i.kind === kind);
@@ -140,105 +117,10 @@ export function MidiView() {
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-muted">Sur présentation de ta carte travailleur dans l&apos;app.</p>
           </section>
         </div>
 
-        <aside className="space-y-4">
-          <section className="surface-card p-5">
-            <h3 className="flex items-center gap-2 font-bold"><Briefcase size={18} className="text-ig-blue" /> Je travaille à Saint-Roch</h3>
-            <p className="mt-1 text-xs text-muted">Tes jours au bureau : l&apos;app te montre les propositions ces jours-là.</p>
-            <div className="mt-3 grid grid-cols-5 gap-1.5">
-              {WEEKDAYS.map((d) => {
-                const on = workDays.includes(d.id);
-                return (
-                  <button key={d.id} type="button" aria-pressed={on} onClick={() => setWorkDays((w) => (on ? w.filter((x) => x !== d.id) : [...w, d.id].sort()))}
-                    className={`min-h-10 rounded-xl text-xs font-bold transition active:scale-95 ${on ? "bg-ig-blue text-white" : "bg-soft text-muted"}`}>{d.short}</button>
-                );
-              })}
-            </div>
-            {workDays.length > 0 && <p className="mt-3 text-xs">✓ On te garde une place {workDays.map((d) => WEEKDAYS.find((x) => x.id === d)!.label).join(", ")}.</p>}
-          </section>
-
-          <section className="surface-card p-5">
-            <h3 className="flex items-center gap-2 font-bold"><Store size={18} className="text-ig-blue" /> Tu as un commerce ?</h3>
-            <p className="mt-1 text-xs text-muted">Publie ton offre du midi en 1 minute (ex. « soupe-sandwich 12 $ pour les travailleurs »).</p>
-            <button type="button" onClick={() => setOfferOpen(true)} className="ig-btn-secondary mt-3 w-full text-sm">Publier mon offre du midi</button>
-          </section>
-
-          <section className="surface-card p-5">
-            <h3 className="flex items-center gap-2 font-bold"><Sparkles size={18} className="text-ig-blue" /> Une entreprise ?</h3>
-            <p className="mt-1 text-xs text-muted">Crée un dîner-rencontre avec les entreprises voisines, et rends vos jours au bureau plus attirants.</p>
-            <div className="mt-3 flex gap-2">
-              <Link href="/lancer" className="ig-btn-secondary min-h-10 flex-1 text-xs">Dîner-rencontre</Link>
-              <button type="button" onClick={shareTeam} className="ig-btn-secondary min-h-10 flex-1 text-xs"><Share2 size={14} /> À mon équipe</button>
-            </div>
-          </section>
-        </aside>
       </div>
-
-      {pass && <WorkerPass name={user?.displayName ?? "Travailleur·euse du quartier"} onClose={() => setPass(false)} />}
-      {offerOpen && (
-        <OfferSheet
-          onClose={() => setOfferOpen(false)}
-          onPublish={(o) => {
-            setMyOffers((m) => [{ ...o, who: user?.displayName ?? "Mon commerce", emoji: "✨" }, ...m]);
-            setOfferOpen(false);
-            toast("🎉 Ton offre du midi est publiée");
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-/** Carte travailleur à montrer au comptoir : dégradé animé et horloge en direct (une capture d'écran ne passe pas). */
-function WorkerPass({ name, onClose }: { name: string; onClose: () => void }) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const date = new Intl.DateTimeFormat("fr-CA", { weekday: "long", day: "numeric", month: "long" }).format(now);
-  const time = new Intl.DateTimeFormat("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(now);
-  return (
-    <div role="dialog" aria-modal="true" aria-label="Ma carte travailleur" className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 animate-fade-in backdrop-blur-sm" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="worker-pass w-full max-w-sm rounded-3xl p-6 text-white shadow-2xl">
-        <div className="flex items-start justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-[.2em] opacity-90">Complices · Saint-Roch</p>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="grid h-9 w-9 place-items-center rounded-full bg-white/20"><X size={18} /></button>
-        </div>
-        <p className="mt-8 text-sm opacity-90">Carte travailleur·euse</p>
-        <p className="mt-1 text-2xl font-bold">{name}</p>
-        <p className="mt-6 text-xs capitalize opacity-90">Valide le {date}</p>
-        <p className="font-mono text-3xl font-bold tabular-nums">{time}</p>
-        <p className="mt-6 rounded-xl bg-white/20 px-3 py-2 text-center text-sm font-semibold">Présente cet écran au comptoir 💳</p>
-      </div>
-    </div>
-  );
-}
-
-function OfferSheet({ onClose, onPublish }: { onClose: () => void; onPublish: (o: { title: string; percent: number; days: number[] }) => void }) {
-  const [title, setTitle] = useState("");
-  const [percent, setPercent] = useState(15);
-  return (
-    <div role="dialog" aria-modal="true" aria-label="Publier mon offre du midi" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in md:items-center" onClick={onClose}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); onPublish({ title: title.trim() || "Offre du midi", percent, days: [1, 2, 3, 4, 5] }); }}
-        className="w-full max-w-md animate-sheet-up rounded-t-3xl bg-bg p-5 pb-[calc(20px+env(safe-area-inset-bottom))] md:rounded-3xl">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">Mon offre du midi</h2>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="grid h-9 w-9 place-items-center rounded-full hover:bg-soft"><X size={18} /></button>
-        </div>
-        <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder="Ex. : Soupe-sandwich à 12 $" className="ig-input mt-4" />
-        <p className="mt-4 text-xs font-semibold text-muted">Rabais pour les travailleurs</p>
-        <div className="mt-2 grid grid-cols-4 gap-2">
-          {[5, 10, 15, 20].map((p) => (
-            <button key={p} type="button" aria-pressed={percent === p} onClick={() => setPercent(p)}
-              className={`min-h-10 rounded-xl text-sm font-bold transition ${percent === p ? "bg-ig-blue text-white" : "bg-soft"}`}>-{p} %</button>
-          ))}
-        </div>
-        <button type="submit" className="ig-btn mt-5 min-h-11 w-full text-sm">Publier (lundi au vendredi)</button>
-      </form>
     </div>
   );
 }

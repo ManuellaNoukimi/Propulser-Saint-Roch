@@ -9,6 +9,7 @@ import { toast } from "@/lib/toast";
 import type { PublicProfile } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { PostGrid } from "./PostGrid";
+import { SocialImport } from "./SocialImport";
 
 type Tab = "publications" | "complice" | "badges";
 
@@ -121,6 +122,8 @@ export function ProfileView({ id }: { id: string }) {
           );
         })}
       </div>
+
+      {isMe && isEstablishment(user.accountType) && <div className="mb-6"><SocialImport /></div>}
 
       {/* Onglets */}
       <nav aria-label="Contenu du profil" className="mb-2 flex justify-around border-t border-line md:justify-center md:gap-14">

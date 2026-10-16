@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { ArrowRight, Check, HandHeart, MapPin, Store } from "lucide-react";
-import { categoryOf } from "@/lib/constants";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Check, ExternalLink, HandHeart, Landmark, MapPin, Navigation, Store } from "lucide-react";
+import type { CityEvent } from "@/lib/city-events";
+import { businessPostTypeOf, categoryOf } from "@/lib/constants";
 import { dateParts } from "@/lib/format";
 import { useNow } from "@/lib/now";
 import { IDEA_TAGS, type IdeaTagId } from "@/lib/quartier";
@@ -42,9 +43,10 @@ const FILTERS = [
 ] as const;
 type FilterId = (typeof FILTERS)[number]["id"];
 
-function matches(idea: Idea, f: FilterId, now: number): boolean {
-  const start = new Date(idea.startsAt!).getTime();
-  const d = new Date(idea.startsAt!);
+type Datable = Pick<Idea, "title" | "description" | "category"> & { startsAt: string };
+function matches(idea: Datable, f: FilterId, now: number): boolean {
+  const start = new Date(idea.startsAt).getTime();
+  const d = new Date(idea.startsAt);
   const today = new Date(now);
   switch (f) {
     case "tout": return true;
@@ -56,17 +58,31 @@ function matches(idea: Idea, f: FilterId, now: number): boolean {
   }
 }
 
-// « Nouveau dans le quartier » : nouveautés et promos des commerces (exemples de démo, comptes fictifs)
-const NEWS = [
-  { who: "Bistro du Faubourg", emoji: "🍂", title: "Nouveau menu d'automne", detail: "Courge rôtie et tarte aux pommes du quartier.", href: "/explorer" },
-  { who: "Boutique Friperie", emoji: "🧥", title: "Arrivage de manteaux d'hiver", detail: "Plus de 60 manteaux dès samedi 10 h.", href: "/explorer" },
-  { who: "Café du Coin", emoji: "☕", title: "2e café à moitié prix", detail: "Cet après-midi, de 14 h à 16 h.", href: "/midi" },
-  { who: "Vitrine éphémère", emoji: "🖼️", title: "Expo des jeunes artistes", detail: "Un local vide devient une galerie.", href: "/vitrines" },
-];
+// Vraies données seulement : événements de Saint-Roch du fichier Excel de la Ville (lu par le serveur)
+// et dernières publications des comptes Entreprise de l'app (« Nouveau dans le quartier »).
+type VilleEvent = CityEvent & { at: { lat: number; lng: number } | null };
+const asDatable = (ev: VilleEvent): Datable => ({ title: ev.title, description: `${ev.description ?? ""} ${ev.cost ?? ""}`, category: "communautaire", startsAt: ev.startsAt });
 
 export function Happening({ ideas }: { ideas: Idea[] | null }) {
   const [filter, setFilter] = useState<FilterId>("tout");
   const now = useNow() ?? 0; // 0 pendant le pré-rendu : la section se remplit dans le navigateur
+  const [ville, setVille] = useState<VilleEvent[]>([]);
+  const [news, setNews] = useState<Idea[] | null>(null);
+  useEffect(() => {
+    fetch("/api/evenements-ville", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { events: [] }))
+      .then((d: { events: VilleEvent[] }) => setVille(d.events))
+      .catch(() => {});
+    fetch("/api/entreprises", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { posts: [] }))
+      .then((d: { posts: Idea[] }) => setNews(d.posts.slice(0, 4)))
+      .catch(() => setNews([]));
+  }, []);
+  const villeSoon = useMemo(
+    () => ville.filter((ev) => { const t = new Date(ev.startsAt).getTime(); const end = ev.endsAt ? new Date(ev.endsAt).getTime() : t + 3 * 3_600_000; return end > now && t < now + 14 * DAY; }),
+    [ville, now],
+  );
+  const villeList = villeSoon.filter((ev) => matches(asDatable(ev), filter, now));
 
   const upcoming = useMemo(
     () =>
@@ -75,8 +91,9 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
         .sort((a, b) => new Date(a.startsAt!).getTime() - new Date(b.startsAt!).getTime()),
     [ideas, now],
   );
-  const live = upcoming.filter((i) => matches(i, "maintenant", now));
-  const list = upcoming.filter((i) => matches(i, filter, now));
+  const live = upcoming.filter((i) => matches({ ...i, startsAt: i.startsAt! }, "maintenant", now));
+  const list = upcoming.filter((i) => matches({ ...i, startsAt: i.startsAt! }, filter, now));
+  const liveCount = live.length + villeSoon.filter((ev) => matches(asDatable(ev), "maintenant", now)).length;
   const weekday = new Date(now).getDay();
   const isWorkday = weekday >= 1 && weekday <= 5;
 
@@ -96,7 +113,7 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/80 text-2xl shadow-sm">🍽️</span>
           <span className="min-w-0 flex-1">
             <span className="block font-bold">Aujourd&apos;hui midi à Saint-Roch</span>
-            <span className="block truncate text-xs text-muted">Table complice au café · Pétanque express · -15 % chez 4 commerces</span>
+            <span className="block truncate text-xs text-muted">Dîner, bouger ou découvrir le quartier pendant ta pause</span>
           </span>
           <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-ig-blue sm:inline-flex">Voir <ArrowRight size={14} className="transition group-hover:translate-x-0.5" /></span>
         </Link>
@@ -105,7 +122,7 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
       <div role="group" aria-label="Filtrer les activités" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
         {FILTERS.map((f) => {
           const on = f.id === filter;
-          const count = f.id === "maintenant" ? live.length : null;
+          const count = f.id === "maintenant" ? liveCount : null;
           return (
             <button key={f.id} type="button" aria-pressed={on} onClick={() => setFilter(f.id)}
               className={`min-h-10 shrink-0 rounded-full border px-3.5 text-xs font-medium transition active:scale-95 ${on ? "border-fg bg-fg text-bg shadow-sm" : "border-line bg-bg hover:border-muted"}`}>
@@ -117,7 +134,7 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
 
       {!ideas ? (
         <div className="no-scrollbar flex gap-3 overflow-hidden">{[0, 1, 2].map((k) => <div key={k} className="h-[214px] w-[280px] shrink-0 animate-pulse rounded-2xl bg-hov" />)}</div>
-      ) : list.length === 0 ? (
+      ) : list.length + villeList.length === 0 ? (
         <div className="surface-card px-6 py-8 text-center text-sm text-muted">
           {filter === "maintenant" ? "Rien en ce moment… " : "Rien pour ce filtre cette semaine… "}
           <Link href="/lancer" className="font-semibold text-ig-blue">et si tu lançais quelque chose ?</Link>
@@ -125,25 +142,34 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
       ) : (
         <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 md:mx-0 md:px-0">
           {list.map((i) => <EventCard key={i.id} idea={i} live={live.includes(i)} />)}
+          {villeList.map((ev) => <CityEventCard key={ev.id} ev={ev} live={matches(asDatable(ev), "maintenant", now)} />)}
         </ul>
       )}
 
       <div>
         <h3 className="mb-3 flex items-center gap-2 text-sm font-bold"><Store size={16} className="text-ig-blue" /> Nouveau dans le quartier</h3>
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {NEWS.map((n) => (
-            <li key={n.title}>
-              <Link href={n.href} className="flex h-full items-start gap-3 rounded-2xl border border-line bg-bg p-3.5 transition hover:-translate-y-0.5 hover:border-ig-blue/40 hover:shadow-sm">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl">{n.emoji}</span>
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted">{n.who}</span>
-                  <span className="block text-sm font-semibold leading-snug">{n.title}</span>
-                  <span className="block text-xs text-muted">{n.detail}</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {news && news.length === 0 ? (
+          <Link href="/entreprises/publier" className="surface-card flex items-center gap-3 px-4 py-4 text-sm transition hover:border-ig-blue/40">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl">🏪</span>
+            <span className="min-w-0 flex-1"><span className="block font-semibold">Aucune nouveauté pour l&apos;instant</span><span className="block text-xs text-muted">Tu as un commerce ? Publie ta promo ou ta nouveauté ici.</span></span>
+            <ArrowRight size={16} className="shrink-0 text-ig-blue" />
+          </Link>
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {(news ?? []).map((n) => (
+              <li key={n.id}>
+                <Link href={`/p/${n.id}`} className="flex h-full items-start gap-3 rounded-2xl border border-line bg-bg p-3.5 transition hover:-translate-y-0.5 hover:border-ig-blue/40 hover:shadow-sm">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl">{businessPostTypeOf(n.postType)?.emoji ?? "🏪"}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[10px] font-semibold uppercase tracking-wider text-muted">{n.organizer.displayName}</span>
+                    <span className="block text-sm font-semibold leading-snug">{n.title}</span>
+                    {n.description && <span className="line-clamp-2 block text-xs text-muted">{n.description}</span>}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
@@ -207,6 +233,35 @@ function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
             className={`inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-xl border text-xs font-semibold transition active:scale-95 ${helping ? "border-ig-green/40 bg-ig-green/10 text-[#2f8a12]" : "border-line hover:bg-soft"}`}>
             {helping ? <Check size={14} /> : <HandHeart size={14} />} Coup de main
           </button>
+        </div>
+      </article>
+    </li>
+  );
+}
+
+// Événement de la Ville (fichier Excel) : on ne s'y inscrit pas dans l'app, on y va.
+function CityEventCard({ ev, live }: { ev: VilleEvent; live: boolean }) {
+  const p = dateParts(ev.startsAt);
+  const go = ev.at ? `/y-aller?vers=${ev.at.lat.toFixed(6)},${ev.at.lng.toFixed(6)}&nom=${encodeURIComponent(ev.title)}` : null;
+  return (
+    <li className="w-[280px] shrink-0 snap-start">
+      <article className="flex h-full flex-col rounded-2xl border border-line bg-bg p-4 transition hover:border-ig-blue/30 hover:shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="flex h-[58px] w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-soft leading-none">
+            <span className="text-[9px] font-bold text-ig-red">{p.month}</span>
+            <span className="mt-1 text-[22px] font-bold">{p.day}</span>
+          </span>
+          <div className="min-w-0 flex-1">
+            {live && <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-ig-red/10 px-2 py-0.5 text-[10px] font-bold text-ig-red"><span className="live-dot" /> En ce moment</span>}
+            <p className="line-clamp-2 text-sm font-bold leading-snug">{ev.title}</p>
+          </div>
+        </div>
+        <p className="mt-2.5 text-xs capitalize text-muted">{p.weekday} · {p.time}</p>
+        {ev.sites.length > 0 && <p className="flex items-center gap-1 truncate text-xs text-muted"><MapPin size={12} className="shrink-0" /> {ev.sites.join(" · ")}</p>}
+        <p className="mt-2.5 inline-flex items-center gap-1 text-[10px] font-medium text-muted"><Landmark size={12} /> Ville de Québec{ev.cost ? ` · ${ev.cost}` : ""}</p>
+        <div className="mt-auto flex gap-2 pt-3.5">
+          {go && <Link href={go} className="ig-btn inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-xl text-xs font-semibold"><Navigation size={14} /> Y aller</Link>}
+          {ev.url && <a href={ev.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 items-center justify-center gap-1 rounded-xl border border-line text-xs font-semibold hover:bg-soft"><ExternalLink size={14} /> Site</a>}
         </div>
       </article>
     </li>

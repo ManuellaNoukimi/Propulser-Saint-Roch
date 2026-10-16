@@ -31,20 +31,6 @@ export const FEATURES: Feature[] = [
     bullets: ["Cartes cliquables", "Filtres : catégorie, organisé par, date", "Recherche"],
   },
   {
-    slug: "signaler", href: "/signaler", problem: 6, emoji: "📍", label: "Signaler", status: "live",
-    title: "Signaler un besoin ou un problème",
-    problemLabel: "Les besoins des habitants (épicerie qui manque, coin sombre, saleté, vol…) ne sont localisés nulle part",
-    pitch: "Comme les applis 311 : cherche une adresse ou utilise ta position, place la pastille en glissant la carte, dis ce qui manque ou ce qui ne va pas, ajoute une photo. Chaque personne ne voit que les siennes ; regroupées par secteur, elles montrent où sont les besoins.",
-    bullets: [
-      "Carte de Saint-Roch (limite officielle du quartier), recherche d'adresse et « Ma position »",
-      "Pastille placée au mètre près, avec l'adresse affichée en direct (OpenStreetMap)",
-      "Un besoin (épicerie, bancs, toilettes, verdure…) ou un problème (lumière, saleté, vol…), le moment (jour, soir, nuit) et jusqu'à 3 photos",
-      "Numéro de suivi (ex. SR-4F2A9C) ; signalements et photos privés",
-      "Plus tard : vue par secteur pour la Ville et transmission (non construites)",
-    ],
-    planActions: "Actions 1.6, 1.10, 1.15 et 3.5 du Plan Saint-Roch",
-  },
-  {
     slug: "soirees", href: "/soirees", problem: 5, emoji: "🌙", label: "Soirées", status: "bientot",
     title: "Les Soirées Complices",
     problemLabel: "Le soir est mort : peu de lumière, les commerces ferment tôt",

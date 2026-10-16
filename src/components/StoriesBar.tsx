@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, MapPin, Plus, Search } from "lucide-react";
+import { CalendarDays, Plus, Search } from "lucide-react";
 import { FEATURES } from "@/lib/features";
 import { useSession } from "@/lib/session";
 import { Avatar } from "./Avatar";
@@ -9,7 +9,6 @@ import { Avatar } from "./Avatar";
 const SHORTCUTS = [
   { href: "/evenements", label: "Agenda", icon: CalendarDays, color: "text-ig-blue" },
   { href: "/explorer", label: "Découvertes", icon: Search, color: "text-violet-500" },
-  { href: "/signaler", label: "Mon quartier", icon: MapPin, color: "text-emerald-500" },
 ];
 
 export function StoriesBar() {

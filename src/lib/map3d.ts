@@ -37,6 +37,7 @@ export async function createMap3D(
     pitch: PITCH_3D,
     bearing: BEARING_3D,
     maxPitch: 80,
+    maxZoom: 22,
     maxBounds: [[-71.75, 46.6], [-70.9, 47.15]], // région de Québec
     interactive: opts.interactive ?? true,
     canvasContextAttributes: { antialias: true },
@@ -89,27 +90,13 @@ export async function createMap3D(
       // Ignorer si setSky non supporté
     }
 
-    // 2) Éclairage 3D réaliste pour donner du relief aux façades
-    try {
-      if (typeof map.setLight === "function") {
-        map.setLight({
-          anchor: "viewport",
-          position: [1.15, 210, 32],
-          color: "#ffffff",
-          intensity: 0.5,
-        });
-      }
-    } catch {
-      // Ignorer si setLight non supporté
-    }
-
-    // 3) Fond Satellite (Esri World Imagery haute résolution)
+    // 2) Fond Satellite
     addSatelliteSourceAndLayer(map, opts.satellite ?? false);
 
-    // 4) Bâtiments 3D sous les noms de rues
+    // 3) Bâtiments 3D sous les noms de rues (visibles en mode plan, masqués en satellite)
     addBuildings3D(map, dark, opts.satellite ?? false);
 
-    // 5) Limite officielle de Saint-Roch
+    // 4) Limite officielle de Saint-Roch
     addBoundary(map);
   } catch (error) {
     map.remove();
@@ -125,7 +112,7 @@ function addSatelliteSourceAndLayer(map: MlMap, active: boolean) {
       type: "raster",
       tiles: [SATELLITE_TILES_URL],
       tileSize: 256,
-      maxzoom: 19,
+      maxzoom: 20,
       attribution: "Imagerie &copy; Esri, Maxar, Earthstar Geographics",
     });
   }
@@ -143,7 +130,7 @@ function addSatelliteSourceAndLayer(map: MlMap, active: boolean) {
         },
         paint: {
           "raster-opacity": active ? 1 : 0,
-          "raster-fade-duration": 250,
+          "raster-fade-duration": 150,
         },
       },
       firstSymbol,
@@ -152,40 +139,24 @@ function addSatelliteSourceAndLayer(map: MlMap, active: boolean) {
 }
 
 /** Active ou désactive la vue satellite avec transition fluide */
-export function setSatelliteMode(map: MlMap, active: boolean, dark = false) {
+export function setSatelliteMode(map: MlMap, active: boolean) {
   if (!map || !map.isStyleLoaded()) return;
 
+  // 1) Afficher / masquer la couche satellite
   if (map.getLayer(SATELLITE_LAYER_ID)) {
     map.setLayoutProperty(SATELLITE_LAYER_ID, "visibility", "visible");
     map.setPaintProperty(SATELLITE_LAYER_ID, "raster-opacity", active ? 1 : 0);
   }
 
+  // 2) En mode satellite : on MASQUE complètement les volumes 3D pour éviter tout bloc noir bizarre
+  //    En mode plan : on les réaffiche normalement
   if (map.getLayer("ya-buildings-3d")) {
-    if (active) {
-      // En mode satellite : aspect architectural semi-transparent avec toitures visibles
-      map.setPaintProperty("ya-buildings-3d", "fill-extrusion-color", [
-        "interpolate",
-        ["linear"],
-        ["coalesce", ["get", "render_height"], 6],
-        0,
-        "#f1f5f9",
-        40,
-        "#94a3b8",
-      ]);
-      map.setPaintProperty("ya-buildings-3d", "fill-extrusion-opacity", 0.65);
-    } else {
-      // En mode plan : teintes accordées au thème clair/sombre
-      map.setPaintProperty("ya-buildings-3d", "fill-extrusion-color", [
-        "interpolate",
-        ["linear"],
-        ["coalesce", ["get", "render_height"], 6],
-        0,
-        dark ? "#2b2a36" : "#ebe7f5",
-        40,
-        dark ? "#3b3852" : "#cfc6ee",
-      ]);
-      map.setPaintProperty("ya-buildings-3d", "fill-extrusion-opacity", 0.88);
-    }
+    map.setLayoutProperty("ya-buildings-3d", "visibility", active ? "none" : "visible");
+  }
+
+  // 3) Voile de Saint-Roch retiré en mode satellite
+  if (map.getLayer("saint-roch-fill")) {
+    map.setPaintProperty("saint-roch-fill", "fill-opacity", active ? 0 : 0.06);
   }
 
   if (!active) {
@@ -225,30 +196,22 @@ function addBuildings3D(map: MlMap, dark: boolean, isSatellite = false) {
       source: "openmaptiles",
       "source-layer": "building",
       minzoom: 13,
+      layout: {
+        visibility: isSatellite ? "none" : "visible",
+      },
       paint: {
-        "fill-extrusion-color": isSatellite
-          ? [
-              "interpolate",
-              ["linear"],
-              ["coalesce", ["get", "render_height"], 6],
-              0,
-              "#f1f5f9",
-              40,
-              "#94a3b8",
-            ]
-          : [
-              "interpolate",
-              ["linear"],
-              ["coalesce", ["get", "render_height"], 6],
-              0,
-              dark ? "#2b2a36" : "#ebe7f5",
-              40,
-              dark ? "#3b3852" : "#cfc6ee",
-            ],
+        "fill-extrusion-color": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "render_height"], 6],
+          0,
+          dark ? "#2b2a36" : "#ebe7f5",
+          40,
+          dark ? "#3b3852" : "#cfc6ee",
+        ],
         "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14.5, ["coalesce", ["get", "render_height"], 6]],
         "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
-        "fill-extrusion-opacity": isSatellite ? 0.65 : 0.88,
-        "fill-extrusion-vertical-gradient": true,
+        "fill-extrusion-opacity": 0.88,
       },
     },
     firstSymbol,

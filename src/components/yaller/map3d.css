@@ -1,0 +1,8 @@
+/* MapLibre's unlayered position rule overrides Tailwind's absolute utility. */
+.ya-map3d-canvas,
+.ya-map3d-canvas.maplibregl-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
+import "./map3d.css";
 import type { Map as MlMap, Marker } from "maplibre-gl";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -143,7 +144,7 @@ export function HomeMap() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="relative h-[340px] overflow-hidden rounded-3xl border border-line md:h-[420px]">
-          <div ref={box} className="absolute inset-0 z-0 bg-soft" role="application" aria-label="Carte 3D des activités de Saint-Roch" />
+          <div ref={box} className="ya-map3d-canvas z-0 bg-soft" role="application" aria-label="Carte 3D des activités de Saint-Roch" />
           <div className="absolute bottom-3 right-3 z-10 flex gap-2">
             <button
               type="button"

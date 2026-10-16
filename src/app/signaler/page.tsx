@@ -1,9 +1,7 @@
-import type { Metadata } from "next";
-import { ReportMap } from "@/components/ReportMap";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Signaler · Complices" };
-
-// Onglet « Signaler » : carte de Saint-Roch, une pastille = un besoin ou un problème (privé).
+// « Signaler » est retiré de l'app (demande de Danny, 15 oct. soir) : l'ancienne adresse renvoie à l'accueil.
+// Le code reste en place (ReportMap.tsx, /api/reports/*) pour pouvoir le remettre : rétablir <ReportMap /> ici.
 export default function ReportPage() {
-  return <ReportMap />;
+  redirect("/vie");
 }

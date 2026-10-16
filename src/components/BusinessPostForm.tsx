@@ -9,6 +9,7 @@ import { toast } from "@/lib/toast";
 import { AuthPrompt } from "./AuthPrompt";
 import { Avatar } from "./Avatar";
 import { ImagePicker } from "./ImagePicker";
+import { SocialImport } from "./SocialImport";
 
 // Publier dans l'onglet « Entreprises » (comptes Entreprise seulement). Une activité se publie dans « Vie Saint-Roch ».
 export function BusinessPostForm() {
@@ -64,6 +65,8 @@ export function BusinessPostForm() {
           <p className="text-xs text-muted">Visible dans l&apos;onglet 🏪 Entreprises</p>
         </div>
       </div>
+
+      <SocialImport />
 
       <div>
         <p className="mb-2 text-sm font-semibold">Qu&apos;est-ce que tu annonces ?</p>

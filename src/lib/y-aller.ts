@@ -407,8 +407,13 @@ const streets = () =>
     [],
   );
 
+// Écritures courantes : « St-Joseph », « boul. Charest », « …, Québec QC G1K 3B2 ».
+const ABBREVIATIONS: Record<string, string> = { st: "saint", ste: "sainte", bd: "boulevard", boul: "boulevard", blvd: "boulevard", av: "avenue", ave: "avenue", ch: "chemin" };
+const FILLER = new Set(["quebec", "qc", "canada"]);
+const POSTAL_CODE = /\b[a-z]\d[a-z]\s?\d[a-z]\d\b/gi;
+
 function searchAddresses(q: string): Place[] {
-  const all = words(q);
+  const all = words(q.replace(POSTAL_CODE, " ")).map((w) => ABBREVIATIONS[w] ?? w).filter((w) => !FILLER.has(w));
   const num = /^\d+$/.test(all[0] ?? "") ? all[0] : null;
   const want = num ? all.slice(1) : all;
   if (!want.length || want.join("").length < 3) return [];
@@ -446,7 +451,14 @@ function pointOf(geometry: GeoFeature["geometry"]): LatLng | null {
   return Array.isArray(c) && typeof c[0] === "number" ? { lng: c[0] as number, lat: c[1] as number } : null;
 }
 
+// iCherche (officiel) et Photon (OpenStreetMap, commerces) en même temps : iCherche cherche dans tout le Québec
+// sans tenir compte de la distance, Photon privilégie les lieux proches de Saint-Roch. null = les deux sont injoignables.
 async function onlinePlaces(q: string): Promise<Place[] | null> {
+  const [official, osm] = await Promise.all([icherchePlaces(q), photonPlaces(q)]);
+  return official || osm ? [...(official ?? []), ...(osm ?? [])] : null;
+}
+
+async function icherchePlaces(q: string): Promise<Place[] | null> {
   try {
     return await remember(`icherche:${q.toLowerCase()}`, 3600_000, async () => {
       const r = await fetch(`https://geoegl.msp.gouv.qc.ca/apis/icherche/geocode?q=${encodeURIComponent(q)}&type=lieux&limit=15&geometry=true`, { headers: { "User-Agent": UA }, cache: "no-store", signal: AbortSignal.timeout(3500) });
@@ -458,20 +470,43 @@ async function onlinePlaces(q: string): Promise<Place[] | null> {
       });
     });
   } catch {
-    try {
-      return await remember(`photon:${q.toLowerCase()}`, 3600_000, async () => {
-        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&lat=46.815&lon=-71.225&limit=8&lang=fr`, { headers: { "User-Agent": UA }, cache: "no-store", signal: AbortSignal.timeout(3000) });
-        if (!r.ok) throw new Error(`Photon ${r.status}`);
-        return ((await r.json()).features as GeoFeature[]).flatMap((f) => {
-          const at = pointOf(f.geometry);
-          const p = f.properties;
-          if (!at || !inRegion(at.lat, at.lng) || !p.name) return [];
-          return [{ label: p.name, detail: [p.street ? `${p.housenumber ? `${p.housenumber}, ` : ""}${p.street}` : null, p.district || p.city].filter(Boolean).join(" · ") || null, ...at, kind: "lieu" } satisfies Place];
-        });
+    return null;
+  }
+}
+
+async function photonPlaces(q: string): Promise<Place[] | null> {
+  try {
+    return await remember(`photon:${q.toLowerCase()}`, 3600_000, async () => {
+      const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&lat=46.815&lon=-71.225&limit=8&lang=fr`, { headers: { "User-Agent": UA }, cache: "no-store", signal: AbortSignal.timeout(3000) });
+      if (!r.ok) throw new Error(`Photon ${r.status}`);
+      return ((await r.json()).features as GeoFeature[]).flatMap((f) => {
+        const at = pointOf(f.geometry);
+        const p = f.properties;
+        if (!at || !inRegion(at.lat, at.lng) || !p.name) return [];
+        return [{ label: p.name, detail: [p.street ? `${p.housenumber ? `${p.housenumber}, ` : ""}${p.street}` : null, p.district || p.city].filter(Boolean).join(" · ") || null, ...at, kind: "lieu" } satisfies Place];
       });
-    } catch {
-      return null;
-    }
+    });
+  } catch {
+    return null;
+  }
+}
+
+// Adresses de toute la région (Lévis, L'Ancienne-Lorette…) : iCherche, adresses officielles du Québec.
+// Le service renvoie « 1060 boulevard Guillaume-Couture, Lévis G6W0R8 » → « 1060, boulevard Guillaume-Couture » · « Lévis ».
+async function officialAddresses(q: string): Promise<Place[] | null> {
+  try {
+    return await remember(`icherche-adresses:${q.toLowerCase()}`, 3600_000, async () => {
+      const r = await fetch(`https://geoegl.msp.gouv.qc.ca/apis/icherche/geocode?q=${encodeURIComponent(q)}&type=adresses&limit=8&geometry=true`, { headers: { "User-Agent": UA }, cache: "no-store", signal: AbortSignal.timeout(3500) });
+      if (!r.ok) throw new Error(`iCherche ${r.status}`);
+      return ((await r.json()).features as GeoFeature[]).flatMap((f) => {
+        const at = pointOf(f.geometry);
+        const m = /^(\d+\S*)\s+(.+?),\s*(.+?)(?:\s+[A-Z]\d[A-Z]\s?\d[A-Z]\d)?$/.exec(f.properties.nom ?? "");
+        if (!at || !inRegion(at.lat, at.lng) || !m) return [];
+        return [{ label: `${m[1]}, ${m[2]}`, detail: m[3], ...at, kind: "adresse" } satisfies Place];
+      });
+    });
+  } catch {
+    return null;
   }
 }
 
@@ -484,12 +519,24 @@ export async function suggestPlaces(q: string, now: Date): Promise<{ results: Pl
   for (const p of parkings()) if (p.source === "ville" && hit(`${p.name} ${p.address ?? ""}`)) local.push({ label: p.name, detail: p.address, lat: p.lat, lng: p.lng, kind: "stationnement" });
   const addresses = searchAddresses(q);
   const startsWithNumber = /^\s*\d/.test(q);
-  const online = q.trim().length >= 3 && !startsWithNumber ? await onlinePlaces(q.trim()) : [];
-  const results = [...local.slice(0, 4), ...(startsWithNumber ? addresses : [...(online ?? []).slice(0, 4), ...addresses])];
+  const [online, official] = await Promise.all([
+    q.trim().length >= 3 && !startsWithNumber ? onlinePlaces(q.trim()) : Promise.resolve([] as Place[]),
+    startsWithNumber && q.trim().length >= 5 ? officialAddresses(q.trim()) : Promise.resolve([] as Place[]),
+  ]);
+  // Chaînes (Tim Hortons, IGA…) : la succursale la plus proche de Saint-Roch d'abord, pas celle de Lévis.
+  const fromSaintRoch = (p: LatLng) => (p.lat - 46.8145) ** 2 + ((p.lng + 71.2245) * 0.68) ** 2;
+  const nearFirst = [...(online ?? [])].sort((a, b) => fromSaintRoch(a) - fromSaintRoch(b));
+  // Adresse avec numéro : d'abord le numéro exact trouvé dans les données de la Ville, puis le service officiel
+  // (autres villes, numéros manquants), puis le numéro le plus proche sur la rue.
+  const num = /^\s*(\d+)/.exec(q)?.[1];
+  const exact = addresses.filter((a) => a.label.startsWith(`${num},`));
+  const numbered = [...exact, ...(official ?? []), ...addresses.filter((a) => !exact.includes(a))];
+  const results = [...local.slice(0, 4), ...(startsWithNumber ? numbered : [...nearFirst.slice(0, 4), ...addresses])];
   const seen = new Set<string>();
   return {
-    results: results.filter((r) => { const k = `${foldPlace(r.label)}|${r.lat.toFixed(3)},${r.lng.toFixed(3)}`; return seen.has(k) ? false : (seen.add(k), true); }).slice(0, 8),
-    unavailable: online === null && !addresses.length && !local.length,
+    // même nom à environ 1 km près = doublon (ex. la même bibliothèque trouvée par deux sources)
+    results: results.filter((r) => { const k = `${foldPlace(r.label)}|${r.lat.toFixed(2)},${r.lng.toFixed(2)}`; return seen.has(k) ? false : (seen.add(k), true); }).slice(0, 8),
+    unavailable: (online === null || official === null) && !addresses.length && !local.length,
   };
 }
 

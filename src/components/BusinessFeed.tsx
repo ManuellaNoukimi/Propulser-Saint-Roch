@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Plus, RefreshCw, Search, Store, X } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, RefreshCw, Search, Store, X } from "lucide-react";
 import { BUSINESS_POST_TYPES, SECTORS, businessPostTypeOf, isEstablishment, sectorOf } from "@/lib/constants";
 import { normalizeSearch, timeAgo } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { usePostActions } from "./usePostActions";
 import type { Idea } from "@/lib/types";
 import { Avatar } from "./Avatar";
-import { Chips } from "./Chips";
+import { FeedFilters } from "./FeedFilters";
 import { PostMedia } from "./PostMedia";
-import { SpaceTabs } from "./SpaceTabs";
 
 // Onglet « Entreprises » : seulement les publications des commerces, restos, entreprises et organismes.
 export function BusinessFeed() {
@@ -47,33 +46,25 @@ export function BusinessFeed() {
 
   const canPublish = !!user && isEstablishment(user.accountType);
   const filtered = type !== "tous" || sector !== "tous" || query.trim().length > 0;
+  const filterCount = Number(type !== "tous") + Number(sector !== "tous");
 
   return (
-    <div className="mx-auto max-w-[1320px] space-y-7 px-4 py-5 md:px-7 md:py-8 lg:px-9">
-      <SpaceTabs active="entreprises" />
-
-      <header className="business-intro flex flex-wrap items-center justify-between gap-6 rounded-3xl border border-line px-6 py-7 md:px-8">
-        <div className="max-w-xl">
-          <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-muted"><Store size={12} /> Commerces et entreprises de Saint-Roch</p>
-          <h1 className="text-[30px] font-bold leading-[1.12] tracking-tight md:text-[36px]">Ce qui se passe <span className="text-ig-blue">chez nos commerces.</span></h1>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted">Promos, nouveautés, emplois et coups de main offerts au quartier. Les activités, elles, sont dans « Vie Saint-Roch ».</p>
-        </div>
-        {canPublish ? (
-          <Link href="/entreprises/publier" className="ig-btn min-h-11 px-5 text-sm"><Plus size={18} /> Publier</Link>
-        ) : (
-          <p className="max-w-[220px] text-xs text-muted">Tu as un commerce ? <Link href="/inscription" className="font-semibold text-ig-blue">Crée un compte Entreprise</Link> pour publier ici.</p>
-        )}
+    <div className="mx-auto max-w-[1240px] space-y-8 px-4 py-7 md:px-8 md:py-10 lg:px-10 [&_.idea-grid]:gap-7 md:[&_.idea-grid]:gap-8">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <h1 className="text-2xl font-bold md:text-3xl">Entreprises</h1>
+        <Link href="/" className="inline-flex min-h-10 items-center gap-2 text-xs font-medium text-muted hover:text-fg"><ArrowLeft size={14} /> Changer d&apos;espace</Link>
       </header>
 
-      <section className="space-y-4">
-        <div className="flex min-w-0 items-center gap-2 rounded-xl border border-line bg-bg px-3 focus-within:border-ig-blue sm:max-w-sm">
+      <section aria-label="Rechercher et filtrer les publications" className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-bg px-3 focus-within:border-ig-blue">
           <Search size={17} className="shrink-0 text-muted" />
           <input type="search" aria-label="Rechercher un commerce ou une offre" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Un commerce, une promo, un emploi…" className="min-w-0 flex-1 bg-transparent py-2.5 text-base outline-none placeholder:text-muted md:text-sm" />
           {query && <button type="button" aria-label="Effacer" onClick={() => setQuery("")} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-soft"><X size={14} /></button>}
         </div>
-        <Chips label="Type" value={type} onChange={setType} options={[{ id: "tous", label: "Tout" }, ...BUSINESS_POST_TYPES]} />
-        {sectorOptions.length > 1 && <Chips label="Secteur" value={sector} onChange={setSector} options={[{ id: "tous", label: "Tous les secteurs" }, ...sectorOptions]} />}
-        {filtered && <button type="button" onClick={() => { setType("tous"); setSector("tous"); setQuery(""); }} className="text-xs font-semibold text-ig-blue">Réinitialiser les filtres</button>}
+        <FeedFilters count={filterCount} onReset={() => { setType("tous"); setSector("tous"); }} fields={[
+          { label: "Type de publication", value: type, onChange: setType, options: [{ id: "tous", label: "Tous les types" }, ...BUSINESS_POST_TYPES] },
+          ...(sectorOptions.length > 1 ? [{ label: "Secteur", value: sector, onChange: setSector, options: [{ id: "tous", label: "Tous les secteurs" }, ...sectorOptions] }] : []),
+        ]} />
       </section>
 
       {error && <div role="alert" className="surface-card px-6 py-12 text-center"><RefreshCw size={28} className="mx-auto text-muted" /><p className="mt-3 font-semibold">Les publications reviennent bientôt.</p></div>}

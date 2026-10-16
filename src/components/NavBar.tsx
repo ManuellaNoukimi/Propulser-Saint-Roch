@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { CalendarDays, Compass, House, LogIn, MapPin, MapPinPlus, Navigation, Search, Sparkles, SquarePlus } from "lucide-react";
+import { CalendarDays, Compass, House, LogIn, MapPin, Navigation, Sparkles, SquarePlus } from "lucide-react";
 import { isEstablishment } from "@/lib/constants";
 import { useSession } from "@/lib/session";
 import { rememberSpace, spaceOfPath, useSpace } from "@/lib/space";
@@ -14,9 +14,7 @@ type Item = { href: string; label: string; icon: typeof House; desktopOnly?: boo
 // Chaque espace a SA navigation (choisi sur la page d'ouverture « / », retenu sur l'appareil).
 const VIE_ITEMS: Item[] = [
   { href: "/vie", label: "Accueil", icon: House },
-  { href: "/explorer", label: "Explorer", icon: Search },
   { href: "/lancer", label: "Lancer", icon: Sparkles },
-  { href: "/signaler", label: "Signaler", icon: MapPinPlus },
   { href: "/y-aller", label: "Y aller", icon: Navigation },
   { href: "/evenements", label: "Événements", icon: CalendarDays },
   { href: "/fonctionnalites", label: "À découvrir", icon: Compass, desktopOnly: true },
@@ -37,7 +35,10 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
     const fromPath = spaceOfPath(pathname);
     if (fromPath) rememberSpace(fromPath);
   }, [pathname]);
-  const items = space === "entreprises" ? BUSINESS_ITEMS : VIE_ITEMS;
+  const canPublish = !!user && isEstablishment(user.accountType);
+  const items = space === "entreprises"
+    ? BUSINESS_ITEMS.filter((item) => item.href !== "/entreprises/publier" || canPublish)
+    : VIE_ITEMS;
   // Entreprise : sa page publique. Résident·e : son compte (pas de profil public).
   const profileHref = user ? (isEstablishment(user.accountType) ? `/u/${user.id}` : "/moi/modifier") : "/connexion";
   const profileActive = pathname !== null && (pathname === profileHref || pathname.startsWith("/moi") || (!user && ["/connexion", "/inscription"].includes(pathname)));
@@ -89,7 +90,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
         <li><ActivityBell withLabel active={pathname === "/activite"} /></li>
       </ul>
       <div className="mt-auto space-y-5 pt-8">
-        <div className="hidden rounded-2xl bg-soft p-4 xl:block">
+        {(space !== "entreprises" || canPublish) && <div className="hidden rounded-2xl bg-soft p-4 xl:block">
           {space === "entreprises" ? (
             <><p className="font-semibold">Fais-toi connaître.</p><p className="mt-1 text-xs leading-relaxed text-muted">Une promo, une nouveauté, un emploi ?</p>
             <Link href="/entreprises/publier" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-ig-blue"><SquarePlus size={14} /> Publier pour mon commerce</Link></>
@@ -97,7 +98,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
             <><p className="font-semibold">Une idée change tout.</p><p className="mt-1 text-xs leading-relaxed text-muted">Et si la prochaine venait de toi ?</p>
             <Link href="/lancer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-ig-blue"><Sparkles size={14} /> Trouver mes complices</Link></>
           )}
-        </div>
+        </div>}
         <Link href={profileHref} aria-label={user ? "Mon profil" : "Se connecter"} title={user ? "Mon profil" : "Se connecter"} aria-current={profileActive ? "page" : undefined} className={`flex items-center justify-center gap-3 rounded-xl p-2.5 transition hover:bg-soft xl:justify-start ${profileActive ? "bg-soft" : ""}`}>
           {user ? <Avatar user={user} size={32} /> : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sep"><LogIn size={19} /></span>}
           <span className="hidden min-w-0 xl:block"><span className="block truncate text-sm font-semibold">{user ? user.displayName : "Se connecter"}</span><span className="block text-[11px] text-muted">{user ? (isEstablishment(user.accountType) ? "Ma page entreprise" : "Mon compte") : "Rejoins ton quartier"}</span></span>

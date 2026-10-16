@@ -1,6 +1,7 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
+import "./map3d.css";
 import "./travel-map.css";
 import type { GeoJSONSource, Map as MlMap, Marker } from "maplibre-gl";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
@@ -347,7 +348,7 @@ export function GoMap({
 
   return (
     <div className="ya-3d-map absolute inset-0" style={{ "--ya-map-inset": bottomInset + "px" } as CSSProperties}>
-      <div ref={box} className="absolute inset-0 z-0 bg-soft" role="application" aria-label="Carte 3D : stationnements, vélos, bus et trajet vers Saint-Roch" />
+      <div ref={box} className="ya-map3d-canvas z-0 bg-soft" role="application" aria-label="Carte 3D : stationnements, vélos, bus et trajet vers Saint-Roch" />
       <div className="ya-3d-controls" role="group" aria-label="Commandes de la carte">
         <button
           type="button"
