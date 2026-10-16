@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { ReportMap } from "@/components/ReportMap";
+import { ComingSoon } from "@/components/ComingSoon";
+import { featureBySlug } from "@/lib/features";
 
-export const metadata: Metadata = { title: "Signaler · Complices" };
+export const metadata: Metadata = { title: `${featureBySlug("signaler").title} · Complices` };
 
-// Onglet « Signaler » : carte de Saint-Roch, une pastille = un besoin ou un problème (privé).
+// Fonctionnalité retirée de l'app par l'équipe (16 oct.) : présentée seulement, comme les autres « Bientôt ».
+// L'ancien écran reste dans le code (ReportMap.tsx, /api/reports/*) pour pouvoir le remettre.
 export default function ReportPage() {
-  return <ReportMap />;
+  return <ComingSoon slug="signaler" />;
 }

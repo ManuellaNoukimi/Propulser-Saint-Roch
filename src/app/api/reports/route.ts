@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getCurrentUser, NOT_LOGGED_IN } from "@/lib/auth";
-import { reportCategoryOf } from "@/lib/constants";
+import { GUEST_CANNOT_POST, isGuest, reportCategoryOf } from "@/lib/constants";
 import { insertReport, listReportsByUser } from "@/lib/db";
 import { isInSaintRoch } from "@/lib/geo";
 import { moderate } from "@/lib/moderation";
@@ -20,6 +20,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const me = await getCurrentUser();
   if (!me) return Response.json(NOT_LOGGED_IN, { status: 401 });
+  if (isGuest(me.account_type)) return Response.json(GUEST_CANNOT_POST, { status: 403 }); // un·e invité·e ne publie pas
 
   let body: unknown = null;
   let photos: File[] = [];

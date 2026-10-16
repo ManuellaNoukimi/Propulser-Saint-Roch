@@ -23,6 +23,8 @@ import { loginHref, useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
 import type { Report } from "@/lib/types";
 import { compressImage } from "./ImagePicker";
+import { addBaseTiles } from "@/lib/map-tiles";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 type LatLng = { lat: number; lng: number };
 type Place = { label: string | null; detail: string | null };
@@ -59,9 +61,9 @@ const EXAMPLES: Record<string, string> = {
   graffiti: "Ex. : graffitis sur le mur de la ruelle.",
 };
 
-// Pastille en goutte (comme les applis de cartes) : vert = besoin, rouge = problème, emoji de la catégorie.
-function pinHtml(emoji: string, color: string, extra = "") {
-  return `<div class="rpin ${extra}" style="--pin:${color}"><svg viewBox="0 0 40 52" aria-hidden="true"><path d="${PIN_PATH}"/></svg><span>${emoji}</span></div>`;
+// Vert = besoin, rouge = probleme ; le titre du repere conserve sa categorie.
+function pinHtml(color: string, extra = "") {
+  return `<div class="rpin ${extra}" style="--pin:${color}"><svg viewBox="0 0 40 52" aria-hidden="true"><path d="${PIN_PATH}"/></svg><span aria-hidden="true">&#8226;</span></div>`;
 }
 
 const keyOf = (p: LatLng) => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`;
@@ -160,16 +162,12 @@ export function ReportMap() {
 
       // Fond détaillé (rues, parcs, commerces) en mode clair, sombre sinon
       const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, {
-        subdomains: "abcd",
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      }).addTo(map);
+      addBaseTiles(L, map);
 
       // Saint-Roch en clair, le reste grisé (masque), et le contour en bleu
       const world: [number, number][] = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
       L.polygon([world, RING], { stroke: false, fillColor: dark ? "#000" : "#262626", fillOpacity: dark ? 0.45 : 0.18, interactive: false }).addTo(map);
-      const accent = getComputedStyle(document.documentElement).getPropertyValue("--blue").trim() || "#7552de"; // couleur du thème
+      const accent = getComputedStyle(document.documentElement).getPropertyValue("--blue").trim() || "#0096d6"; // couleur du thème
       L.polygon(RING, { color: accent, weight: 2.5, dashArray: "6 6", fill: false, interactive: false }).addTo(map);
       map.fitBounds(L.latLngBounds(RING), { padding: [24, 24] });
 
@@ -244,7 +242,7 @@ export function ReportMap() {
       const c = reportCategoryOf(r.category);
       const extra = [r.id === selectedId && "rpin--on", r.id === newId && "rpin--new", mode === "place" && "rpin--dim"].filter(Boolean).join(" ");
       L.marker([r.lat, r.lng], {
-        icon: L.divIcon({ html: pinHtml(c?.emoji ?? "📍", KIND_COLOR[r.kind] ?? "#0095f6", extra), className: "", iconSize: PIN_SIZE, iconAnchor: PIN_ANCHOR }),
+        icon: L.divIcon({ html: pinHtml(KIND_COLOR[r.kind] ?? "#0095f6", extra), className: "", iconSize: PIN_SIZE, iconAnchor: PIN_ANCHOR }),
         keyboard: mode === "browse",
         interactive: mode === "browse",
         title: c?.label,
@@ -377,7 +375,7 @@ export function ReportMap() {
   function locate() {
     if (!("geolocation" in navigator)) return toast("Cet appareil ne donne pas sa position.");
     if (!window.isSecureContext) {
-      return toast("La position exige une connexion sécurisée (https). Sur téléphone en http://…, déplace la carte à la main 🙂");
+      return toast("La position exige une connexion sécurisée (https). Sur téléphone en http://…, déplace la carte à la main ");
     }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -582,7 +580,7 @@ export function ReportMap() {
             </span>
             <h2 className="mt-3 text-lg font-bold">Merci ! Signalement enregistré</h2>
             <p className="mt-1 truncate text-sm text-muted">
-              {createdCat?.emoji} {createdCat?.label} · {created.address ?? "Point choisi sur la carte"}
+               {createdCat?.label} · {created.address ?? "Point choisi sur la carte"}
             </p>
             <p className="mt-3 inline-flex items-center gap-1 rounded-full bg-soft px-3 py-1 text-sm font-semibold">
               <Hash size={14} /> N° {created.ref}
@@ -646,13 +644,13 @@ export function ReportMap() {
                   return (
                     <li key={r.id} className="flex items-center gap-3 px-4 py-3">
                       <button type="button" onClick={() => focus(r)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg text-white" style={{ background: KIND_COLOR[r.kind] }}>{c?.emoji}</span>
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg text-white" style={{ background: KIND_COLOR[r.kind] }}><InterfaceIcon symbol={c?.emoji} size={22} /></span>
                         <span className="min-w-0">
                           <span className="block font-semibold">{c?.label}</span>
                           <span className="block truncate text-sm text-muted">{r.address || r.description || "Point choisi sur la carte"}</span>
                           <span className="block text-xs text-muted">
                             {timeAgo(r.createdAt, true)} · N° {r.ref}
-                            {r.photos.length > 0 && ` · 📷 ${r.photos.length}`}
+                            {r.photos.length > 0 && ` · ${r.photos.length} photo${r.photos.length > 1 ? "s" : ""}`}
                           </span>
                         </span>
                       </button>
@@ -676,7 +674,7 @@ function ReportDetail({ report: r, onClose, onRemove }: { report: Report; onClos
   return (
     <div className="absolute inset-x-3 bottom-3 z-[600] mx-auto max-w-md animate-sheet-up rounded-3xl border border-line bg-bg p-4 shadow-xl">
       <div className="flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-xl text-white" style={{ background: KIND_COLOR[r.kind] }}>{c?.emoji}</span>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-xl text-white" style={{ background: KIND_COLOR[r.kind] }}><InterfaceIcon symbol={c?.emoji} size={22} /></span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">{r.kind === "besoin" ? "Besoin" : "Problème"} · N° {r.ref}</p>
           <p className="font-semibold">{c?.label}</p>
@@ -699,7 +697,7 @@ function ReportDetail({ report: r, onClose, onRemove }: { report: Report; onClos
       )}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="rounded-full bg-[#1f8a3b] px-2.5 py-1 font-semibold text-white">✓ Reçu</span>
-        {m && <span className="rounded-full bg-soft px-2.5 py-1">{m.emoji} {m.label}</span>}
+        {m && <span className="rounded-full bg-soft px-2.5 py-1"> {m.label}</span>}
         <span className="rounded-full bg-soft px-2.5 py-1 text-muted">{timeAgo(r.createdAt, true)}</span>
       </div>
       <button type="button" onClick={onRemove} className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-ig-red">
@@ -814,7 +812,7 @@ function ReportForm({ draft, place, onEditPlace, onCancel, onCreated }: {
                 {REPORT_CATEGORIES.filter((c) => c.kind === kind).map((c) => (
                   <button key={c.id} type="button" aria-pressed={category === c.id} onClick={() => { setCategory(c.id); setStep(3); }}
                     className={`flex min-h-[84px] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs font-medium leading-tight transition active:scale-[0.97] ${category === c.id ? "border-ig-blue bg-ig-blue/10" : "border-line hover:bg-soft"}`}>
-                    <span className="text-2xl">{c.emoji}</span>
+                    <span className="text-2xl"><InterfaceIcon symbol={c.emoji} size={22} /></span>
                     {c.label}
                   </button>
                 ))}
@@ -834,7 +832,7 @@ function ReportForm({ draft, place, onEditPlace, onCancel, onCreated }: {
                   <button type="button" onClick={onEditPlace} className="text-sm font-semibold text-ig-blue">Modifier</button>
                 </div>
                 <div className="flex items-center gap-3 px-3 py-2.5">
-                  <span className="w-[18px] text-center text-lg">{cat?.emoji}</span>
+                  <span className="w-[18px] text-center text-lg"><InterfaceIcon symbol={cat?.emoji} size={18} /></span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                     {cat?.label} <span className="font-normal text-muted">· {kind === "besoin" ? "besoin" : "problème"}</span>
                   </span>
@@ -855,7 +853,7 @@ function ReportForm({ draft, place, onEditPlace, onCancel, onCreated }: {
                   {REPORT_MOMENTS.map((m) => (
                     <button key={m.id} type="button" aria-pressed={moment === m.id} onClick={() => setMoment(moment === m.id ? null : m.id)}
                       className={`rounded-full border px-3 py-1.5 text-sm transition active:scale-95 ${moment === m.id ? "border-ig-blue bg-ig-blue/10 font-semibold" : "border-line"}`}>
-                      {m.emoji} {m.label}
+                       {m.label}
                     </button>
                   ))}
                 </div>
@@ -882,11 +880,11 @@ function ReportForm({ draft, place, onEditPlace, onCancel, onCreated }: {
                   )}
                 </div>
                 <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={(e) => addPhotos(e.target.files)} />
-                <p className="mt-1.5 text-xs text-muted">🔒 Photos privées. Évite les visages et les plaques d&apos;immatriculation.</p>
+                <p className="mt-1.5 text-xs text-muted"> Photos privées. Évite les visages et les plaques d&apos;immatriculation.</p>
               </div>
 
               <p className="rounded-xl bg-soft px-3 py-2 text-xs text-muted">
-                🚨 Urgence ou danger immédiat ? Compose le <b className="text-fg">911</b>.
+ Urgence ou danger immédiat ? Compose le <b className="text-fg">911</b>.
               </p>
             </>
           )}

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Compass, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { ActivityBell } from "./ActivityBell";
+import { TopBarDiscover } from "./TopBarDiscover";
 
 export function TopBar() {
   return (
@@ -8,7 +9,7 @@ export function TopBar() {
       <Link href="/" aria-label="Complices, accueil" className="font-logo text-[26px] leading-none">Complices<span className="text-ig-blue">.</span></Link>
       <span className="hidden items-center gap-1 text-[10px] font-medium text-muted min-[380px]:flex"><MapPin size={11} /> Saint-Roch</span>
       <div className="flex items-center gap-1">
-        <Link href="/fonctionnalites" aria-label="Toutes les fonctionnalités" className="grid h-10 w-10 place-items-center rounded-full transition hover:bg-soft"><Compass size={22} strokeWidth={1.8} /></Link>
+        <TopBarDiscover />
         <ActivityBell />
       </div>
     </header>

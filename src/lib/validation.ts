@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ACTOR_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_MOMENTS, SECTORS } from "./constants";
+import { ACTOR_TYPES, BUSINESS_POST_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_MOMENTS, SECTORS } from "./constants";
+import { PUBLICATION_KINDS } from "./quartier";
 
 const ids = <T extends readonly { id: string }[]>(list: T) => list.map((x) => x.id) as [T[number]["id"], ...T[number]["id"][]];
 
@@ -28,6 +29,7 @@ const profileFields = {
 
 // Démo SANS mot de passe ni courriel (demande de Danny) : le courriel/identifiant et le mot de passe sont facultatifs.
 export const signupSchema = z.object({
+  referralCode: z.string().trim().max(64).optional(),
   email: z.string().trim().toLowerCase().max(120).default(""),
   password: z.string().max(100).default(""),
   ...profileFields,
@@ -36,7 +38,8 @@ export const signupSchema = z.object({
 export const loginSchema = z.object({
   email: loginId.optional(), // un prénom, un pseudo ou un courriel
   password: z.string().max(100).default(""),
-  guest: z.boolean().optional(), // « Entrer en invité·e » : compte créé automatiquement
+  guest: z.boolean().optional(), // « Entrer en invité·e » : compte invité créé avec juste un nom
+  name: z.string().trim().max(60).default(""),
 });
 
 export const profileUpdateSchema = z.object(profileFields);
@@ -54,6 +57,8 @@ export const createIdeaSchema = z.object({
     .optional()
     .transform((v) => v ?? null),
   needs: z.array(z.enum(ids(NEEDS))).max(NEEDS.length).default([]),
+  // F3 : promo / nouveauté / événement. Facultatif : les résident·e·s ne choisissent pas de type.
+  kind: z.enum(ids(PUBLICATION_KINDS)).nullable().optional().transform((v) => v ?? null),
   images: z
     .array(z.string().regex(/^\/api\/uploads\/[a-f0-9-]+\.(jpg|png|webp)$/, "Image invalide."))
     .max(MAX_IMAGES, `${MAX_IMAGES} images maximum.`)
@@ -96,3 +101,14 @@ export const inviteSchema = z.object({
     .max(12),
 });
 export const answerSchema = z.object({ accept: z.boolean() });
+
+// ---------- Onglet « Entreprises » ----------
+export const businessPostSchema = z.object({
+  postType: z.enum(ids(BUSINESS_POST_TYPES), { message: "Choisis le type de publication (promo, nouveauté, emploi, offre, annonce)." }),
+  title: z.string().trim().min(1, "Donne un titre à ta publication.").max(90, "Titre : 90 caractères maximum."),
+  description: z.string().trim().max(1500, "Texte : 1500 caractères maximum.").default(""),
+  images: z
+    .array(z.string().regex(/^\/api\/uploads\/[a-f0-9-]+\.(jpg|png|webp)$/, "Image invalide."))
+    .max(MAX_IMAGES, `${MAX_IMAGES} images maximum.`)
+    .default([]),
+});

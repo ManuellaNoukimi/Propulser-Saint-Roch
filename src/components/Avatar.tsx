@@ -1,6 +1,7 @@
 import { actorTypeOf, isEstablishment } from "@/lib/constants";
 import { avatarGradient, initials } from "@/lib/ui";
 import type { PublicUser } from "@/lib/types";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 // Avatar rond à initiales ; anneau dégradé optionnel (comme une story). Les établissements ont un petit pictogramme.
 export function Avatar({ user, size = 32, ring = false }: { user: Pick<PublicUser, "id" | "displayName" | "accountType">; size?: number; ring?: boolean }) {
@@ -18,7 +19,7 @@ export function Avatar({ user, size = 32, ring = false }: { user: Pick<PublicUse
       style={{ width: size * 0.42, height: size * 0.42, fontSize: size * 0.24 }}
       title={actorTypeOf(user.accountType)?.label}
     >
-      {actorTypeOf(user.accountType)?.emoji}
+      <InterfaceIcon symbol={actorTypeOf(user.accountType)?.emoji} size={Math.max(10, Math.round(size * 0.24))} />
     </span>
   );
   if (!ring) {

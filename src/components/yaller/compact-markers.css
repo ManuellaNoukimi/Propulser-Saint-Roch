@@ -1,0 +1,33 @@
+/* Small visual points; transparent hit areas do not move their map anchors. */
+.map-points .maplibregl-marker[role="button"]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; transform: translate(-50%, -50%); }
+.map-points .ya-ping-destination { width: 24px; height: 32px; }
+.map-points .ya-ping-radar, .map-points .ya-from-ring, .map-points .ya-focus-ring { display: none; }
+.map-points .ya-ping-pin-wrapper { animation: none; }
+.map-points .ya-ping-pin { width: 24px; height: 32px; filter: drop-shadow(0 1px 2px #0004); transition: none; }
+.map-points .ya-ping-destination:hover .ya-ping-pin { transform: none; }
+.map-points .ya-ping-pin-svg path { fill: #ea4335; filter: none; }
+.map-points .ya-from-marker, .map-points .ya-focus-ping { width: 16px; height: 16px; }
+.map-points .ya-from-dot, .map-points .ya-focus-dot { width: 12px; height: 12px; border-width: 2px; box-shadow: 0 1px 3px #0004; }
+.map-points .ya-ping-tooltip, .map-points .ya-from-tooltip, .map-points .ya-focus-tooltip { visibility: hidden; opacity: 0; animation: none; }
+.map-points .maplibregl-marker:hover :is(.ya-ping-tooltip, .ya-from-tooltip, .ya-focus-tooltip),
+.map-points .maplibregl-marker:focus-visible :is(.ya-ping-tooltip, .ya-from-tooltip, .ya-focus-tooltip) { visibility: visible; opacity: 1; }
+.map-points .ya-ping-badge, .map-points .ya-from-badge, .map-points .ya-focus-badge { max-width: 180px; padding: 4px 8px; border-radius: 6px; font-size: 11px; box-shadow: 0 2px 6px #0003; }
+.map-points .ya-ping-badge-icon { display: none; }
+.map-points .ya-ping-title { font-weight: 600; }
+.map-points .ya-p { width: 20px; height: 20px; border-radius: 5px; border-width: 1.5px; font-size: 11px; }
+.map-points .ya-p--sm { width: 16px; height: 16px; border-radius: 4px; font-size: 9px; }
+.map-points .ya-p i { top: -7px; left: 13px; min-width: 16px; padding: 0 3px; font-size: 8px; line-height: 11px; }
+.map-points .ya-bike { justify-content: center; width: 36px; height: 20px; gap: 1px; padding: 0 3px; border-width: 1.5px; font-size: 9px; }
+.map-points .ya-bike span { font-size: 10px; }
+.map-points .ya-rack { width: 7px; height: 7px; }
+.map-points .ya-bus { border-width: 2px; }
+.map-points .ya-ev { width: 18px; height: 18px; border-width: 1.5px; font-size: 10px; }
+.map-points .ya-evt { width: 20px; height: 20px; }
+.map-points .ya-evt::before { inset: 0; width: 100%; height: 100%; border-radius: 50%; border-width: 1.5px; transform: none; box-shadow: 0 1px 3px #0004; }
+.map-points .ya-evt::after { display: none; }
+.map-points .ya-evt span { inset: 0; display: grid; place-items: center; font-size: 10px; line-height: 1; }
+.map-points :is(.ya-p, .ya-bike, .ya-bus, .ya-ev, .ya-evt):is(:hover, .is-on) { transform: none; }
+.map-points :is(.ya-p, .ya-bike, .ya-bus, .ya-ev, .ya-evt).is-on { outline: 2px solid #0096d6; outline-offset: 2px; box-shadow: 0 1px 3px #0004; }
+.map-points .ya-to { width: 18px; height: 18px; animation: none; }
+.map-points .ya-to::before { inset: 0; width: 100%; height: 100%; border-radius: 50%; border-width: 2px; background: #ea4335; transform: none; box-shadow: 0 1px 3px #0004; }
+.map-points .ya-to span { left: 6px; top: 6px; width: 6px; height: 6px; }

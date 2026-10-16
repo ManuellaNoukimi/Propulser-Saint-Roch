@@ -1,0 +1,28 @@
+/* Vitrines: presentation isolee, sans modifier les cartes ou pages voisines. */
+.vitrines-page { --vitrines-gap: 28px; }
+.vitrines-page .surface-card { border-radius: 8px; }
+.vitrines-page .vitrines-section { border-top: 1px solid var(--border); padding-top: 28px; }
+.vitrines-page .vitrines-details > summary { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; list-style: none; cursor: pointer; }
+.vitrines-page .vitrines-details > summary::-webkit-details-marker { display: none; }
+.vitrines-page .vitrines-details[open] > summary .vitrines-chevron { transform: rotate(180deg); }
+.vitrines-page .vitrines-chevron { flex-shrink: 0; transition: transform .15s; }
+.vitrines-page .vitrines-map { position: relative; width: 100%; height: 400px; min-width: 0; background: #eef2f1; }
+.vitrines-page .vitrines-map .ya-3d-controls { right: 12px; bottom: 48px; max-width: calc(100% - 24px); gap: 2px; padding: 3px; border-radius: 8px; border-color: #dfe4e2; background: #fff; color: #253d36; }
+.vitrines-page .vitrines-map .ya-3d-controls button { gap: 4px; padding-inline: 6px; }
+.vitrines-page .vitrines-map .ya-3d-controls button:not([aria-pressed="true"]) { color: #334155; }
+.vitrines-page .vitrines-map .ya-3d-controls button:hover:not([aria-pressed="true"]) { color: #16221e; background: #f1f4f2; }
+.vitrines-page .maplibregl-popup-content { padding: 14px 30px 14px 14px; border-radius: 8px; background: #fff; color: #25332d; line-height: 1.5; }
+.vitrines-page .maplibregl-popup-content a { display: inline-block; margin-top: 8px; color: #007bb0; text-decoration: underline; }
+.vitrines-page .maplibregl-popup-close-button { width: 28px; height: 28px; font-size: 20px; }
+.vitrines-page .maplibregl-popup-tip { border-top-color: #fff; }
+.vitrines-business-pin { display: block; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; background: #2563eb; box-shadow: 0 1px 3px #172b4a44; }
+.vitrines-vacancy-pin, .vitrines-street-pin { display: grid; place-items: center; flex-shrink: 0; border: 2px solid #fff; background: #ffad36; color: #352000; box-shadow: 0 1px 3px #56350c44; font-weight: 700; }
+.vitrines-vacancy-pin { width: 16px; height: 16px; border-radius: 50%; font-size: 0; }
+.vitrines-street-pin { border-radius: 50%; font-size: 10px; }
+.vitrines-vacancy-pin.is-selected, .vitrines-street-pin.is-selected { outline: 2px solid #0096d6; outline-offset: 2px; }
+.vitrines-zone-pin { width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50%; background: #0096d6; box-shadow: 0 0 0 2px #0096d633, 0 1px 3px #0004; cursor: grab; }
+.vitrines-zone-pin::before { content: ""; position: absolute; inset: -8px; }
+.vitrines-zone-pin:active { cursor: grabbing; }
+.vitrines-map [role="button"]:focus-visible { outline: 3px solid #0096d6; outline-offset: 4px; }
+@media (min-width: 768px) { .vitrines-page .vitrines-map { height: 520px; } }
+@media (prefers-reduced-motion: reduce) { .vitrines-page .vitrines-chevron { transition: none; } }

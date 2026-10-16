@@ -1,14 +1,18 @@
 // Couleurs et dégradés pour l'interface (aucune donnée).
 
 // Papiers colorés des affiches de la galerie.
+// Style HACKATHON26 : affiches en dégradé de deux couleurs de la charte (vert #7AB648, bleu #0096D6, bleu nuit
+// #1F3A4D) sous un léger voile bleu nuit pour garder le texte blanc lisible. Aucune autre couleur.
+const VEIL = "linear-gradient(rgb(31 58 77 / .22), rgb(31 58 77 / .22))";
+const duo = (a: string, b: string) => ({ background: `${VEIL}, linear-gradient(135deg, ${a}, ${b})`, ink: "#ffffff", accent: "#ffffff" });
 export const CATEGORY_PALETTES = {
-  culturel: { background: "#eee4ff", ink: "#39235d", accent: "#8053b8" },
-  communautaire: { background: "#dff3ed", ink: "#204f47", accent: "#3c8b78" },
-  benevolat: { background: "#ffecd9", ink: "#704224", accent: "#b36c36" },
-  recrutement: { background: "#e2e9ff", ink: "#2c3e73", accent: "#5b71b1" },
-  sport: { background: "#dcf2f4", ink: "#23535c", accent: "#368d98" },
-  commerce: { background: "#ffe3eb", ink: "#76364c", accent: "#b75c7c" },
-  environnement: { background: "#eaf0d8", ink: "#43532e", accent: "#798e46" },
+  culturel: duo("#1f3a4d", "#0096d6"),
+  communautaire: duo("#0096d6", "#7ab648"),
+  benevolat: duo("#7ab648", "#1f3a4d"),
+  recrutement: duo("#1f3a4d", "#7ab648"),
+  sport: duo("#0096d6", "#1f3a4d"),
+  commerce: duo("#7ab648", "#0096d6"),
+  environnement: duo("#7ab648", "#7ab648"),
 };
 
 // Fonds des publications sans photo (façon « publication texte »)
@@ -23,13 +27,13 @@ export const CATEGORY_GRADIENTS: Record<string, string> = {
 };
 
 const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, #f58529, #dd2a7b)",
-  "linear-gradient(135deg, #515bd4, #8134af)",
-  "linear-gradient(135deg, #00c6a7, #1e4d92)",
-  "linear-gradient(135deg, #feda75, #fa7e1e)",
-  "linear-gradient(135deg, #ee0979, #ff6a00)",
-  "linear-gradient(135deg, #56ab2f, #a8e063)",
-  "linear-gradient(135deg, #4f5bd5, #00c6ff)",
+  "#1f3a4d",
+  "#335f45",
+  "#245b75",
+  "#37576b",
+  "#43622d",
+  "#1f3a4d",
+  "#245b75",
 ];
 
 export function avatarGradient(seed: string): string {

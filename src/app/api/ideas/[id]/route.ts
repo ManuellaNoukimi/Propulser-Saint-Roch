@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, NOT_LOGGED_IN } from "@/lib/auth";
 import { badgesFor } from "@/lib/badges";
 import { isEstablishment } from "@/lib/constants";
-import { getIdea, listComplices, listInvitationsForIdea, toPublicUser } from "@/lib/db";
+import { getIdea, listComplices, listInvitationsForIdea, setIdeaHidden, toPublicUser } from "@/lib/db";
 import { toInvitations } from "@/lib/invitations";
 import type { Badge, IdeaWithComplices } from "@/lib/types";
 
@@ -40,4 +40,19 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/ideas/[id]"
     myInvitation: me ? (invitations.find((i) => i.to.id === me.id) ?? null) : null,
   };
   return Response.json({ idea: full });
+}
+
+// PATCH /api/ideas/:id : masquer ou réafficher sa propre publication (F3, publications importées).
+export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/ideas/[id]">) {
+  const me = await getCurrentUser();
+  if (!me) return Response.json(NOT_LOGGED_IN, { status: 401 });
+  const { id } = await ctx.params;
+
+  const body = (await req.json().catch(() => null)) as { hidden?: unknown } | null;
+  if (typeof body?.hidden !== "boolean") return Response.json({ error: "Indique hidden (true ou false)." }, { status: 400 });
+
+  if (!setIdeaHidden(id, me.id, body.hidden)) {
+    return Response.json({ error: "Cette publication n'existe pas, ou elle n'est pas à toi." }, { status: 404 });
+  }
+  return Response.json({ hidden: body.hidden });
 }

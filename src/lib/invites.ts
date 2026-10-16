@@ -19,7 +19,7 @@ async function poll() {
   if (!d) return;
   if (d.latest && d.latest.id !== lastNotified) {
     if (!first) {
-      toast(`📩 ${d.latest.from} t'invite : « ${d.latest.title} »`);
+      toast(` ${d.latest.from} t'invite : « ${d.latest.title} »`);
       navigator.vibrate?.([60, 40, 60]);
     }
     lastNotified = d.latest.id;

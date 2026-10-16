@@ -19,11 +19,13 @@ export const ACTOR_TYPES = [
   { id: "commerce", label: "Commerce / restaurant", emoji: "🍽️", group: "etablissement", hint: "Boutique, restaurant, café, bar…" },
   { id: "entreprise", label: "Entreprise / lieu de travail", emoji: "🏢", group: "etablissement", hint: "Bureau, studio, coop, institution…" },
   { id: "organisme", label: "Organisme", emoji: "🏛️", group: "etablissement", hint: "Communautaire, culturel, sportif…" },
+  { id: "invite", label: "Invité·e", emoji: "👋", group: "invite", hint: "Juste un nom : tu vois et tu rejoins les activités" },
 ] as const;
 
 export const ACCOUNT_GROUPS = [
-  { id: "personnel", label: "Résident·e", emoji: "🏠", description: "Tu publies une activité (bénévolat, aide, vide-grenier…). Pas de profil : on voit seulement ton nom, et ta publication disparaît après l'événement." },
+  { id: "personnel", label: "Résident·e", emoji: "🏠", description: "Tu publies une activité (bénévolat, aide, vide-grenier…). Ton profil est privé ; tu peux choisir de partager ton niveau et tes badges. Ta publication disparaît après l'événement." },
   { id: "etablissement", label: "Entreprise", emoji: "🏪", description: "Commerce, restaurant, entreprise ou organisme : tu as une page publique avec toutes tes publications." },
+  { id: "invite", label: "Invité·e", emoji: "👋", description: "Juste ton nom. Tu vois les publications et tu peux rejoindre une activité, mais tu ne publies pas." },
 ] as const;
 
 // Secteur d'activité d'un établissement
@@ -38,6 +40,7 @@ export const SECTORS = [
   { id: "hebergement", label: "Hébergement", emoji: "🛏️", for: ["commerce"] },
   { id: "bureau", label: "Bureau / services professionnels", emoji: "🗂️", for: ["entreprise"] },
   { id: "tech", label: "Tech / jeux vidéo / créatif", emoji: "🎮", for: ["entreprise"] },
+  { id: "construction", label: "Construction / architecture / immobilier", emoji: "🏗️", for: ["entreprise", "commerce"] },
   { id: "economie-sociale", label: "Coopérative / économie sociale", emoji: "🤝", for: ["entreprise", "organisme"] },
   { id: "institution", label: "Institution / gouvernement / école", emoji: "🏛️", for: ["entreprise", "organisme"] },
   { id: "communautaire", label: "Communautaire / social", emoji: "💛", for: ["organisme"] },
@@ -137,6 +140,9 @@ export type CategoryId = (typeof CATEGORIES)[number]["id"];
 export type ActorTypeId = (typeof ACTOR_TYPES)[number]["id"];
 export type SectorId = (typeof SECTORS)[number]["id"];
 export const isEstablishment = (t: string) => ACTOR_TYPES.find((a) => a.id === t)?.group === "etablissement";
+/** Un·e invité·e (juste un nom) peut voir et rejoindre, mais pas publier. */
+export const isGuest = (t: string) => t === "invite";
+export const GUEST_CANNOT_POST = { error: "Les invité·e·s peuvent voir et rejoindre les activités, mais pas publier. Crée un compte résident ou entreprise.", code: "invite" } as const;
 export const sectorOf = (id: string | null | undefined) => SECTORS.find((s) => s.id === id);
 export type NeedId = (typeof NEEDS)[number]["id"];
 export type ContributionId = (typeof CONTRIBUTIONS)[number]["id"];
@@ -148,3 +154,16 @@ export const needOf = (id: string) => NEEDS.find((n) => n.id === id);
 export const contributionOf = (id: string) => CONTRIBUTIONS.find((c) => c.id === id);
 
 export const MAX_IMAGES = 4;
+
+// ---------- Onglet « Entreprises » : publications des commerces, restos, entreprises, organismes ----------
+// (les ACTIVITÉS vont toujours dans « Vie Saint-Roch », jamais ici)
+export const BUSINESS_POST_TYPES = [
+  { id: "promo", label: "Promo", emoji: "🏷️", hint: "Un rabais, une offre spéciale" },
+  { id: "nouveaute", label: "Nouveauté", emoji: "✨", hint: "Un nouveau produit, menu, service" },
+  { id: "emploi", label: "Emploi", emoji: "📣", hint: "On recrute" },
+  { id: "offre", label: "On offre", emoji: "🤝", hint: "Une salle, du matériel, un coup de main pour le quartier" },
+  { id: "annonce", label: "Annonce", emoji: "📢", hint: "Horaires, fermeture, travaux, nouvelle adresse…" },
+] as const;
+export type BusinessPostTypeId = (typeof BUSINESS_POST_TYPES)[number]["id"];
+export const businessPostTypeOf = (id: string | null | undefined) => BUSINESS_POST_TYPES.find((t) => t.id === id);
+export const BUSINESS_ONLY = { error: "Seuls les comptes Entreprise (commerce, resto, entreprise, organisme) publient dans l'onglet Entreprises. Pour une activité, utilise « Vie Saint-Roch ».", code: "entreprise" } as const;

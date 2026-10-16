@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getCurrentUser, NOT_LOGGED_IN } from "@/lib/auth";
+import { GUEST_CANNOT_POST, isGuest } from "@/lib/constants";
 import { insertIdea, listIdeas } from "@/lib/db";
 import { moderate } from "@/lib/moderation";
 import { createIdeaSchema, firstError } from "@/lib/validation";
@@ -10,10 +11,11 @@ export async function GET() {
   return Response.json({ ideas: listIdeas(me?.id ?? null) });
 }
 
-// POST /api/ideas : publier (tous les types de comptes peuvent publier ; il faut être connecté)
+// POST /api/ideas : publier (résident·e ou entreprise ; un·e invité·e ne publie pas)
 export async function POST(req: NextRequest) {
   const me = await getCurrentUser();
   if (!me) return Response.json(NOT_LOGGED_IN, { status: 401 });
+  if (isGuest(me.account_type)) return Response.json(GUEST_CANNOT_POST, { status: 403 });
 
   const parsed = createIdeaSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: firstError(parsed.error) }, { status: 400 });

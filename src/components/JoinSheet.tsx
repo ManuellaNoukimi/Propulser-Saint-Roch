@@ -1,9 +1,10 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { CONTRIBUTIONS, type ContributionId, type NeedId } from "@/lib/constants";
-import { toast } from "@/lib/toast";
+import { confirmRegistration } from "@/lib/registration-confirmation";
 
 // Panneau qui monte du bas (mobile) / fenêtre centrée (ordinateur) : « Comment veux-tu aider ? »
 export function JoinSheet({
@@ -19,7 +20,7 @@ export function JoinSheet({
   needs: NeedId[];
   open: boolean;
   onClose: () => void;
-  onJoined?: () => void;
+  onJoined?: (contribution: ContributionId) => void;
 }) {
   const [contribution, setContribution] = useState<ContributionId>("participer");
   const [message, setMessage] = useState("");
@@ -59,9 +60,10 @@ export function JoinSheet({
       return;
     }
     setMessage("");
-    toast("🎉 Tu es maintenant complice !");
-    onJoined?.();
+    notifyResidentProgress();
+    onJoined?.(contribution);
     onClose();
+    confirmRegistration(title);
   }
 
   return (
@@ -97,7 +99,7 @@ export function JoinSheet({
                     on ? "border-ig-blue bg-ig-blue/10 font-semibold ring-1 ring-ig-blue" : "border-line hover:bg-soft"
                   }`}
                 >
-                  {c.emoji} {c.label}
+                   {c.label}
                   {wanted && <span className="block text-[11px] font-semibold text-ig-blue">Recherché</span>}
                 </button>
               );

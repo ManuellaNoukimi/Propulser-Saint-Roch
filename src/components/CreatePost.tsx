@@ -1,9 +1,10 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MapPin } from "lucide-react";
-import { CATEGORIES, NEEDS, PLACES, actorTypeOf, type CategoryId, type NeedId } from "@/lib/constants";
+import { CATEGORIES, NEEDS, PLACES, actorTypeOf, type CategoryId, type NeedId, isGuest } from "@/lib/constants";
 import { localInputToIso } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
@@ -27,8 +28,8 @@ export function CreatePost() {
   const [error, setError] = useState<string | null>(null);
 
   if (loading) return <div className="p-10 text-center text-muted">Chargement…</div>;
-  if (!user)
-    return <AuthPrompt title="Publie ton idée pour Saint-Roch" text="Habitant·e, travailleur·euse, commerce, organisme : tout le monde peut publier. Il suffit d'un compte." next="/creer" />;
+  if (!user || isGuest(user.accountType))
+    return <AuthPrompt title="Publie ton idée pour Saint-Roch" text={user ? "En invité·e, tu vois et tu rejoins les activités, mais tu ne publies pas. Crée un compte résident ou entreprise pour publier." : "Résident·e ou entreprise : crée ton compte pour publier."} next="/creer" />;
 
   const toggleNeed = (n: NeedId) => setNeeds((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]));
 
@@ -44,7 +45,8 @@ export function CreatePost() {
     const d = await res?.json().catch(() => ({}));
     setSending(false);
     if (!res?.ok) return setError(d?.error ?? "Publication impossible. Vérifie ta connexion.");
-    toast("🎉 Ta publication a été partagée !");
+    toast(" Ta publication a été partagée !");
+    notifyResidentProgress();
     refresh();
     router.push(`/p/${d.id}`);
   }
@@ -88,7 +90,7 @@ export function CreatePost() {
               placeholder="Adresse ou nom du lieu" className="ig-input my-3" />
           )}
           <label className="flex flex-wrap items-center justify-between gap-3 py-3">
-            <span>📅 Date de l&apos;événement</span>
+            <span> Date de l&apos;événement</span>
             <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className="bg-transparent text-right outline-none" />
           </label>
         </div>
@@ -99,7 +101,7 @@ export function CreatePost() {
             {CATEGORIES.map((c) => (
               <button key={c.id} type="button" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}
                 className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition active:scale-95 ${category === c.id ? "bg-fg text-bg" : "bg-sep"}`}>
-                {c.emoji} {c.label}
+                 {c.label}
               </button>
             ))}
           </div>
@@ -113,7 +115,7 @@ export function CreatePost() {
               return (
                 <button key={n.id} type="button" aria-pressed={on} onClick={() => toggleNeed(n.id)}
                   className={`rounded-xl border px-3 py-2.5 text-left text-sm transition active:scale-[0.98] ${on ? "border-ig-blue bg-ig-blue/10 font-semibold" : "border-line"}`}>
-                  {n.emoji} {n.label}
+                   {n.label}
                 </button>
               );
             })}

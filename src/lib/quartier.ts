@@ -58,6 +58,24 @@ export const OFFER_KINDS = [
 ] as const;
 export type OfferKindId = (typeof OFFER_KINDS)[number]["id"];
 
+// F3 : ce qu'un commerce ou un organisme publie. « evenement » est le seul type daté.
+export const PUBLICATION_KINDS = [
+  { id: "promo", label: "Promo", emoji: "🏷️", hint: "Un rabais ou une offre limitée dans le temps." },
+  { id: "nouveaute", label: "Nouveauté", emoji: "✨", hint: "Un nouveau produit, service ou aménagement." },
+  { id: "evenement", label: "Événement", emoji: "📅", hint: "Une activité à une date précise." },
+] as const;
+export type PublicationKindId = (typeof PUBLICATION_KINDS)[number]["id"];
+export const publicationKindOf = (id: string | null) => PUBLICATION_KINDS.find((k) => k.id === id);
+
+// F3 : d'où vient la publication. « manuel » = écrite dans l'app ; les autres arrivent d'une page liée.
+export const PUBLICATION_SOURCES = [
+  { id: "manuel", label: "Publié dans Complices" },
+  { id: "facebook", label: "via Facebook" },
+  { id: "instagram", label: "via Instagram" },
+] as const;
+export type PublicationSource = (typeof PUBLICATION_SOURCES)[number]["id"];
+export const publicationSourceOf = (id: string) => PUBLICATION_SOURCES.find((s) => s.id === id);
+
 // ---------- Problème 4 : Vitrines à remplir ----------
 export const WISHES = [
   { id: "epicerie", label: "Épicerie", emoji: "🛒" },

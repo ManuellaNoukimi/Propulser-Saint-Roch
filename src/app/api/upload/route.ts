@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { getCurrentUser, NOT_LOGGED_IN } from "@/lib/auth";
+import { GUEST_CANNOT_POST, isGuest } from "@/lib/constants";
 import { UPLOAD_DIR } from "@/lib/db";
 
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -10,7 +11,9 @@ const EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "
 
 // POST /api/upload (multipart, champ « file ») → { url: "/api/uploads/<id>.<ext>" }
 export async function POST(req: NextRequest) {
-  if (!(await getCurrentUser())) return Response.json(NOT_LOGGED_IN, { status: 401 });
+  const me = await getCurrentUser();
+  if (!me) return Response.json(NOT_LOGGED_IN, { status: 401 });
+  if (isGuest(me.account_type)) return Response.json(GUEST_CANNOT_POST, { status: 403 });
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) return Response.json({ error: "Aucune image reçue." }, { status: 400 });

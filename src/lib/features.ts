@@ -17,40 +17,18 @@ export type Feature = {
 
 export const FEATURES: Feature[] = [
   {
-    slug: "idees", href: "/", problem: 1, emoji: "💡", label: "Idées", status: "live",
+    slug: "idees", href: "/vie", problem: 1, emoji: "💡", label: "Idées", status: "live",
     title: "Lancer une idée",
     problemLabel: "Les acteurs ne se connaissent pas, les bonnes idées meurent",
     pitch: "Publie ton idée pour le quartier : n'importe qui peut se proposer comme complice pour t'aider.",
     bullets: ["Publier une initiative avec des images", "Se proposer comme complice (bénévole, matériel, lieu, commandite…)", "Badges : Super voisin, Bonne personne…"],
   },
   {
-    slug: "ca-se-passe", href: "/", problem: 2, emoji: "📅", label: "Accueil", status: "live",
+    slug: "ca-se-passe", href: "/vie", problem: 2, emoji: "📅", label: "Accueil", status: "live",
     title: "Ça se passe à Saint-Roch",
     problemLabel: "On ne sait pas ce qui se passe dans le quartier",
     pitch: "Un seul endroit pour tout ce qui se passe près de chez toi, avec des filtres simples.",
     bullets: ["Cartes cliquables", "Filtres : catégorie, organisé par, date", "Recherche"],
-  },
-  {
-    slug: "signaler", href: "/signaler", problem: 6, emoji: "📍", label: "Signaler", status: "live",
-    title: "Signaler un besoin ou un problème",
-    problemLabel: "Les besoins des habitants (épicerie qui manque, coin sombre, saleté, vol…) ne sont localisés nulle part",
-    pitch: "Comme les applis 311 : cherche une adresse ou utilise ta position, place la pastille en glissant la carte, dis ce qui manque ou ce qui ne va pas, ajoute une photo. Chaque personne ne voit que les siennes ; regroupées par secteur, elles montrent où sont les besoins.",
-    bullets: [
-      "Carte de Saint-Roch (limite officielle du quartier), recherche d'adresse et « Ma position »",
-      "Pastille placée au mètre près, avec l'adresse affichée en direct (OpenStreetMap)",
-      "Un besoin (épicerie, bancs, toilettes, verdure…) ou un problème (lumière, saleté, vol…), le moment (jour, soir, nuit) et jusqu'à 3 photos",
-      "Numéro de suivi (ex. SR-4F2A9C) ; signalements et photos privés",
-      "Plus tard : vue par secteur pour la Ville et transmission (non construites)",
-    ],
-    planActions: "Actions 1.6, 1.10, 1.15 et 3.5 du Plan Saint-Roch",
-  },
-  {
-    slug: "soirees", href: "/soirees", problem: 5, emoji: "🌙", label: "Soirées", status: "bientot",
-    title: "Les Soirées Complices",
-    problemLabel: "Le soir est mort : peu de lumière, les commerces ferment tôt",
-    pitch: "Les commerces d'une rue restent ouverts ensemble un soir… si assez de gens confirment leur venue.",
-    bullets: ["Compteur « 87 / 100 personnes viennent jeudi »", "Seuil atteint : la soirée est confirmée et la rue s'allume sur la carte", "Trajet éclairé et stationnement le plus proche"],
-    planActions: "Actions 1.10, 2.2 et 3.2 du Plan Saint-Roch",
   },
   {
     slug: "midi", href: "/midi", problem: 3, emoji: "🍽️", label: "Midi", status: "bientot",
@@ -61,12 +39,33 @@ export const FEATURES: Feature[] = [
     planActions: "Action 3.2 du Plan Saint-Roch",
   },
   {
-    slug: "vitrines", href: "/vitrines", problem: 4, emoji: "🟠", label: "Vitrines", status: "bientot",
+    slug: "soirees", href: "/soirees", problem: 5, emoji: "🌙", label: "Soirées", status: "bientot",
+    title: "Les Soirées Complices",
+    problemLabel: "Le soir est mort : peu de lumière, les commerces ferment tôt",
+    pitch: "Les commerces d'une rue restent ouverts ensemble un soir… si assez de gens confirment leur venue.",
+    bullets: ["Compteur « 87 / 100 personnes viennent jeudi »", "Seuil atteint : la soirée est confirmée et la rue s'allume sur la carte", "Trajet éclairé et stationnement le plus proche"],
+    planActions: "Actions 1.10, 2.2 et 3.2 du Plan Saint-Roch",
+  },
+  {
+    slug: "vitrines", href: "/vitrines", problem: 4, emoji: "🟠", label: "Vitrines", status: "live",
     title: "Vitrines à remplir",
     problemLabel: "Les commerces souffrent : fermetures, locaux vides",
     pitch: "Les locaux vides deviennent visibles : vote pour le commerce que tu veux, ou occupe la vitrine en attendant.",
     bullets: ["« Ce que je veux ici » : la preuve de la demande", "Vitrine éphémère pour artistes, étudiants, organismes", "Promos et nouveautés des commerçants"],
     planActions: "Actions 2.8, 3.5 et 3.10 du Plan Saint-Roch",
+  },
+  {
+    slug: "signaler", href: "/signaler", problem: 6, emoji: "📍", label: "Signaler", status: "bientot",
+    title: "Signaler un besoin ou un problème",
+    problemLabel: "Les besoins des habitants (épicerie qui manque, coin sombre, saleté…) ne sont localisés nulle part",
+    pitch: "Dis ce qui manque ou ce qui ne va pas dans le quartier, à l'endroit exact : regroupés par secteur, les signalements montrent où sont les besoins.",
+    bullets: [
+      "Carte de Saint-Roch : cherche une adresse ou utilise ta position",
+      "Un besoin (épicerie, bancs, toilettes, verdure…) ou un problème (lumière, saleté…), le moment et des photos",
+      "Un numéro de suivi ; tes signalements restent privés",
+      "Les besoins regroupés par secteur pour la Ville",
+    ],
+    planActions: "Actions 1.6, 1.10, 1.15 et 3.5 du Plan Saint-Roch",
   },
   {
     slug: "serein", href: "/serein", problem: 6, emoji: "🤝", label: "Serein", status: "bientot",
@@ -85,11 +84,16 @@ export const FEATURES: Feature[] = [
     planActions: "Actions 2.3, 2.6 et 3.9 du Plan Saint-Roch",
   },
   {
-    slug: "y-aller", href: "/y-aller", problem: 8, emoji: "🚗", label: "Y aller", status: "bientot",
+    slug: "y-aller", href: "/y-aller", problem: 8, emoji: "🚗", label: "Y aller", status: "live",
     title: "Y aller facilement",
     problemLabel: "Stationnement, chantiers, tramway",
-    pitch: "Pour chaque activité : où te garer, quel bus prendre, quel trajet est éclairé, et quels commerces sont ouverts malgré les travaux.",
-    bullets: ["Stationnements municipaux et places disponibles", "Bus, vélo, à pied", "« Ouvert pendant les travaux » et « Adopte un commerce en chantier »"],
+    pitch: "D'où je pars, où je vais : le trajet en auto, en bus, en vélo ou à pied, et surtout où se garer à Saint-Roch.",
+    bullets: [
+      "Suggestions d'adresses pendant la frappe (adresses officielles de la Ville, lieux, événements)",
+      "Auto : les stationnements les plus proches, places et minutes à pied",
+      "Bus : la ligne du RTC à prendre et les prochains passages ; vélo : les stations àVélo en direct",
+      "Carte : stationnements, vélos, arrêts de bus, bornes et événements numérotés (rouge = en direct)",
+    ],
     planActions: "Action 3.6 du Plan Saint-Roch",
   },
   {

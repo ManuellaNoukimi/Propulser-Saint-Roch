@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Award, Grid3x3, MapPin, Settings, Users } from "lucide-react";
-import { actorTypeOf, isEstablishment, sectorOf } from "@/lib/constants";
+import { startTransition, useEffect, useState, ViewTransition } from "react";
+import { Award, Check, Flame, Grid3x3, Heart, House, Lightbulb, LockKeyhole, MapPin, MessageSquare, Settings, Star, Users } from "lucide-react";
+import { actorTypeOf, isEstablishment, isGuest, sectorOf } from "@/lib/constants";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
 import type { PublicProfile } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { ContactSheet } from "./ContactSheet";
+import { LogoutButton } from "./LogoutButton";
 import { PostGrid } from "./PostGrid";
+import { SocialImport } from "./SocialImport";
+import "./profile-badges.css";
 
 type Tab = "publications" | "complice" | "badges";
+const BADGE_ICONS = { "super-voisin": House, "bonne-personne": Heart, batisseur: Lightbulb, rassembleur: Flame, "premier-complice": Star };
 
 // Profil façon Instagram : avatar, statistiques, bio, « highlights » de badges, onglets et grille.
 export function ProfileView({ id }: { id: string }) {
@@ -18,6 +23,8 @@ export function ProfileView({ id }: { id: string }) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("publications");
+  const [contactOpen, setContactOpen] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     fetch(`/api/users/${id}`, { cache: "no-store" })
@@ -27,7 +34,7 @@ export function ProfileView({ id }: { id: string }) {
         setProfile(d);
       })
       .catch((e) => setError(e instanceof Error && e.message ? e.message : "Chargement impossible."));
-  }, [id, me?.id]);
+  }, [id, me?.id, reload]);
 
   if (error) return <p className="p-10 text-center font-semibold">{error}</p>;
   if (!profile)
@@ -58,7 +65,7 @@ export function ProfileView({ id }: { id: string }) {
   const bio = (
       <div className="space-y-0.5">
         <p className="font-semibold">{user.displayName}</p>
-        <p className="text-muted">{type?.emoji} {type?.label}{sector ? ` · ${sector.emoji} ${sector.label}` : ""}</p>
+        <p className="text-muted"> {type?.label}{sector ? ` ·  ${sector.label}` : ""}</p>
         {user.description && <p className="whitespace-pre-line">{user.description}</p>}
         {isEstablishment(user.accountType) && user.address && (
           <p className="flex items-center gap-1 font-semibold text-ig-link"><MapPin size={14} /> {user.address}</p>
@@ -87,9 +94,16 @@ export function ProfileView({ id }: { id: string }) {
               <>
                 <Link href="/moi/modifier" className="ig-btn-secondary text-sm">Modifier le profil</Link>
                 <Link href="/moi/modifier" aria-label="Paramètres" className="p-1"><Settings size={22} /></Link>
+                <LogoutButton />
               </>
             ) : (
-              <button type="button" onClick={shareProfile} className="ig-btn-secondary text-sm">Partager le profil</button>
+              <>
+                {/* Contacter un commerce, une entreprise ou un organisme (message dans l'app, sans courriel) */}
+                {me && !isGuest(me.accountType) && isEstablishment(user.accountType) && (
+                  <button type="button" onClick={() => setContactOpen(true)} className="ig-btn text-sm"><MessageSquare size={16} /> Contacter</button>
+                )}
+                <button type="button" onClick={shareProfile} className="ig-btn-secondary text-sm">Partager le profil</button>
+              </>
             )}
           </div>
           <ul className="hidden gap-10 md:flex">
@@ -109,18 +123,26 @@ export function ProfileView({ id }: { id: string }) {
         ))}
       </ul>
 
-      {/* Cartes de badges du profil. */}
-      <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-3 lg:grid-cols-5">
+      <ul aria-label="Badges du profil" className="profile-badges-summary">
         {allBadges.map((b) => {
           const on = earned.has(b.id);
+          const Icon = BADGE_ICONS[b.id];
           return (
-            <div key={b.id} className={`flex min-w-0 items-center gap-3 rounded-xl border border-line bg-bg p-3 ${on ? "" : "opacity-55"}`} title={b.description}>
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-soft text-xl ${on ? "" : "grayscale"}`}>{b.emoji}</span>
-              <span className="min-w-0"><span className={`block text-[11px] leading-tight ${on ? "font-semibold" : "text-muted"}`}>{b.label}</span><span className="mt-1 block text-[9px] text-muted">{on ? "Débloqué" : "À découvrir"}</span></span>
-            </div>
+            <li key={b.id} data-earned={on} title={b.description}>
+              <Icon size={18} strokeWidth={1.6} aria-hidden="true" />
+              <span>{b.label}</span>
+              {on ? <Check size={13} aria-hidden="true" /> : <LockKeyhole size={12} aria-hidden="true" />}
+              <span className="sr-only">{on ? "Débloqué" : "À découvrir"}</span>
+            </li>
           );
         })}
-      </div>
+      </ul>
+
+      {/* F3 : lier ses pages (seulement sur son propre profil d'établissement). Facebook et Instagram : liaison de Stelle
+          (LinkedPages, dans le panneau du réseau) ; les publications importées s'ajoutent au profil (rechargé). */}
+      {isMe && isEstablishment(user.accountType) && <div className="mb-6"><SocialImport onChange={() => setReload((n) => n + 1)} /></div>}
+
+      {contactOpen && <ContactSheet to={{ id: user.id, displayName: user.displayName }} open onClose={() => setContactOpen(false)} />}
 
       {/* Onglets */}
       <nav aria-label="Contenu du profil" className="mb-2 flex justify-around border-t border-line md:justify-center md:gap-14">
@@ -129,32 +151,43 @@ export function ProfileView({ id }: { id: string }) {
           { id: "complice", label: "Complice de", icon: Users },
           { id: "badges", label: "Badges", icon: Award },
         ] as const).map(({ id: t, label, icon: Icon }) => (
-          <button key={t} type="button" aria-label={label} aria-pressed={tab === t} onClick={() => setTab(t)}
+          <button key={t} type="button" aria-label={label} aria-pressed={tab === t} onClick={() => startTransition(() => setTab(t))}
             className={`-mt-px flex min-h-12 items-center gap-2 border-t-2 px-2 py-3 text-[10px] font-semibold transition md:text-xs ${tab === t ? "border-fg text-fg" : "border-transparent text-muted hover:text-fg"}`}>
             <Icon size={17} /> <span>{label}</span>
           </button>
         ))}
       </nav>
 
+      <ViewTransition key={tab} name="profile-tab-content" default="content-swap">
+      <div className="profile-tab-content">
       {tab === "publications" && (ideas.length ? <PostGrid ideas={ideas} /> : (
         <Empty title={isMe ? "Partage ta première idée" : "Aucune publication"} text={isMe ? "Quand tu publieras une idée, elle apparaîtra ici." : "Ce compte n'a encore rien publié."} cta={isMe ? { href: "/creer", label: "Publier une idée" } : undefined} />
       ))}
       {tab === "complice" && (joined.length ? <PostGrid ideas={joined} /> : (
-        <Empty title="Pas encore complice" text={isMe ? "Propose ton aide sur une publication pour la retrouver ici." : "Ce compte n'a encore rejoint aucune initiative."} cta={isMe ? { href: "/", label: "Voir le fil" } : undefined} />
+        <Empty title="Pas encore complice" text={isMe ? "Propose ton aide sur une publication pour la retrouver ici." : "Ce compte n'a encore rejoint aucune initiative."} cta={isMe ? { href: "/vie", label: "Voir les activités" } : undefined} />
       ))}
       {tab === "badges" && (
-        <ul className="grid gap-2 p-4 sm:grid-cols-2">
-          {allBadges.map((b) => (
-            <li key={b.id} className={`flex items-center gap-3 rounded-2xl border border-line bg-bg p-4 ${earned.has(b.id) ? "" : "opacity-50"}`}>
-              <span className={`text-3xl ${earned.has(b.id) ? "" : "grayscale"}`}>{b.emoji}</span>
-              <span>
-                <span className="block font-semibold">{b.label} {earned.has(b.id) ? "✅" : "🔒"}</span>
-                <span className="block text-xs text-muted">{b.description}</span>
-              </span>
-            </li>
-          ))}
+        <ul className="profile-badges-details">
+          {allBadges.map((b) => {
+            const on = earned.has(b.id);
+            const Icon = BADGE_ICONS[b.id];
+            return (
+              <li key={b.id} data-earned={on}>
+                <Icon size={22} strokeWidth={1.6} className="profile-badge-icon" aria-hidden="true" />
+                <div className="profile-badge-content">
+                  <div className="profile-badge-heading">
+                    <h2>{b.label}</h2>
+                    <span className="profile-badge-state">{on ? <Check size={14} aria-hidden="true" /> : <LockKeyhole size={13} aria-hidden="true" />}{on ? "Débloqué" : "À découvrir"}</span>
+                  </div>
+                  <p>{b.description}</p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
+      </div>
+      </ViewTransition>
     </div>
   );
 

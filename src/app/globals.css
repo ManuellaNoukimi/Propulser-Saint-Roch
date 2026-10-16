@@ -10,9 +10,9 @@
   --separator: #f0eef5;
   --soft: #f4f2f8;
   --hover: #ece8f5;
-  --blue: #7552de;
-  --blue-hover: #6040c2;
-  --link: #6246ad;
+  --blue: #0096d6;
+  --blue-hover: #0083bb;
+  --link: #0096d6;
   --red: #ff3040;
   --green: #58c322;
   --story: linear-gradient(135deg, #40b8b0, #7259d9);
@@ -184,7 +184,7 @@ button:disabled { cursor: wait; }
 }
 .ig-btn:hover {
   background: var(--blue-hover);
-  box-shadow: 0 4px 12px #7552de26;
+  box-shadow: 0 4px 12px #0096d626;
 }
 .ig-btn:active { transform: scale(.98); }
 .ig-btn:disabled {
@@ -338,10 +338,361 @@ button:disabled { cursor: wait; }
 @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 
 /* ---------- Problème 3 : carte travailleur (dégradé animé, impossible à copier par capture) ---------- */
-.worker-pass { background: linear-gradient(120deg, #7552de, #40b8b0, #ff8a65, #7552de); background-size: 300% 300%; animation: pass-shift 6s ease infinite; }
+.worker-pass { background: linear-gradient(120deg, #0096d6, #40b8b0, #ff8a65, #0096d6); background-size: 300% 300%; animation: pass-shift 6s ease infinite; }
 @keyframes pass-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
 /* ---------- Problème 4 : pastilles orange des locaux vides ---------- */
 .vac-pin { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9999px; background: #ff8a00; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.3); font-size: 17px; transition: transform .2s; }
 .vac-pin:hover { transform: scale(1.1); }
 .vac-pin--on { transform: scale(1.25); box-shadow: 0 0 0 6px color-mix(in srgb, #ff8a00 30%, transparent), 0 6px 16px rgba(0,0,0,.35); }
+
+/* ---------- Transitions entre les pages (React <ViewTransition>, voir layout.tsx) ---------- */
+::view-transition-old(.page-swap) { animation: page-out 140ms cubic-bezier(.4, 0, 1, 1) both; }
+::view-transition-new(.page-swap) { animation: page-in 260ms cubic-bezier(0, 0, .2, 1) both; }
+::view-transition-group(.page-swap) { animation-duration: 260ms; }
+@keyframes page-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.page-swap), ::view-transition-new(.page-swap) { animation: none; }
+}
+
+/* ---------- Deux espaces : Vie Saint-Roch / Entreprises ---------- */
+.business-intro { isolation: isolate; position: relative; overflow: hidden; background: linear-gradient(115deg, color-mix(in srgb, var(--bg) 84%, #ffd9a8), color-mix(in srgb, var(--bg) 88%, #c9e7d4)); }
+/* Page de choix des deux espaces */
+.space-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; animation: space-in .45s cubic-bezier(.2,.9,.3,1) both; }
+.space-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,.08); border-color: var(--text-2); }
+.space-card:active { transform: scale(.985); }
+.space-card--vie { background: linear-gradient(140deg, color-mix(in srgb, var(--bg) 80%, #d8ccff), color-mix(in srgb, var(--bg) 86%, #b6e8df)); }
+.space-card--entreprises { background: linear-gradient(140deg, color-mix(in srgb, var(--bg) 80%, #ffd9a8), color-mix(in srgb, var(--bg) 86%, #c9e7d4)); }
+@keyframes space-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .space-card { animation: none; } }
+
+/* ---------- Y aller : carte des trajets, stationnements, vélos, bus et événements ---------- */
+.ya-chips { scrollbar-width: none; }
+.ya-chips::-webkit-scrollbar { display: none; }
+.ya-card-pop { animation: ya-pop .22s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes ya-pop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+/* Stationnement : carré « P » (violet = municipal, bleu = public, gris = clientèle / à vérifier) et nombre de places */
+.ya-p { --c: #0096d6; position: relative; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--c); color: #fff; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); font: 900 14px/1 var(--font-sans); transition: transform .15s ease, box-shadow .15s ease; }
+.ya-p i { position: absolute; top: -10px; left: 18px; min-width: 22px; padding: 1px 5px; border-radius: 999px; background: #fff; color: var(--c); font: 800 9px/13px var(--font-sans); font-style: normal; text-align: center; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.ya-p--sm { width: 20px; height: 20px; border-radius: 6px; font-size: 10px; border-width: 1.5px; opacity: .9; }
+.ya-p:hover, .ya-p.is-on { transform: scale(1.25); }
+.ya-p.is-on { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 35%, transparent), 0 3px 10px rgba(0,0,0,.35); }
+.ya-p.is-legend { display: inline-grid; width: 18px; height: 18px; border-radius: 5px; font-size: 10px; border-width: 1.5px; box-shadow: none; }
+/* àVélo : pastille verte avec le nombre de vélos libres (en direct) */
+.ya-bike { display: inline-flex; align-items: center; gap: 2px; height: 26px; padding: 0 7px 0 4px; border-radius: 999px; background: #22a06b; color: #fff; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); font: 800 11px/1 var(--font-sans); white-space: nowrap; transition: transform .15s ease; }
+.ya-bike span { font-size: 12px; }
+.ya-bike.is-empty { background: #9ca3af; }
+.ya-bike:hover, .ya-bike.is-on { transform: scale(1.2); }
+.ya-bike.is-legend { height: 18px; padding: 0 5px 0 3px; font-size: 9px; border-width: 1.5px; box-shadow: none; }
+.ya-bike.is-legend span { font-size: 9px; }
+.ya-rack { width: 10px; height: 10px; border-radius: 3px; background: #22a06b; border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+/* Arrêt de bus et borne de recharge */
+.ya-bus { width: 100%; height: 100%; border-radius: 50%; background: #fff; border: 3px solid #f08c00; box-shadow: 0 1px 4px rgba(0,0,0,.3); transition: transform .15s ease; }
+.ya-bus:hover, .ya-bus.is-on { transform: scale(1.4); }
+.ya-bus.is-on { background: #f08c00; }
+.ya-bus.is-legend { display: inline-block; width: 13px; height: 13px; box-shadow: none; }
+.ya-ev { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e0a800; border: 2px solid #fff; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.ya-ev.is-on { transform: scale(1.25); }
+/* Activités et événements : goutte numérotée, rouge qui pulse = en direct, violette = à venir */
+.ya-evt { --c: var(--blue); position: relative; width: 34px; height: 42px; transition: transform .15s ease; }
+.ya-evt::before { content: ""; position: absolute; left: 3px; top: 1px; width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--c); border: 2.5px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.35); }
+.ya-evt span { position: absolute; left: 0; right: 0; top: 7px; text-align: center; color: #fff; font: 800 13px/16px var(--font-sans); }
+.ya-evt.is-live { --c: var(--red); }
+.ya-evt.is-live::after { content: ""; position: absolute; left: 3px; top: 1px; width: 28px; height: 28px; border-radius: 50%; background: var(--red); z-index: -1; animation: ya-pulse 1.6s ease-out infinite; }
+.ya-evt:hover, .ya-evt.is-on { transform: translateY(-3px) scale(1.12); }
+.ya-evt.is-legend { display: inline-block; width: 20px; height: 20px; }
+.ya-evt.is-legend::before { left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; border-width: 1.5px; transform: none; box-shadow: none; }
+.ya-evt.is-legend::after { left: 0; top: 0; width: 20px; height: 20px; }
+.ya-evt.is-legend span { top: 2px; font-size: 10px; }
+@keyframes ya-pulse { from { transform: scale(1); opacity: .55; } to { transform: scale(2.4); opacity: 0; } }
+/* Départ (point bleu) et arrivée (goutte violette qui tombe) */
+.ya-from { width: 20px; height: 20px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(26, 115, 232, .22), 0 2px 6px rgba(0,0,0,.3); }
+.ya-to { position: relative; width: 36px; height: 46px; animation: ya-drop .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ya-to::before { content: ""; position: absolute; left: 4px; top: 2px; width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--blue); border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+.ya-to span { position: absolute; left: 13px; top: 11px; width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+@keyframes ya-drop { from { transform: translateY(-20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ya-route { animation: ya-fade .5s ease-out both; }
+@keyframes ya-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ya-evt.is-live::after, .ya-to, .ya-route, .ya-card-pop { animation: none; }
+}
+
+/* ---------- Vitrines : locaux vacants regroupés par rue (position approximative, fichier SDC sans adresse) ---------- */
+.vac-rue { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 9999px; background: #ff8a00; border: 3px solid #fff; color: #fff; font: 800 15px/1 var(--font-sans); box-shadow: 0 0 0 6px color-mix(in srgb, #ff8a00 25%, transparent), 0 4px 12px rgba(0,0,0,.3); transition: transform .2s, box-shadow .2s; cursor: pointer; }
+.vac-rue:hover { transform: scale(1.08); }
+.vac-rue--on { transform: scale(1.12); box-shadow: 0 0 0 10px color-mix(in srgb, #ff8a00 38%, transparent), 0 6px 16px rgba(0,0,0,.35); }
+@media (prefers-reduced-motion: reduce) { .vac-rue { transition: none; } }
+
+/* ---------- Style HACKATHON26 (demande de Danny, 15 oct. au soir) ----------
+   Apparence reprise du prototype HACKATHON26 (src/styles/theme.css et ses composants) : vert #7AB648 pour l'action
+   principale, bleu #0096D6 pour les liens et éléments actifs, bleu nuit #1F3A4D pour les textes (en transparence pour
+   les bordures et textes secondaires), blanc et menthe #F3F8F5 pour les fonds, rayon de 8 px, bordures fines plutôt
+   qu'ombres, police Inter. Seulement l'apparence : écrans et fonctions inchangés. Pour revenir en arrière : retirer
+   cette section (et la police Inter dans layout.tsx). */
+:root {
+  --bg: #ffffff;
+  --canvas: #ffffff;
+  --text: #1f3a4d;        /* bleu nuit */
+  --text-2: #627582;      /* bleu nuit à 70 % */
+  --border: #e9ebed;      /* bleu nuit à 10 % */
+  --separator: #f2f3f4;
+  --soft: #f3f8f5;        /* menthe : fond secondaire */
+  --hover: #e8f1ec;
+  --blue: #0096d6;        /* accent : liens, éléments actifs */
+  --blue-hover: #0083bb;
+  --link: #0096d6;
+  --red: #e5484d;
+  --green: #7ab648;       /* action principale */
+  --green-hover: #6da33f;
+  --story: linear-gradient(135deg, #7ab648, #0096d6);
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #13232e;
+    --canvas: #0d1a22;
+    --text: #eef3f6;
+    --text-2: #9db1be;
+    --border: #253845;
+    --separator: #1c2e3a;
+    --soft: #182a36;
+    --hover: #20343f;
+    --blue: #27a9e1;
+    --blue-hover: #0096d6;
+    --link: #5cc4ee;
+  }
+}
+body { font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 15px; }
+h1, h2, h3 { letter-spacing: -0.01em; }
+::selection { background: color-mix(in srgb, var(--blue) 18%, transparent); }
+.surface-card { border-radius: 8px; }
+/* Pas d'effet ludique : les cartes ne s'envolent pas, la bordure suffit. */
+.idea-card:hover, .space-card:hover { transform: none; box-shadow: none; border-color: color-mix(in srgb, var(--text) 25%, var(--border)); }
+.space-card:active { transform: none; }
+.gallery-intro, .midi-banner, .space-card--vie, .space-card--entreprises { background: var(--soft); }
+.gallery-intro::before { display: none; }
+.join-dialog { border-radius: 8px 8px 0 0; }
+@media (min-width: 768px) { .join-dialog { border-radius: 8px; } }
+@layer components {
+  .ig-input { border-radius: 8px; background: var(--bg); border-color: color-mix(in srgb, var(--text) 20%, transparent); }
+  .ig-btn { background: var(--green); border-radius: 8px; min-height: 44px; }
+  .ig-btn:hover { background: var(--green-hover); box-shadow: none; }
+  .ig-btn:active { transform: none; }
+  .ig-btn-secondary { background: var(--bg); border: 1px solid color-mix(in srgb, var(--text) 20%, transparent); color: var(--text); border-radius: 8px; min-height: 44px; }
+  .ig-btn-secondary:hover { background: var(--soft); }
+}
+/* Barre latérale (ordinateur) sur fond bleu nuit, comme HACKATHON26 : textes blancs, élément actif sur fond
+   translucide avec un trait vert à gauche, action principale (Lancer / Publier) en vert. */
+.side-nav { background: #1f3a4d; color: #fff; border-color: transparent; }
+.side-nav .text-muted { color: rgb(255 255 255 / .7); }
+.side-nav .bg-soft { background: rgb(255 255 255 / .1); }
+.side-nav .hover\:bg-soft:hover { background: rgb(255 255 255 / .06); }
+.side-nav .bg-sep { background: rgb(255 255 255 / .12); }
+.side-nav .text-ig-blue { color: var(--green); }
+.side-nav .ring-bg { --tw-ring-color: #1f3a4d; }
+.side-nav [aria-current="page"] { position: relative; }
+.side-nav [aria-current="page"]::before { position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px; border-radius: 9999px; background: var(--green); content: ""; }
+.side-nav .side-nav-primary { background: var(--green); color: #fff; font-weight: 600; }
+.side-nav .side-nav-primary:hover { background: var(--green-hover); }
+.side-nav .side-nav-primary .text-ig-blue { color: #fff; }
+.side-nav .side-nav-primary[aria-current="page"] { box-shadow: 0 0 0 2px rgb(255 255 255 / .6); }
+.side-nav .side-nav-primary[aria-current="page"]::before { display: none; }
+
+/* ---------- Reference HACKATHON26: lisibilite et composants de notre app ---------- */
+:root { --link: #0075a5; }
+body { font-size: 16px; letter-spacing: 0; }
+h1, h2, h3, .font-logo { letter-spacing: 0; }
+.app-main :is(h1, h2, h3, p) { overflow-wrap: anywhere; }
+.app-main h1 { text-wrap: balance; }
+.ig-btn, .ig-btn-secondary { min-height: 44px; font-size: 14px; line-height: 1.4; text-align: center; white-space: normal; overflow-wrap: anywhere; }
+.ig-btn { color: #173045; }
+.ig-btn > svg, .ig-btn-secondary > svg { flex-shrink: 0; }
+.ig-input, input[type="search"] { font-family: inherit; }
+.side-nav .side-nav-primary, .side-nav .side-nav-primary .text-ig-blue { color: #173045; }
+.side-nav .hover\:text-fg:hover { color: #fff; }
+.side-nav .text-xs { font-size: 13px; line-height: 1.65; }
+.side-nav [aria-current="page"] { font-weight: 600; }
+.mobile-nav-label { max-width: 100%; font-size: 10px; line-height: 1.15; overflow-wrap: anywhere; text-align: center; }
+.feed-page > header { padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.feed-page > header > a { font-size: 13px; }
+.feed-page .idea-grid { gap: 24px; }
+.feed-page > section > p[role="status"] { font-size: 14px; }
+.feed-search { min-height: 48px; background: var(--bg); }
+.feed-search input { min-height: 46px; font-size: 16px; }
+.feed-filters > div { box-shadow: 0 8px 24px rgb(31 58 77 / 10%); }
+.feed-filters :is(label, select), .feed-filters > div > button { font-size: 14px; }
+.feed-filters > div > h2 { font-size: 16px; }
+.publication-card { border-radius: 8px; box-shadow: 0 1px 2px rgb(31 58 77 / 4%); }
+.publication-card:hover { border-color: color-mix(in srgb, var(--text) 22%, var(--border)); box-shadow: 0 2px 8px rgb(31 58 77 / 5%); }
+.publication-preview { aspect-ratio: 16 / 10; border-bottom: 1px solid var(--border); }
+.publication-body { padding: 20px; }
+.publication-title { min-height: 48px; font-size: 18px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.business-publication .publication-title { min-height: 0; }
+.publication-description { min-height: 44px; font-size: 14px; line-height: 1.6; }
+.publication-tag { display: inline-flex; min-height: 27px; max-width: 100%; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid var(--border); border-radius: 4px; background: var(--soft); color: var(--text); font-size: 12px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.publication-tag-secondary { background: color-mix(in srgb, var(--blue) 8%, var(--bg)); }
+.publication-date { display: flex; width: 48px; height: 62px; flex-shrink: 0; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+.publication-date > span { font-size: 10px; font-weight: 600; line-height: 1; color: var(--link); }
+.publication-date > strong { font-size: 23px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.publication-metadata { display: grid; gap: 10px; font-size: 13px; line-height: 1.5; }
+.publication-author, .publication-actions { min-width: 0; }
+.publication-actions > :first-child { padding-inline: 10px; }
+.publication-share { width: 44px; height: 44px; }
+.business-publication-media > div { aspect-ratio: 16 / 10; }
+.business-publication .publication-body > p { overflow-wrap: anywhere; }
+.idea-poster::before { display: none; }
+.idea-poster .poster-title { font-size: 30px; line-height: 1.2; letter-spacing: 0; }
+.idea-poster--compact { padding: 18px; }
+.idea-poster--compact .poster-title { font-size: 22px; line-height: 1.2; }
+.idea-poster--compact > span { font-size: 10px; letter-spacing: 0; }
+.auth-page { width: 100%; }
+.auth-page .text-xs { font-size: 14px; }
+.auth-page :is(form, .animate-fade-in) { gap: 12px; }
+.join-dialog h2 { text-align: center; line-height: 1.4; }
+.join-dialog [aria-pressed] { min-height: 76px; font-size: 14px; }
+.join-dialog [aria-pressed] > span { font-size: 12px; }
+.post-detail-summary { padding-block: 4px 24px; border-bottom: 1px solid var(--border); }
+.post-detail-page .text-sm { font-size: 15px; line-height: 1.65; }
+.post-detail-page .text-xs { font-size: 13px; }
+.post-detail-page .publication-tag { font-size: 13px; }
+@media (min-width: 380px) { .mobile-nav-label { font-size: 11px; } }
+@media (min-width: 640px) { .feed-page .idea-grid { gap: 28px; } }
+@media (min-width: 1024px) and (max-width: 1399px) { .idea-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1400px) { .publication-body { padding: 22px; } }
+@media (max-width: 379px) {
+  .publication-body { padding: 16px; }
+  .publication-date { width: 42px; }
+  .publication-actions { gap: 6px; }
+  .publication-actions .ig-btn, .publication-actions .ig-btn-secondary { font-size: 13px; }
+}
+@media (prefers-color-scheme: dark) {
+  :root { --link: #5cc4ee; }
+  .publication-card { box-shadow: none; }
+  .publication-card:hover { box-shadow: none; }
+}
+/* ---------- Annuaire : commerces de la liste SDC regroupés par rue (position de la rue, pas d'une adresse) ---------- */
+.dir-rue { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 9999px; background: #1f3a4d; border: 3px solid #fff; color: #fff; font: 700 13px/1 var(--font-inter), system-ui, sans-serif; box-shadow: 0 0 0 5px color-mix(in srgb, #1f3a4d 18%, transparent), 0 3px 10px rgba(0,0,0,.25); cursor: pointer; }
+.dir-rue--on { background: #0096d6; box-shadow: 0 0 0 8px color-mix(in srgb, #0096d6 30%, transparent), 0 4px 12px rgba(0,0,0,.3); }
+
+/* ---------- Reference validee : conserver le rendu clair independamment du systeme ---------- */
+html { color-scheme: light; }
+:root {
+  --bg: #ffffff;
+  --canvas: #ffffff;
+  --text: #1f3a4d;
+  --text-2: #627582;
+  --border: #e9ebed;
+  --separator: #f2f3f4;
+  --soft: #f3f8f5;
+  --hover: #e8f1ec;
+  --blue: #0096d6;
+  --blue-hover: #0083bb;
+  --link: #0075a5;
+}
+.publication-card { box-shadow: 0 1px 2px rgb(31 58 77 / 4%); }
+.publication-card:hover { box-shadow: 0 2px 8px rgb(31 58 77 / 5%); }
+
+/* ---------- Galerie : proportions de la capture validee (1440 px) ---------- */
+.feed-page .publication-card { min-width: 0; }
+.feed-page .publication-preview { aspect-ratio: 16 / 10; }
+.feed-page .publication-card:not(.business-publication) .publication-body { min-height: 418px; }
+@media (min-width: 1400px) {
+  .feed-page .idea-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+  .feed-page .publication-body { padding: 22px; }
+}
+@media (max-width: 639px) {
+  .feed-page .publication-card:not(.business-publication) .publication-body { min-height: 0; }
+}
+
+/* ---------- Mobile au maximum (demande de Danny, 16 oct. matin) ----------
+   Règles transversales, sans toucher aux écrans : elles s'appliquent partout et corrigent les cas que les écrans
+   ne prévoient pas (très petits téléphones, mode paysage, encoches, doigts, clavier). */
+
+/* 1. Aucune page ne doit défiler de côté : un élément trop large est rogné au lieu de décaler tout l'écran. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-x: clip; }
+h1, h2, h3, h4, p, li, dd, dt, label, blockquote { overflow-wrap: anywhere; }
+
+/* 2. Champs de saisie à 16 px sur téléphone : iOS ne zoome plus la page quand on touche un champ. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea { font-size: max(16px, 1em); }
+}
+
+/* 3. Au doigt (écran tactile) : boutons d'au moins 44 px de haut, et petites icônes avec une zone tactile agrandie
+      sans changer leur taille visible. */
+@media (pointer: coarse) {
+  .ig-btn, .ig-btn-secondary { min-height: 44px; }
+  :is(button, a)[class~="h-8"][class~="w-8"]:not(.absolute):not(.fixed),
+  :is(button, a)[class~="h-9"][class~="w-9"]:not(.absolute):not(.fixed),
+  :is(button, a)[class~="h-10"][class~="w-10"]:not(.absolute):not(.fixed) { position: relative; }
+  :is(button, a)[class~="h-8"][class~="w-8"]::after,
+  :is(button, a)[class~="h-9"][class~="w-9"]::after,
+  :is(button, a)[class~="h-10"][class~="w-10"]::after { position: absolute; inset: -6px; content: ""; }
+  /* Pas d'effet de survol « collé » après un toucher */
+  .idea-card:hover, .space-card:hover { border-color: var(--border); }
+}
+
+/* 4. Textes minuscules lisibles sur téléphone (les étiquettes de 8-9 px montent à 10-11 px). */
+@media (max-width: 767px) {
+  .text-\[8px\] { font-size: 10px; }
+  .text-\[9px\] { font-size: 10.5px; }
+}
+
+/* 5. Rangées qui défilent de côté (filtres, carrousels) : le geste reste dans la rangée, il ne déclenche pas
+      le « retour » du navigateur ni le défilement de la page. */
+.no-scrollbar { overscroll-behavior-x: contain; scroll-padding-inline: 16px; }
+
+/* 6. Encoches et coins arrondis en mode paysage : contenu, en-tête et menu du bas restent dans la zone visible. */
+@media (max-width: 767px) {
+  #contenu { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .glass-header { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  nav[aria-label="Navigation mobile"] { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+}
+
+/* 7. Panneaux qui montent du bas (« Je me propose », « Contacter »…) : jamais plus hauts que l'écran visible,
+      même avec le clavier ouvert, et la barre de l'iPhone ne cache pas le bouton. */
+@media (max-width: 767px) {
+  .join-dialog { max-height: calc(100dvh - max(12px, env(safe-area-inset-top))); }
+  .join-dialog form, .join-dialog > div { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+}
+
+/* 8. Cartes : en mode paysage sur téléphone, la carte tient dans l'écran (au lieu de 400-520 px de haut). */
+@media (max-height: 500px) and (orientation: landscape) {
+  .vitrines-page .vitrines-map, .directory-map .vitrines-map { height: max(220px, 76dvh); }
+  .ya-map3d-canvas { min-height: 0; }
+}
+/* Très petits téléphones : cartes un peu moins hautes pour voir le contenu dessous. */
+@media (max-width: 359px) {
+  .vitrines-page .vitrines-map, .directory-map .vitrines-map { height: 340px; }
+}
+/* Commandes Plan / Satellite / 3D : sur un petit écran, les libellés se cachent et les icônes restent. */
+@media (max-width: 380px) {
+  .ya-3d-controls button { font-size: 0; gap: 0; }
+  .ya-3d-controls button svg { width: 17px; height: 17px; }
+}
+
+/* 9. Très petits téléphones (moins de 360 px de large) : marges et grands titres réduits pour ne rien couper. */
+@media (max-width: 359px) {
+  .px-4 { padding-left: 12px; padding-right: 12px; }
+  .-mx-4 { margin-left: -12px; margin-right: -12px; }
+  .text-\[28px\] { font-size: 24px; }
+  .text-\[26px\] { font-size: 23px; }
+  .text-3xl { font-size: 1.6rem; }
+}
+
+/* 10. Moins d'animation demandée par le téléphone : on la respecte partout. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+/* Carte de l'accueil (« Ça se passe où ? ») en mode paysage sur téléphone : elle tient dans l'écran. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .map-points.h-\[340px\] { height: max(220px, 76dvh); }
+}
+/* Menu du bas sur les plus petits téléphones (6 entrées sur 320 px) : libellés sur une ligne, sans couper les mots. */
+@media (max-width: 359px) {
+  .mobile-nav-label { font-size: 9.5px; letter-spacing: -0.01em; overflow-wrap: normal; white-space: nowrap; }
+}

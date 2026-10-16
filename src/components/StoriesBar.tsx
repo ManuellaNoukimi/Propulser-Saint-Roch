@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, MapPin, Plus, Search } from "lucide-react";
+import { CalendarDays, Plus, Search } from "lucide-react";
 import { FEATURES } from "@/lib/features";
 import { useSession } from "@/lib/session";
 import { Avatar } from "./Avatar";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 const SHORTCUTS = [
   { href: "/evenements", label: "Agenda", icon: CalendarDays, color: "text-ig-blue" },
   { href: "/explorer", label: "Découvertes", icon: Search, color: "text-violet-500" },
-  { href: "/signaler", label: "Mon quartier", icon: MapPin, color: "text-emerald-500" },
 ];
 
 export function StoriesBar() {
@@ -33,7 +33,7 @@ export function StoriesBar() {
         <span className="my-3 h-10 w-px shrink-0 bg-line" aria-hidden />
         {FEATURES.filter((f) => f.status === "bientot").map((f) => (
           <Link key={f.slug} href={f.href} aria-label={`${f.label}, bientôt disponible`} className="group flex w-[64px] shrink-0 flex-col items-center gap-2">
-            <span className="relative grid h-[62px] w-[62px] place-items-center rounded-full border border-line transition group-hover:border-muted group-active:scale-95"><span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-soft text-[25px]">{f.emoji}</span><span className="absolute -bottom-1 rounded-full border border-line bg-bg px-1.5 py-0.5 text-[7px] font-semibold uppercase tracking-wide text-muted">Bientôt</span></span>
+            <span className="relative grid h-[62px] w-[62px] place-items-center rounded-full border border-line transition group-hover:border-muted group-active:scale-95"><span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-soft text-[25px]"><InterfaceIcon symbol={f.emoji} size={22} /></span><span className="absolute -bottom-1 rounded-full border border-line bg-bg px-1.5 py-0.5 text-[7px] font-semibold uppercase tracking-wide text-muted">Bientôt</span></span>
             <span className="text-[11px] text-muted">{f.label}</span>
           </Link>
         ))}

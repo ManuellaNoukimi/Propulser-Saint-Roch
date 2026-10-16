@@ -1,4 +1,5 @@
 "use client";
+import { notifyResidentProgress } from "@/lib/resident-feedback";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,13 +9,17 @@ import { actorTypeOf, categoryOf, contributionOf, needOf, sectorOf } from "@/lib
 import { formatDate, timeAgo } from "@/lib/format";
 import { loginHref, useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
+import { confirmRegistration } from "@/lib/registration-confirmation";
 import type { IdeaWithComplices, Invitation } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { BadgeChips } from "./BadgeChips";
 import { JoinSheet } from "./JoinSheet";
+import { JoinedTag } from "./JoinedTag";
 import { PostMedia } from "./PostMedia";
 import { ProfileLink } from "./ProfileLink";
 import { usePostActions } from "./usePostActions";
+import { HowToGetThere } from "./yaller/HowToGetThere";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 export function PostDetail({ id }: { id: string }) {
   const { user } = useSession();
@@ -64,7 +69,7 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
   const accepted = idea.invitations.filter((i) => i.status === "accepted").length;
 
   return (
-    <div className="mx-auto max-w-[1100px] px-4 py-5 md:px-7 md:py-8">
+    <div className="post-detail-page mx-auto max-w-[1100px] px-4 py-5 md:px-7 md:py-8">
       <button type="button" onClick={() => router.back()} className="mb-4 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-muted hover:text-fg">
         <ArrowLeft size={18} /> Retour
       </button>
@@ -77,9 +82,9 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
         </div>
 
         <div className="space-y-5">
-          <section className="surface-card p-5 md:p-6">
+          <section className="post-detail-summary">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-soft px-2.5 py-1 text-[11px] font-semibold">{cat?.emoji} {cat?.label}</span>
+              <span className="publication-tag"> {cat?.label}</span>
               {idea.isMine && <span className="rounded-md bg-ig-blue/10 px-2.5 py-1 text-[11px] font-semibold text-ig-blue">Ton idée</span>}
               <span className="ml-auto text-[11px] text-muted">{timeAgo(idea.createdAt, true)}</span>
             </div>
@@ -94,7 +99,7 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
               <div className="mt-4">
                 <p className="text-[10px] font-bold uppercase tracking-[.14em] text-muted">On cherche</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {idea.needs.map((n) => <span key={n} className="rounded-full border border-line px-3 py-1.5 text-xs">{needOf(n)?.emoji} {needOf(n)?.label}</span>)}
+                  {idea.needs.map((n) => <span key={n} className="publication-tag"> {needOf(n)?.label}</span>)}
                 </div>
               </div>
             )}
@@ -112,11 +117,18 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
               {idea.isMine ? (
                 <Link href="/lancer" className="ig-btn min-h-11 flex-1 text-sm"><UserPlus size={17} /> Trouver d&apos;autres complices</Link>
               ) : (
-                <button type="button" onClick={() => (user ? setJoinOpen(true) : router.push(loginHref()))} className="ig-btn min-h-11 flex-1 text-sm">Je me propose</button>
+                idea.myContributions?.length ? (
+                  <JoinedTag ideaId={idea.id} contributions={idea.myContributions} onLeft={() => { reload(); refresh(); }} />
+                ) : (
+                  <button type="button" onClick={() => (user ? setJoinOpen(true) : router.push(loginHref()))} className="ig-btn min-h-11 flex-1 text-sm">Je me propose</button>
+                )
               )}
               <button type="button" onClick={share} aria-label="Partager cette idée" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line text-muted transition hover:bg-soft hover:text-fg"><Send size={18} /></button>
             </div>
           </section>
+
+          {/* « Y aller » : stationnements, bus et vélos près du lieu, bouton Itinéraire */}
+          <HowToGetThere place={idea.place} />
 
           {idea.isMine && idea.invitations.length > 0 && (
             <section className="surface-card p-5 md:p-6">
@@ -135,7 +147,7 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
                       <Avatar user={i.to} size={34} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold">{i.to.displayName}</span>
-                        <span className="block truncate text-xs text-muted">{contributionOf(i.contribution)?.emoji} {contributionOf(i.contribution)?.label}</span>
+                        <span className="block truncate text-xs text-muted"> {contributionOf(i.contribution)?.label}</span>
                       </span>
                       <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.className}`}><s.icon size={12} /> {s.label}</span>
                     </li>
@@ -147,8 +159,8 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
           )}
 
           <section id="complices" className="surface-card p-5 md:p-6">
-            <h2 className="text-lg font-bold">🤝 {idea.complices.length} complice{idea.complices.length > 1 ? "s" : ""}</h2>
-            {idea.complices.length === 0 && <p className="mt-2 text-sm text-muted">Sois le premier ou la première, et gagne le badge ⭐ Premier complice !</p>}
+            <h2 className="flex items-center gap-2 text-lg font-bold"><InterfaceIcon symbol="🤝" size={20} />{idea.complices.length} complice{idea.complices.length > 1 ? "s" : ""}</h2>
+            {idea.complices.length === 0 && <p className="mt-2 text-sm text-muted">Sois le premier ou la première, et gagne le badge Premier complice !</p>}
             {[{ t: "Aident", list: helpers }, { t: "Participent", list: participants }].map(
               (g) =>
                 g.list.length > 0 && (
@@ -161,7 +173,7 @@ function PostDetailView({ idea, reload }: { idea: IdeaWithComplices; reload: () 
                           <div className="min-w-0 flex-1">
                             <p className="text-sm leading-tight">
                               <ProfileLink user={c.user} className="font-semibold">{c.user.displayName}</ProfileLink>{" "}
-                              <span className="text-muted">· {contributionOf(c.contribution)?.emoji} {contributionOf(c.contribution)?.label}</span>
+                              <span className="text-muted">·  {contributionOf(c.contribution)?.label}</span>
                             </p>
                             {c.message && <p className="mt-0.5 text-sm text-muted">{c.message}</p>}
                             <div className="mt-1"><BadgeChips badges={c.badges} /></div>
@@ -206,14 +218,16 @@ export function InvitationBanner({ invitation, onAnswered }: { invitation: Invit
     }).catch(() => null);
     setSending(null);
     if (!res?.ok) return toast("Réponse non envoyée. Réessaie.");
-    toast(accept ? "🎉 Tu es maintenant complice !" : "Merci d'avoir répondu");
+    if (accept) confirmRegistration(invitation.idea.title);
+    else toast("Merci d'avoir répondu");
+    if (accept) notifyResidentProgress();
     onAnswered();
   }
 
   if (invitation.status !== "pending") {
     return (
       <p className="mb-5 rounded-2xl border border-line bg-bg px-4 py-3 text-sm">
-        {invitation.status === "accepted" ? "✅ Tu as accepté d'être complice de cette idée." : "Tu as répondu « Pas cette fois » à cette invitation."}
+        {invitation.status === "accepted" ? " Tu as accepté d'être complice de cette idée." : "Tu as répondu « Pas cette fois » à cette invitation."}
       </p>
     );
   }
@@ -225,7 +239,7 @@ export function InvitationBanner({ invitation, onAnswered }: { invitation: Invit
         <p className="text-[15px] leading-snug">
           <span className="font-semibold">{invitation.from.displayName}</span> t&apos;invite à être complice de{" "}
           <span className="font-semibold">« {invitation.idea.title} »</span>
-          {c && <> pour <span className="font-semibold">{c.emoji} {c.label.toLowerCase()}</span></>}.
+          {c && <> pour <span className="font-semibold"> {c.label.toLowerCase()}</span></>}.
         </p>
       </div>
       {invitation.reason && <p className="mt-3 rounded-xl bg-soft px-3 py-2 text-sm text-muted">Pourquoi toi : {invitation.reason}</p>}
