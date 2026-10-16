@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpDown, Bike, Bus, CalendarDays, Car, Check, ChevronDown, ChevronUp, ExternalLink, Footprints, LoaderCircle,
-  LocateFixed, MapPin, Navigation, SquareParking, X, Zap,
+  LocateFixed, MapPin, Navigation, SquareParking, X, Zap, Layers as LayersIcon,
 } from "lucide-react";
 import { useNow } from "@/lib/now";
 import { toast } from "@/lib/toast";
@@ -31,11 +31,51 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
   const [parkingId, setParkingId] = useState<string | null>(null);
   const [busIndex, setBusIndex] = useState(0);
   const [selected, setSelected] = useState<Selected | null>(null);
-  const [show, setShow] = useState<Show>({ parkings: true, velo: true, bus: false, bornes: false, events: true });
+  const [show, setShow] = useState<Show>({ parkings: true, velo: false, bus: false, bornes: false, events: true });
   const [sheetOpen, setSheetOpen] = useState(true);
   const [locating, setLocating] = useState(false);
   const gen = useRef(0);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDetailsElement>(null);
+  const hasSelection = selected !== null;
+  const [mapInset, setMapInset] = useState(0);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const measure = () => setMapInset(selectionRef.current ? selectionRef.current.offsetHeight + (desktop.matches ? 16 : 0) : desktop.matches ? 0 : sheet.offsetHeight);
+    const observer = new ResizeObserver(measure);
+    observer.observe(sheet);
+    if (selectionRef.current) observer.observe(selectionRef.current);
+    desktop.addEventListener("change", measure);
+    return () => {
+      observer.disconnect();
+      desktop.removeEventListener("change", measure);
+    };
+  }, [hasSelection]);
+
+  useEffect(() => {
+    function closeFilters(event: PointerEvent) {
+      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) filtersRef.current.open = false;
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      if (filtersRef.current?.open) {
+        filtersRef.current.open = false;
+        filtersRef.current.querySelector("summary")?.focus();
+      } else {
+        setSelected(null);
+      }
+    }
+    document.addEventListener("pointerdown", closeFilters);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeFilters);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   // Données de la carte (les vélos àVélo sont en direct : on rafraîchit chaque minute)
   useEffect(() => {
@@ -124,17 +164,18 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
     if (trip.mode === "bus" && trip.bus?.[busIndex]) return { ...trip, legs: trip.bus[busIndex].legs };
     return trip;
   }, [trip, busIndex]);
-  const padBottom = useCallback(() => (window.matchMedia("(min-width: 768px)").matches ? 24 : (sheetRef.current?.offsetHeight ?? 0)), []);
+  const padBottom = useCallback(() => selectionRef.current ? selectionRef.current.offsetHeight + 24 : window.matchMedia("(min-width: 768px)").matches ? 24 : (sheetRef.current?.offsetHeight ?? 0), []);
   const chosenParking = trip?.mode === "auto" ? (trip.parking?.id ?? null) : null;
   const upcoming = events.slice(0, 6);
 
   return (
-    <div className="relative -mb-1 h-[calc(100dvh-136px-env(safe-area-inset-bottom))] overflow-hidden md:-mb-8 md:flex md:h-dvh">
+    <div className="ya-travel-layout relative -mb-1 h-[calc(100dvh-136px-env(safe-area-inset-bottom))] overflow-hidden md:-mb-8 md:flex md:h-dvh">
       {/* ---------- Panneau (feuille du bas sur téléphone, colonne à gauche sur ordinateur) ---------- */}
       <section
         ref={sheetRef}
         aria-label="Comment y aller"
-        className={`ya-sheet absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-3xl border-t border-line bg-bg shadow-[0_-12px_40px_rgba(0,0,0,.14)] transition-[max-height] duration-300 md:static md:z-auto md:max-h-none md:w-[420px] md:shrink-0 md:rounded-none md:border-r md:border-t-0 md:shadow-none ${sheetOpen ? "max-h-[78%]" : "max-h-[132px]"}`}
+        data-selected={hasSelection || undefined}
+        className={`ya-sheet absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-3xl border-t border-line bg-bg shadow-[0_-12px_40px_rgba(0,0,0,.14)] transition-[max-height] duration-300 md:static md:z-auto md:max-h-none md:w-[360px] lg:w-[400px] md:shrink-0 md:rounded-none md:border-r md:border-t-0 md:shadow-none ${sheetOpen ? "max-h-[56%]" : "max-h-[132px]"}`}
       >
         <button type="button" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen} aria-label={sheetOpen ? "Réduire le panneau" : "Agrandir le panneau"} className="flex w-full shrink-0 flex-col items-center pb-1 pt-2 md:hidden">
           <span className="h-1.5 w-10 rounded-full bg-line" />
@@ -144,7 +185,6 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
           <header className="mb-3 flex items-start justify-between gap-3">
             <div>
               <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight md:text-2xl"><Navigation size={22} className="text-ig-blue" /> Y aller</h1>
-              <p className="mt-0.5 text-xs text-muted md:text-sm">Trajet, stationnements, vélos et bus pour venir à Saint-Roch.</p>
             </div>
             <button type="button" onClick={() => setSheetOpen((o) => !o)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-soft md:hidden" aria-label={sheetOpen ? "Voir la carte" : "Voir le panneau"}>
               {sheetOpen ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
@@ -170,7 +210,7 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
               placeholder="Je vais à… (événement, lieu, adresse)"
               value={to}
               onPick={pickTo}
-              dot={<MapPin size={17} className="text-ig-blue" fill="currentColor" fillOpacity={0.15} />}
+              dot={<MapPin size={17} className="text-[#ea4335]" fill="currentColor" fillOpacity={0.15} />}
             />
             <span className="pointer-events-none absolute left-[21px] top-[42px] h-5 border-l-2 border-dotted border-line" aria-hidden />
             {(from || to) && (
@@ -182,8 +222,8 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
 
           {/* Raccourcis : les prochains événements */}
           {!to && upcoming.length > 0 && (
-            <div className="mt-3">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Où vas-tu ?</p>
+            <details className="ya-quiet-details mt-4">
+              <summary>Événements à venir</summary>
               <div className="ya-chips -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
                 {upcoming.map((ev, i) => (
                   <button key={ev.id} type="button" onClick={() => pickTo({ label: ev.title, detail: ev.place, lat: ev.lat, lng: ev.lng, kind: "evenement" })}
@@ -193,7 +233,7 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
                   </button>
                 ))}
               </div>
-            </div>
+            </details>
           )}
 
           {/* Modes avec la durée de chacun */}
@@ -231,13 +271,13 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
               )}
             </div>
           ) : (
-            <Explore layers={layers} show={show} setShow={setShow} hasTo={!!to} />
+            <Explore layers={layers} show={show} setShow={setShow} />
           )}
         </div>
       </section>
 
       {/* ---------- Carte ---------- */}
-      <div className="absolute inset-0 md:relative md:flex-1">
+      <div className="absolute inset-0 md:relative md:flex-1" style={{ "--ya-panel-height": mapInset + "px" } as React.CSSProperties}>
         <GoMap
           layers={layers}
           show={show}
@@ -249,16 +289,23 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
           chosenParkingId={chosenParking}
           onSelect={setSelected}
           padBottom={padBottom}
+          bottomInset={mapInset}
+          focusedPlace={selected?.item ?? null}
         />
         {/* Couches (raccourci sur la carte) */}
-        <div className="absolute left-3 top-3 z-10 flex gap-1.5 md:left-4 md:top-4">
+        <details ref={filtersRef} className="ya-map-layers">
+          <summary><LayersIcon size={17} strokeWidth={1.8} /> Afficher</summary>
+          <div className="ya-layers-menu">
           <LayerToggle on={show.parkings} onClick={() => setShow((s) => ({ ...s, parkings: !s.parkings }))} label="Stationnements" icon={<SquareParking size={16} />} color="#7552de" />
           <LayerToggle on={show.velo} onClick={() => setShow((s) => ({ ...s, velo: !s.velo }))} label="Vélos" icon={<Bike size={16} />} color="#22a06b" />
           <LayerToggle on={show.bus} onClick={() => setShow((s) => ({ ...s, bus: !s.bus }))} label="Bus" icon={<Bus size={16} />} color="#f08c00" />
           <LayerToggle on={show.bornes} onClick={() => setShow((s) => ({ ...s, bornes: !s.bornes }))} label="Bornes" icon={<Zap size={16} />} color="#e0a800" />
-        </div>
+          <LayerToggle on={show.events} onClick={() => setShow((s) => ({ ...s, events: !s.events }))} label="Événements" icon={<CalendarDays size={16} />} color="#d64656" />
+          </div>
+        </details>
         {selected && (
           <SelectedCard
+            panelRef={selectionRef}
             sel={selected}
             canPark={!!(from && to)}
             onClose={() => setSelected(null)}
@@ -273,25 +320,22 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
 
 function LayerToggle({ on, onClick, label, icon, color }: { on: boolean; onClick: () => void; label: string; icon: React.ReactNode; color: string }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={on} title={label}
-      className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold shadow-md backdrop-blur transition active:scale-95 ${on ? "border-transparent text-white" : "border-line bg-bg/95 text-muted"}`}
-      style={on ? { background: color } : undefined}>
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </button>
+    <label className="ya-layer-option">
+      <span style={{ color }}>{icon}</span>
+      <span>{label}</span>
+      <input type="checkbox" checked={on} onChange={onClick} aria-label={label} />
+    </label>
   );
 }
 
 // ---------- Sans trajet : ce qu'il y a dans le quartier ----------
-function Explore({ layers, show, setShow, hasTo }: { layers: Layers | null; show: Show; setShow: (f: (s: Show) => Show) => void; hasTo: boolean }) {
+function Explore({ layers, show, setShow }: { layers: Layers | null; show: Show; setShow: (f: (s: Show) => Show) => void }) {
   const s = layers?.stats;
   return (
-    <div className="mt-5 space-y-4 animate-fade-in">
-      <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
-        {hasTo ? "Entre ton point de départ (ou touche « Ma position ») pour voir le trajet en auto, en bus, en vélo et à pied." : "Choisis où tu vas : un événement, un lieu ou une adresse. Tu verras le trajet et où te garer."}
-      </p>
+    <details className="ya-quiet-details mt-4">
+      <summary>Dans le quartier</summary>
+      <div className="space-y-4 pt-3">
       <div>
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Dans le quartier</p>
         <div className="grid grid-cols-2 gap-2">
           <Stat on={show.parkings} onClick={() => setShow((x) => ({ ...x, parkings: !x.parkings }))} color="#7552de" icon={<SquareParking size={18} />}
             value={s ? s.villePlaces.toLocaleString("fr-CA") : "…"} label={s ? `places dans ${s.villeLots} stationnements municipaux` : "stationnements municipaux"} />
@@ -305,7 +349,8 @@ function Explore({ layers, show, setShow, hasTo }: { layers: Layers | null; show
       </div>
       <Legend />
       {layers && <p className="text-[10px] leading-relaxed text-muted">Sources : {layers.sources.join(" · ")}.</p>}
-    </div>
+      </div>
+    </details>
   );
 }
 
@@ -457,7 +502,7 @@ function BikeList({ title, list, field, empty }: { title: string; list: NonNulla
 }
 
 // ---------- Fiche de l'élément touché sur la carte ----------
-function SelectedCard({ sel, canPark, onClose, onGo, onPark }: { sel: Selected; canPark: boolean; onClose: () => void; onGo: (p: Place) => void; onPark: (p: Selected["item"]) => void }) {
+function SelectedCard({ sel, canPark, onClose, onGo, onPark, panelRef }: { sel: Selected; canPark: boolean; onClose: () => void; onGo: (p: Place) => void; onPark: (p: Selected["item"]) => void; panelRef: React.Ref<HTMLDivElement> }) {
   let icon: React.ReactNode;
   let title: string;
   let lines: (string | null)[] = [];
@@ -515,7 +560,7 @@ function SelectedCard({ sel, canPark, onClose, onGo, onPark }: { sel: Selected; 
     }
   }
   return (
-    <div className="absolute inset-x-3 top-14 z-30 mx-auto max-w-sm rounded-3xl border border-line bg-bg p-4 shadow-2xl ya-card-pop md:inset-x-auto md:bottom-6 md:left-6 md:top-auto md:w-[360px]" role="dialog" aria-label={title}>
+    <div ref={panelRef} className="ya-selection border border-line bg-bg p-4 shadow-xl ya-card-pop" role="region" aria-label={title}>
       <div className="flex items-start gap-3">
         {icon}
         <div className="min-w-0 flex-1">

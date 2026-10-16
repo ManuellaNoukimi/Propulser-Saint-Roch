@@ -4,8 +4,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MlMap, Marker } from "maplibre-gl";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, CalendarDays, ExternalLink, MapPin, Navigation, X } from "lucide-react";
-import { BEARING_3D, PITCH_3D, createMap3D, htmlMarker, type MapLib } from "@/lib/map3d";
+import { ArrowRight, CalendarDays, ExternalLink, Globe, MapPin, Navigation, X } from "lucide-react";
+import { BEARING_3D, PITCH_3D, createMap3D, htmlMarker, setSatelliteMode, type MapLib } from "@/lib/map3d";
 import type { GoEvent } from "@/lib/y-aller-types";
 
 const FILTERS = [
@@ -37,6 +37,7 @@ export function HomeMap() {
   const [filter, setFilter] = useState<Filter>("tout");
   const [selected, setSelected] = useState<string | null>(null);
   const [is3d, setIs3d] = useState(true);
+  const [isSatellite, setIsSatellite] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -112,6 +113,12 @@ export function HomeMap() {
     mapRef.current?.easeTo({ pitch: next ? PITCH_3D : 0, bearing: next ? BEARING_3D : 0, duration: 900 });
   }
 
+  function toggleSatellite() {
+    const next = !isSatellite;
+    setIsSatellite(next);
+    if (mapRef.current) setSatelliteMode(mapRef.current, next);
+  }
+
   return (
     <section aria-labelledby="carte-titre" className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -137,10 +144,28 @@ export function HomeMap() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="relative h-[340px] overflow-hidden rounded-3xl border border-line md:h-[420px]">
           <div ref={box} className="absolute inset-0 z-0 bg-soft" role="application" aria-label="Carte 3D des activités de Saint-Roch" />
-          <button type="button" onClick={toggle3d} aria-pressed={is3d} aria-label={is3d ? "Passer en vue 2D" : "Passer en vue 3D"}
-            className="absolute bottom-3 right-3 z-10 grid h-10 w-10 place-items-center rounded-full border border-line bg-bg/95 text-xs font-black shadow-md backdrop-blur transition active:scale-90">
-            {is3d ? "2D" : "3D"}
-          </button>
+          <div className="absolute bottom-3 right-3 z-10 flex gap-2">
+            <button
+              type="button"
+              onClick={toggleSatellite}
+              aria-pressed={isSatellite}
+              aria-label={isSatellite ? "Passer en vue Plan" : "Passer en vue Satellite"}
+              title={isSatellite ? "Vue Plan" : "Vue Satellite HD"}
+              className={`grid h-10 w-10 place-items-center rounded-full border border-line bg-bg/95 text-xs font-black shadow-md backdrop-blur transition active:scale-90 ${isSatellite ? "text-ig-blue border-ig-blue" : "text-fg"}`}
+            >
+              <Globe size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={toggle3d}
+              aria-pressed={is3d}
+              aria-label={is3d ? "Passer en vue 2D" : "Passer en vue 3D"}
+              title={is3d ? "Vue 2D" : "Vue 3D"}
+              className="grid h-10 w-10 place-items-center rounded-full border border-line bg-bg/95 text-xs font-black shadow-md backdrop-blur transition active:scale-90"
+            >
+              {is3d ? "2D" : "3D"}
+            </button>
+          </div>
           <div className="pointer-events-none absolute left-3 top-3 z-10 flex gap-1.5 text-[11px] font-semibold">
             <span className="flex items-center gap-1.5 rounded-full bg-bg/95 px-2.5 py-1 shadow-md"><span className="h-2.5 w-2.5 rounded-full bg-ig-red" /> En direct</span>
             <span className="flex items-center gap-1.5 rounded-full bg-bg/95 px-2.5 py-1 shadow-md"><span className="h-2.5 w-2.5 rounded-full bg-ig-blue" /> À venir</span>

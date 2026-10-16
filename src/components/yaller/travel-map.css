@@ -1,0 +1,444 @@
+/* Presentation reservee a la carte Y aller. */
+.ya-map-layers { position: absolute; left: 12px; top: 12px; z-index: 40; color: #253d36; }
+.ya-map-layers > summary { display: flex; min-height: 42px; align-items: center; gap: 8px; padding: 0 14px; list-style: none; border: 1px solid #e3e8e5; border-radius: 8px; background: #fff; box-shadow: 0 3px 12px rgb(23 39 32 / 12%); font-weight: 600; font-size: 13px; }
+.ya-map-layers > summary::-webkit-details-marker { display: none; }
+.ya-map-layers[open] > summary { color: #6843ca; background: #f7f5fc; }
+.ya-layers-menu { width: 224px; max-width: calc(100vw - 28px); max-height: min(280px, calc(100dvh - 226px - var(--ya-panel-height, 0px))); overflow-y: auto; overscroll-behavior: contain; margin-top: 8px; padding: 6px; border: 1px solid #e3e8e5; border-radius: 8px; background: #fff; box-shadow: 0 6px 24px rgb(23 39 32 / 16%); }
+.ya-layer-option { display: flex; width: 100%; min-height: 42px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 5px; text-align: left; font-size: 13px; }
+.ya-layer-option:hover { background: #f5f3fa; }
+.ya-layer-option { cursor: pointer; }
+.ya-layer-option input { width: 17px; height: 17px; margin-left: auto; flex-shrink: 0; accent-color: #6843ca; cursor: pointer; }
+.ya-travel-layout [role="listbox"] { max-height: min(32dvh, 260px); overflow-y: auto; overscroll-behavior: contain; }
+.ya-travel-layout .ya-quiet-details { border-top: 1px solid var(--border); font-size: 13px; }
+.ya-travel-layout .ya-quiet-details > summary { padding: 14px 0; color: var(--text-2); font-weight: 600; }
+.ya-travel-layout .ya-quiet-details[open] > summary { color: var(--text); }
+.ya-travel-layout .ya-selection { position: absolute; inset: auto 0 0; z-index: 30; max-height: 46%; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px 16px 0 0; }
+.ya-travel-layout .ya-selection p { overflow-wrap: anywhere; }
+@media (max-width: 767px) { .ya-travel-layout .ya-sheet[data-selected] { display: none; } }
+@media (min-width: 768px) {
+  .ya-map-layers { left: 16px; top: 16px; }
+  .ya-travel-layout .ya-selection { inset: auto auto 16px 16px; width: min(320px, calc(100% - 32px)); max-height: 46%; border-radius: 8px; }
+}
+
+/* Carte MapLibre : controles reserves a la vue 3D. */
+.ya-3d-map { isolation: isolate; --ya-map-inset: 0px; }
+.ya-travel-layout .ya-to::before { background: #ea4335; }
+.ya-3d-map .maplibregl-ctrl-top-right { right: 12px; top: 12px; }
+.ya-3d-map .maplibregl-ctrl-top-right .maplibregl-ctrl { margin: 0; }
+.ya-3d-map .maplibregl-ctrl-group { display: flex; border: 1px solid #e3e8e5; border-radius: 8px; box-shadow: 0 3px 12px rgb(23 39 32 / 14%); }
+.ya-3d-map .maplibregl-ctrl-group button { width: 36px; height: 38px; border: 0; border-right: 1px solid #ebefec; }
+.ya-3d-map .maplibregl-ctrl-group button:last-child { border: 0; }
+.ya-3d-map .maplibregl-ctrl-bottom-right, .ya-3d-map .maplibregl-ctrl-bottom-left { bottom: var(--ya-map-inset); transition: bottom .2s ease; }
+
+.ya-3d-controls {
+  position: absolute;
+  z-index: 15;
+  right: 12px;
+  bottom: calc(var(--ya-map-inset) + 26px);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(227, 232, 229, 0.9);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #253d36;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: bottom .2s ease;
+}
+
+.ya-3d-controls button {
+  display: flex;
+  min-width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  background: transparent;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.ya-3d-controls button:hover {
+  background: rgba(241, 245, 249, 0.9);
+  color: #0f172a;
+}
+
+.ya-3d-controls button[aria-pressed="true"] {
+  background: #6843ca;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(104, 67, 202, 0.35);
+}
+
+.ya-3d-controls button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.ya-3d-controls-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(203, 213, 225, 0.7);
+  margin: 0 2px;
+}
+
+.ya-3d-feedback { position: absolute; z-index: 20; left: 12px; top: 66px; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 24px); padding: 9px 12px; border: 1px solid #e3e8e5; border-radius: 6px; background: #fff; color: #43534c; box-shadow: 0 2px 10px rgb(0 0 0 / 8%); font-size: 12px; }
+.ya-3d-feedback button { text-decoration: underline; text-underline-offset: 3px; }
+.ya-3d-map .maplibregl-marker[role="button"]:focus-visible { outline: 3px solid #7552de; outline-offset: 4px; border-radius: 8px; }
+
+@media (min-width: 768px) {
+  .ya-3d-map .maplibregl-ctrl-top-right { right: 16px; top: 16px; }
+  .ya-3d-map .maplibregl-ctrl-group { flex-direction: column; }
+  .ya-3d-map .maplibregl-ctrl-group button { width: 40px; height: 40px; border-right: 0; border-bottom: 1px solid #ebefec; }
+  .ya-3d-controls { right: 16px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .ya-3d-controls {
+    background: rgba(24, 24, 27, 0.92);
+    border-color: rgba(63, 63, 70, 0.8);
+    color: #f1f5f9;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  }
+  .ya-3d-controls button {
+    color: #cbd5e1;
+  }
+  .ya-3d-controls button:hover {
+    background: rgba(39, 39, 42, 0.9);
+    color: #ffffff;
+  }
+  .ya-3d-controls-divider {
+    background: rgba(63, 63, 70, 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ya-3d-controls, .ya-3d-map .maplibregl-ctrl-bottom-right, .ya-3d-map .maplibregl-ctrl-bottom-left { transition: none; }
+}
+
+/* ==========================================================================
+   Ping localisation haute visibilité (Sonar Radar + Épingle 3D + Badge)
+   ========================================================================== */
+
+.ya-ping-destination {
+  position: relative;
+  width: 44px;
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Sonar émis depuis la pointe exacte au sol */
+.ya-ping-radar {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.ya-ping-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 72px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2.5px solid #ff334b;
+  background: radial-gradient(ellipse at center, rgba(255, 51, 75, 0.4) 0%, rgba(255, 51, 75, 0.05) 60%, transparent 100%);
+  transform: translate(-50%, -50%) rotateX(55deg);
+  opacity: 0;
+}
+
+.ya-ping-ring-1 {
+  animation: ya-sonar-pulse 2.4s cubic-bezier(0.1, 0.4, 0.2, 1) infinite;
+}
+
+.ya-ping-ring-2 {
+  animation: ya-sonar-pulse 2.4s cubic-bezier(0.1, 0.4, 0.2, 1) infinite 0.8s;
+}
+
+.ya-ping-ring-3 {
+  animation: ya-sonar-pulse 2.4s cubic-bezier(0.1, 0.4, 0.2, 1) infinite 1.6s;
+}
+
+.ya-ping-core {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff334b;
+  border: 2px solid #ffffff;
+  transform: translate(-50%, -50%) rotateX(55deg);
+  box-shadow: 0 0 12px rgba(255, 51, 75, 0.9);
+}
+
+@keyframes ya-sonar-pulse {
+  0% {
+    transform: translate(-50%, -50%) rotateX(55deg) scale(0.2);
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotateX(55deg) scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Le pin 3D */
+.ya-ping-pin-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: ya-pin-drop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.ya-ping-pin {
+  width: 44px;
+  height: 56px;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom center;
+}
+
+.ya-ping-destination:hover .ya-ping-pin {
+  transform: scale(1.14) translateY(-4px);
+}
+
+.ya-ping-pin-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Label flottant au-dessus du pin */
+.ya-ping-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: ya-label-appear 0.4s ease-out 0.2s both;
+}
+
+.ya-ping-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  max-width: 250px;
+}
+
+.ya-ping-badge::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.96) transparent transparent;
+}
+
+.ya-ping-badge-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ya-ping-badge-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ya-ping-title {
+  font-weight: 800;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ya-ping-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes ya-pin-drop {
+  0% {
+    transform: translateY(-45px) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(5px) scale(1.08);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-3px) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ya-label-appear {
+  0% {
+    transform: translateX(-50%) translateY(6px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Marker départ */
+.ya-from-marker {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ya-from-ring {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.28);
+  animation: ya-pulse-from 2s ease-out infinite;
+}
+
+.ya-from-dot {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.65);
+}
+
+.ya-from-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ya-from-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(37, 99, 235, 0.95);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes ya-pulse-from {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Marker focus / sélectionné */
+.ya-focus-ping {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ya-focus-radar {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ya-focus-ring {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.25);
+  animation: ya-pulse-from 1.8s ease-out infinite;
+}
+
+.ya-focus-dot {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
+}
+
+.ya-focus-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ya-focus-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+}

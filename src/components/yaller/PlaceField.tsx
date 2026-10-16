@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { CalendarDays, Home, LoaderCircle, MapPin, SquareParking, X } from "lucide-react";
 import type { Place } from "@/lib/y-aller-types";
 
@@ -33,11 +33,28 @@ export function PlaceField({
   const listId = useId();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ctrl = useRef<AbortController | null>(null);
+  const revision = useRef(0);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shown = text ?? value?.label ?? "";
 
-  function search(q: string) {
+  function cancelSearch() {
+    revision.current++;
     if (timer.current) clearTimeout(timer.current);
     ctrl.current?.abort();
+  }
+
+  useEffect(() => () => {
+    revision.current++;
+    if (timer.current) clearTimeout(timer.current);
+    if (blurTimer.current) clearTimeout(blurTimer.current);
+    ctrl.current?.abort();
+  }, []);
+
+  function search(q: string) {
+    cancelSearch();
+    const request = revision.current;
+    setNote(null);
+    setResults(null);
     if (q.trim().length < 2) {
       setResults(null);
       setLoading(false);
@@ -48,20 +65,29 @@ export function PlaceField({
       const c = new AbortController();
       ctrl.current = c;
       fetch(`/api/y-aller/lieux?q=${encodeURIComponent(q.trim())}`, { signal: c.signal })
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error("Recherche indisponible");
+          return r.json();
+        })
         .then((d: { results: Place[]; unavailable: boolean }) => {
+          if (request !== revision.current) return;
           setResults(d.results);
           setActive(0);
           setNote(d.results.length ? null : d.unavailable ? "Recherche indisponible pour l'instant." : "Aucun résultat. Essaie une adresse (ex. 450 rue Saint-Joseph Est).");
           setLoading(false);
         })
         .catch((e: Error) => {
-          if (e.name !== "AbortError") setLoading(false);
+          if (e.name !== "AbortError" && request === revision.current) {
+            setLoading(false);
+            setNote("Recherche indisponible. Réessaie.");
+          }
         });
     }, 220);
   }
 
   function pick(p: Place) {
+    cancelSearch();
+    setLoading(false);
     setText(null);
     setResults(null);
     setNote(null);
@@ -82,20 +108,40 @@ export function PlaceField({
             if (value) onPick(null);
             search(e.target.value);
           }}
-          onFocus={(e) => e.currentTarget.select()}
-          onBlur={() => setTimeout(() => { setResults(null); setNote(null); setText(null); }, 160)}
+          onFocus={(e) => {
+            if (blurTimer.current) clearTimeout(blurTimer.current);
+            e.currentTarget.select();
+          }}
+          onBlur={() => {
+            blurTimer.current = setTimeout(() => {
+              cancelSearch();
+              setLoading(false);
+              setResults(null);
+              setNote(null);
+              setText(null);
+            }, 160);
+          }}
           onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.stopPropagation();
+              cancelSearch();
+              setLoading(false);
+              setResults(null);
+              setNote(null);
+              setText(null);
+              return;
+            }
             if (!results?.length) return;
             if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => (a + 1) % results.length); }
             if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => (a - 1 + results.length) % results.length); }
             if (e.key === "Enter") { e.preventDefault(); pick(results[active]); }
-            if (e.key === "Escape") { setResults(null); setText(null); }
           }}
           placeholder={placeholder}
           aria-label={label}
           role="combobox"
           aria-controls={listId}
           aria-expanded={open}
+          aria-activedescendant={open && results?.length ? listId + "-" + active : undefined}
           aria-autocomplete="list"
           autoComplete="off"
           enterKeyHint="search"
@@ -104,7 +150,7 @@ export function PlaceField({
         {loading ? (
           <LoaderCircle size={17} className="shrink-0 animate-spin text-muted" />
         ) : shown ? (
-          <button type="button" aria-label={`Effacer : ${label}`} onClick={() => { setText(""); setResults(null); onPick(null); }} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted hover:bg-hov">
+          <button type="button" aria-label={`Effacer : ${label}`} onClick={() => { cancelSearch(); setLoading(false); setText(""); setResults(null); setNote(null); onPick(null); }} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted hover:bg-hov">
             <X size={16} />
           </button>
         ) : null}
@@ -121,6 +167,7 @@ export function PlaceField({
                 key={`${r.label}-${r.lat}-${r.lng}`}
                 type="button"
                 role="option"
+                id={listId + "-" + i}
                 aria-selected={i === active}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(r)}
