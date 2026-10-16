@@ -9,8 +9,8 @@ export const MODES: { id: Mode; label: string; emoji: string; color: string }[] 
 ];
 export const modeOf = (id: Mode) => MODES.find((m) => m.id === id)!;
 
-export const PARKING_COLOR: Record<Parking["kind"], string> = { ville: "#0096d6", public: "#1a73e8", clients: "#64748b", inconnu: "#9ca3af" };
-export const PARKING_KIND: Record<Parking["kind"], string> = { ville: "Municipal", public: "Public", clients: "Clientèle", inconnu: "Accès à vérifier" };
+export const PARKING_COLOR: Record<Parking["kind"], string> = { ville: "#0096d6", public: "#1a73e8", clients: "#64748b", inconnu: "#9ca3af", prive: "#b4536a" };
+export const PARKING_KIND: Record<Parking["kind"], string> = { ville: "Municipal", public: "Public", clients: "Clientèle", inconnu: "Accès à vérifier", prive: "Privé" };
 export const PARKING_TYPE: Record<Parking["type"], string> = { interieur: "Intérieur", etage: "Étagé", souterrain: "Souterrain", surface: "Extérieur", rue: "Dans la rue" };
 
 /** 754 s → « 13 min » ; 4 000 s → « 1 h 07 » */

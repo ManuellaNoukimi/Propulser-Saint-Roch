@@ -15,6 +15,7 @@ import {
   createMap3D,
   focusMarkerHtml,
   fromMarkerHtml,
+  hideBaseParkings,
   htmlMarker,
   pingMarkerHtml,
   set3DView,
@@ -106,6 +107,7 @@ export function GoMap({
       if (cancelled) return map.remove();
       libRef.current = maplibregl;
       fitted.current = "";
+      hideBaseParkings(map); // tous les « P » visibles sont les nôtres, donc cliquables
       // Tracé du trajet : contour blanc + couleur du mode ; marche en pointillés
       map.addSource("route", { type: "geojson", data: EMPTY });
       map.addLayer({ id: "route-casing", type: "line", source: "route", filter: ["!=", ["get", "dashed"], true], layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#ffffff", "line-width": 10, "line-opacity": 0.95 } });
@@ -165,8 +167,8 @@ export function GoMap({
       for (const p of layers.parkings) {
         const on = p.id === selectedId || p.id === chosenParkingId;
         if (!on && p.kind === "inconnu" && detailZoom < 17) continue;
-        if (!on && p.kind === "clients" && detailZoom < 16) continue;
-        const small = p.kind === "inconnu" || p.kind === "clients";
+        if (!on && (p.kind === "clients" || p.kind === "prive") && detailZoom < 16) continue;
+        const small = p.kind === "inconnu" || p.kind === "clients" || p.kind === "prive";
         const cap = p.capacity && !small && (detailZoom >= 17 || on) ? `<i>${p.estimated ? "≈" : ""}${p.capacity}</i>` : "";
         add(p, `<div class="ya-p${small ? " ya-p--sm" : ""}${on ? " is-on" : ""}" style="--c:${PARKING_COLOR[p.kind]}"><b>P</b>${cap}</div>`, p.name, () => onSelectRef.current({ kind: "parking", item: p }), on ? 9 : p.kind === "ville" ? 4 : 3);
       }

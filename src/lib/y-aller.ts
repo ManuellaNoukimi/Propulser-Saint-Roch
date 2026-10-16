@@ -135,7 +135,7 @@ export function parkings(): Parking[] {
   const ville = villeParkings();
   const others: Parking[] = osm()
     .parkings.filter((p) => !ville.some((v) => distance(v, p) < 70))
-    .map((p) => ({ ...p, source: "osm", name: p.name ?? (p.kind === "clients" ? "Stationnement pour la clientèle" : TYPE_LABEL[p.type]) }));
+    .map((p) => ({ ...p, source: "osm", name: p.name ?? (p.kind === "clients" ? "Stationnement pour la clientèle" : p.kind === "prive" ? "Stationnement privé" : TYPE_LABEL[p.type]) }));
   return [...ville, ...others];
 }
 
@@ -177,7 +177,7 @@ export async function layers(): Promise<Layers> {
   const all = parkings();
   const stations = await bikeStations();
   const ville = all.filter((p) => p.source === "ville");
-  const otherInSR = all.filter((p) => p.source === "osm" && p.kind !== "inconnu" && isInSaintRoch(p.lng, p.lat));
+  const otherInSR = all.filter((p) => p.source === "osm" && p.kind !== "inconnu" && p.kind !== "prive" && isInSaintRoch(p.lng, p.lat));
   const R = rtc();
   const busStops = busStopsInZone();
   return {
@@ -335,7 +335,7 @@ export async function planTrip(mode: Mode, from: LatLng, to: LatLng, parkingId: 
   }
   if (mode === "auto") {
     const options = parkingsNear(to, 5);
-    const chosen = (parkingId && parkings().find((p) => p.id === parkingId)) || options.find((p) => (p.capacity ?? 0) >= 15) || options[0];
+    const chosen = (parkingId && parkings().find((p) => p.id === parkingId && p.kind !== "prive")) || options.find((p) => (p.capacity ?? 0) >= 15) || options[0];
     if (!chosen) {
       const leg = await route("auto", from, to);
       return { ...base, ok: true, approx: leg.approx, duration: leg.duration, distance: leg.distance, legs: [leg], parkings: [] };

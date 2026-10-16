@@ -7,7 +7,7 @@ export type Parking = LatLng & {
   id: string;
   name: string;
   source: "ville" | "osm"; // stationnement municipal (fichier de la Ville) ou OpenStreetMap
-  kind: "ville" | "public" | "clients" | "inconnu";
+  kind: "ville" | "public" | "clients" | "inconnu" | "prive"; // prive : réservé (on ne peut pas s'y garer)
   type: "interieur" | "etage" | "souterrain" | "surface" | "rue";
   capacity: number | null;
   estimated: boolean; // nombre de places estimé d'après la surface

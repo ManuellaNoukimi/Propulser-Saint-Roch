@@ -519,6 +519,10 @@ function SelectedCard({ sel, canPark, onClose, onGo, onPark, panelRef }: { sel: 
       icon = <span className="grid h-11 w-11 place-items-center rounded-xl text-lg font-black text-white" style={{ background: PARKING_COLOR[p.kind] }}>P</span>;
       title = p.name;
       lines = [[places(p), PARKING_TYPE[p.type], PARKING_KIND[p.kind]].filter(Boolean).join(" · "), p.address, [p.fee === false ? "Gratuit" : charge(p.charge) ?? (p.fee ? "Payant" : null), p.maxstay ? `Max. ${p.maxstay.replace("hours", "h").replace("hour", "h")}` : null, p.operator].filter(Boolean).join(" · ") || null];
+      if (p.kind === "prive") {
+        lines.push("Réservé à ses usagers : on ne peut pas s'y garer.");
+        break;
+      }
       actions = canPark ? (
         <button type="button" onClick={() => onPark(p)} className="ig-btn min-h-10 flex-1 px-4 text-sm"><Car size={15} /> Me garer ici</button>
       ) : go(p.name, p.address, "stationnement");

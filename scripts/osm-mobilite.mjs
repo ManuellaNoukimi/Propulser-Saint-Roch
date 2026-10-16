@@ -15,6 +15,7 @@ const SERVERS = [
 const QUERY = `[out:json][timeout:90];
 (
   nwr[amenity=parking](${BBOX});
+  nwr[amenity=parking_entrance](${BBOX});
   nwr[amenity=bicycle_parking](${BBOX});
   nwr[amenity=bicycle_rental](${BBOX});
   nwr[amenity=charging_station](${BBOX});
@@ -67,6 +68,7 @@ const yesNo = (v) => (v === "yes" ? true : v === "no" ? false : null);
 const address = (t) => (t["addr:street"] ? `${t["addr:housenumber"] ? `${t["addr:housenumber"]}, ` : ""}${t["addr:street"]}` : null);
 
 const data = await overpass();
+const entrances = [];
 const out = { source: "© les contributeurs d'OpenStreetMap (ODbL)", generatedAt: new Date().toISOString(), parkings: [], bikeParkings: [], bikeStations: [], charging: [], carSharing: [] };
 
 for (const e of data.elements) {
@@ -77,7 +79,8 @@ for (const e of data.elements) {
   switch (t.amenity) {
     case "parking": {
       const access = t.access ?? null;
-      if (["private", "no", "permit", "delivery"].includes(access)) break; // on ne garde que ce qui est ouvert au public
+      // Les stationnements privés sont gardés aussi (la carte de fond les montre) : marqués « prive », jamais proposés pour se garer
+      const closed = ["private", "no", "permit", "delivery"].includes(access);
       const type = t.parking === "multi-storey" ? "etage" : t.parking === "underground" ? "souterrain" : t.parking === "street_side" || t.parking === "lane" ? "rue" : "surface";
       let capacity = int(t.capacity);
       let estimated = false;
@@ -88,7 +91,7 @@ for (const e of data.elements) {
       out.parkings.push({
         ...base,
         name: t.name ?? null,
-        kind: access === "customers" ? "clients" : access || t.name || t.operator || t.fee ? "public" : "inconnu",
+        kind: closed ? "prive" : access === "customers" ? "clients" : access || t.name || t.operator || t.fee ? "public" : "inconnu",
         type,
         capacity,
         estimated,
@@ -102,6 +105,9 @@ for (const e of data.elements) {
       });
       break;
     }
+    case "parking_entrance": // entrée d'un stationnement souterrain ou étagé : ajoutée plus bas si son stationnement manque
+      entrances.push({ ...base, t });
+      break;
     case "bicycle_parking":
       out.bikeParkings.push({ ...base, capacity: int(t.capacity), covered: t.covered === "yes" });
       break;
@@ -115,6 +121,28 @@ for (const e of data.elements) {
       out.carSharing.push({ ...base, name: t.name ?? t.operator ?? "Autopartage", operator: t.operator ?? null });
       break;
   }
+}
+
+// Entrées sans stationnement connu à moins de 80 m : la carte de fond les montre, on les garde comme stationnements
+const meters = (a, b) => Math.hypot((a.lat - b.lat) * 111_000, (a.lng - b.lng) * 111_000 * Math.cos((a.lat * Math.PI) / 180));
+for (const { t, ...e } of entrances) {
+  if (out.parkings.some((p) => meters(p, e) < 80)) continue;
+  const access = t.access ?? null;
+  out.parkings.push({
+    ...e,
+    name: t.name ?? null,
+    kind: ["private", "no", "permit", "delivery"].includes(access) ? "prive" : access === "customers" ? "clients" : access || t.name || t.operator ? "public" : "inconnu",
+    type: t.parking === "multi-storey" ? "etage" : "souterrain",
+    capacity: int(t.capacity),
+    estimated: false,
+    fee: yesNo(t.fee),
+    charge: t.charge ?? null,
+    maxstay: t.maxstay ?? null,
+    operator: t.operator ?? null,
+    disabled: int(t["capacity:disabled"]),
+    address: address(t),
+    website: t.website ?? null,
+  });
 }
 
 const dir = path.join(import.meta.dirname, "..", "donnees-ouvertes");

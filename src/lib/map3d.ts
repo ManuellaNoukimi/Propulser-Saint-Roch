@@ -360,3 +360,18 @@ export function focusMarkerHtml(label?: string): string {
 </div>`.trim();
 }
 
+/**
+ * Retire les « P » de la carte de fond : sur les cartes qui dessinent leurs propres stationnements (cliquables),
+ * on n'en garde qu'un par stationnement.
+ */
+export function hideBaseParkings(map: MlMap) {
+  for (const l of map.getStyle().layers) {
+    if (l.type !== "symbol" || !("source-layer" in l) || l["source-layer"] !== "poi") continue;
+    try {
+      const noParking = ["!=", ["get", "class"], "parking"];
+      map.setFilter(l.id, (l.filter ? ["all", l.filter, noParking] : noParking) as Parameters<MlMap["setFilter"]>[1]);
+    } catch {
+      // couche au format ancien : on la laisse telle quelle
+    }
+  }
+}
