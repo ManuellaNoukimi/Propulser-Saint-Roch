@@ -6,13 +6,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, ExternalLink, HandHeart, Landmark, MapPin, Navigation, Store } from "lucide-react";
 import type { CityEvent } from "@/lib/city-events";
-import { businessPostTypeOf, categoryOf } from "@/lib/constants";
+import { businessPostTypeOf } from "@/lib/constants";
 import { dateParts } from "@/lib/format";
 import { useNow } from "@/lib/now";
 import { IDEA_TAGS, type IdeaTagId } from "@/lib/quartier";
 import { loginHref, useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
+import { confirmRegistration } from "@/lib/registration-confirmation";
 import type { Idea } from "@/lib/types";
+import { JoinedTag } from "./JoinedTag";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 // Problème 2 : « Ça se passe à Saint-Roch » — un seul endroit pour tout ce qui se passe près de chez soi.
 
@@ -95,30 +98,17 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
   const live = upcoming.filter((i) => matches({ ...i, startsAt: i.startsAt! }, "maintenant", now));
   const list = upcoming.filter((i) => matches({ ...i, startsAt: i.startsAt! }, filter, now));
   const liveCount = live.length + villeSoon.filter((ev) => matches(asDatable(ev), "maintenant", now)).length;
-  const weekday = new Date(now).getDay();
-  const isWorkday = weekday >= 1 && weekday <= 5;
 
   return (
     <section aria-labelledby="ca-se-passe" className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-muted"><span className="live-dot" /> Problème 2 · En direct du quartier</p>
+          <p className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-muted"><span className="live-dot" /> En direct du quartier</p>
           <h2 id="ca-se-passe" className="text-xl font-bold tracking-tight md:text-2xl">Ça se passe à Saint-Roch</h2>
         </div>
         <Link href="/evenements" className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-ig-blue">Tout l&apos;agenda <ArrowRight size={14} /></Link>
       </div>
 
-      {/* Le Midi Complice (problème 3), du lundi au vendredi */}
-      {isWorkday && (
-        <Link href="/midi" className="midi-banner group flex items-center gap-4 rounded-2xl border border-line p-4 transition hover:-translate-y-0.5 hover:shadow-md">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/80 text-2xl shadow-sm">🍽️</span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-bold">Aujourd&apos;hui midi à Saint-Roch</span>
-            <span className="block truncate text-xs text-muted">Dîner, bouger ou découvrir le quartier pendant ta pause</span>
-          </span>
-          <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-ig-blue sm:inline-flex">Voir <ArrowRight size={14} className="transition group-hover:translate-x-0.5" /></span>
-        </Link>
-      )}
 
       <div role="group" aria-label="Filtrer les activités" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
         {FILTERS.map((f) => {
@@ -127,7 +117,7 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
           return (
             <button key={f.id} type="button" aria-pressed={on} onClick={() => setFilter(f.id)}
               className={`min-h-10 shrink-0 rounded-full border px-3.5 text-xs font-medium transition active:scale-95 ${on ? "border-fg bg-fg text-bg shadow-sm" : "border-line bg-bg hover:border-muted"}`}>
-              {f.emoji} {f.label}{count ? ` (${count})` : ""}
+               {f.label}{count ? ` (${count})` : ""}
             </button>
           );
         })}
@@ -151,7 +141,7 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
         <h3 className="mb-3 flex items-center gap-2 text-sm font-bold"><Store size={16} className="text-ig-blue" /> Nouveau dans le quartier</h3>
         {news && news.length === 0 ? (
           <Link href="/entreprises/publier" className="surface-card flex items-center gap-3 px-4 py-4 text-sm transition hover:border-ig-blue/40">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl">🏪</span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl"><InterfaceIcon symbol="🏪" size={24} /></span>
             <span className="min-w-0 flex-1"><span className="block font-semibold">Aucune nouveauté pour l&apos;instant</span><span className="block text-xs text-muted">Tu as un commerce ? Publie ta promo ou ta nouveauté ici.</span></span>
             <ArrowRight size={16} className="shrink-0 text-ig-blue" />
           </Link>
@@ -160,7 +150,7 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
             {(news ?? []).map((n) => (
               <li key={n.id}>
                 <Link href={`/p/${n.id}`} className="flex h-full items-start gap-3 rounded-2xl border border-line bg-bg p-3.5 transition hover:-translate-y-0.5 hover:border-ig-blue/40 hover:shadow-sm">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl">{businessPostTypeOf(n.postType)?.emoji ?? "🏪"}</span>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-soft text-xl"><InterfaceIcon symbol={businessPostTypeOf(n.postType)?.emoji ?? "🏪"} size={22} /></span>
                   <span className="min-w-0">
                     <span className="block truncate text-[10px] font-semibold uppercase tracking-wider text-muted">{n.organizer.displayName}</span>
                     <span className="block text-sm font-semibold leading-snug">{n.title}</span>
@@ -179,11 +169,11 @@ export function Happening({ ideas }: { ideas: Idea[] | null }) {
 function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
   const router = useRouter();
   const { user } = useSession();
-  const [going, setGoing] = useState(false);
-  const [helping, setHelping] = useState(false);
+  const [going, setGoing] = useState(idea.myContributions?.includes("participer") ?? false);
+  const [helping, setHelping] = useState(idea.myContributions?.includes("benevole") ?? false);
+  const [others, setOthers] = useState((idea.myContributions ?? []).filter((c) => c !== "participer" && c !== "benevole"));
   const p = dateParts(idea.startsAt!);
   const tags = tagsOf(idea);
-  const cat = categoryOf(idea.category);
 
   async function join(contribution: "participer" | "benevole") {
     if (!user) return router.push(loginHref());
@@ -196,11 +186,10 @@ function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
     if (res.ok) notifyResidentProgress();
     if (contribution === "participer") {
       setGoing(true);
-      toast("📅 C'est noté, tu y vas !");
     } else {
       setHelping(true);
-      toast("💪 L'organisateur a reçu ton offre de coup de main");
     }
+    if (res.ok) confirmRegistration(idea.title);
   }
 
   return (
@@ -213,7 +202,7 @@ function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
           </span>
           <div className="min-w-0 flex-1">
             {live && <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-ig-red/10 px-2 py-0.5 text-[10px] font-bold text-ig-red"><span className="live-dot" /> En ce moment</span>}
-            <Link href={`/p/${idea.id}`} className="line-clamp-2 text-sm font-bold leading-snug hover:text-ig-blue">{cat?.emoji} {idea.title}</Link>
+            <Link href={`/p/${idea.id}`} className="line-clamp-2 text-sm font-bold leading-snug hover:text-ig-blue"> {idea.title}</Link>
           </div>
         </div>
         <p className="mt-2.5 text-xs capitalize text-muted">{p.weekday} · {p.time}</p>
@@ -222,10 +211,16 @@ function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
           <div className="mt-2.5 flex flex-wrap gap-1">
             {tags.slice(0, 3).map((t) => {
               const tag = IDEA_TAGS.find((x) => x.id === t)!;
-              return <span key={t} className="rounded-full bg-soft px-2 py-0.5 text-[10px] font-medium">{tag.emoji} {tag.label}</span>;
+              return <span key={t} className="rounded-full bg-soft px-2 py-0.5 text-[10px] font-medium"> {tag.label}</span>;
             })}
           </div>
         )}
+        {going || helping || others.length > 0 ? (
+          <div className="mt-auto flex pt-3.5">
+            <JoinedTag size="sm" ideaId={idea.id} contributions={[...(going ? ["participer"] : []), ...(helping ? ["benevole"] : []), ...others]}
+              onLeft={() => { setGoing(false); setHelping(false); setOthers([]); }} />
+          </div>
+        ) : (
         <div className="mt-auto flex gap-2 pt-3.5">
           <button type="button" onClick={() => join("participer")} disabled={going} aria-pressed={going}
             className={`min-h-10 flex-1 rounded-xl text-xs font-semibold transition active:scale-95 ${going ? "bg-ig-blue/10 text-ig-blue" : "ig-btn"}`}>
@@ -236,6 +231,7 @@ function EventCard({ idea, live }: { idea: Idea; live: boolean }) {
             {helping ? <Check size={14} /> : <HandHeart size={14} />} Coup de main
           </button>
         </div>
+        )}
       </article>
     </li>
   );

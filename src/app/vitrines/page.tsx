@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { ResidentNeedsView } from "@/components/ResidentNeedsView";
+import { VitrinesPage } from "@/components/VitrinesPage";
 
 export const metadata: Metadata = {
-  title: "Vitrine · Les besoins des résidents · Complices",
-  description: "Exprime ce qui manque dans ton secteur et soutiens les besoins de tes voisins à Saint-Roch.",
+  title: "Vitrines · Locaux vacants et besoins des résidents · Complices",
+  description: "Les locaux vacants de Saint-Roch et ce qui manque selon les résidents : vote, soutiens et occupation en attendant.",
 };
 
+// Deux onglets (VitrinesPage) : « Locaux vacants » (VitrinesView) et « Besoins des résidents » (ResidentNeedsView), tous deux de Manuella.
 export default function Page() {
-  return <ResidentNeedsView />;
+  return <VitrinesPage />;
 }

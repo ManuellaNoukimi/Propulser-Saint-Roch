@@ -49,7 +49,7 @@ export function ResidentPointFeedback() {
             for (const id of badges) {
               const badge = RESIDENT_BADGES.find((item) => item.id === id);
               if (badge)
-                messages.push(`${badge.emoji} Badge débloqué : ${badge.label}`);
+                messages.push(` Badge débloqué : ${badge.label}`);
             }
             if (messages.length) toast(messages.join(" · "));
           }

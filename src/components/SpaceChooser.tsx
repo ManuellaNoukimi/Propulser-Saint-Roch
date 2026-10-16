@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 // Page d'ouverture : on choisit un des deux espaces, puis il s'affiche.
 const SPACES = [
@@ -61,7 +62,7 @@ export function SpaceChooser() {
             style={{ animationDelay: `${k * 90}ms` }}
           >
             <div>
-              <span className="grid h-16 w-16 place-items-center rounded-2xl bg-bg text-4xl shadow-sm md:h-20 md:w-20 md:text-5xl">{s.emoji}</span>
+              <span className="grid h-16 w-16 place-items-center rounded-2xl bg-bg text-4xl shadow-sm md:h-20 md:w-20 md:text-5xl"><InterfaceIcon symbol={s.emoji} size={22} /></span>
               <h2 className="mt-5 text-2xl font-bold tracking-tight md:text-3xl">{s.title}</h2>
               <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted md:text-base">{s.text}</p>
             </div>

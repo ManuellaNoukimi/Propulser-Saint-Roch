@@ -20,7 +20,8 @@ function EditProfileForm({ user }: { user: SessionUser }) {
   const router = useRouter();
   const { refresh, logout } = useSession();
   const [displayName, setDisplayName] = useState(user.displayName);
-  const [accountType, setAccountType] = useState<ActorTypeId>(user.accountType);
+  // Le type de compte est choisi à l'inscription et ne se change pas ici (affiché seulement).
+  const accountType: ActorTypeId = user.accountType;
   const [sector, setSector] = useState<SectorId | "">(user.sector ?? "");
   const [address, setAddress] = useState(user.address ?? "");
   const [description, setDescription] = useState(user.description ?? "");
@@ -62,19 +63,17 @@ function EditProfileForm({ user }: { user: SessionUser }) {
         <span className="font-semibold">Nom</span>
         <input required maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="ig-input" />
       </label>
-      <label className={row}>
+      <div className={row}>
         <span className="font-semibold">Type de compte</span>
-        <select value={accountType} onChange={(e) => setAccountType(e.target.value as ActorTypeId)} className="ig-input">
-          {ACTOR_TYPES.map((a) => <option key={a.id} value={a.id}>{a.emoji} {a.label}</option>)}
-        </select>
-      </label>
+        <p className="ig-input text-muted">{ACTOR_TYPES.find((a) => a.id === accountType)?.label ?? accountType}</p>
+      </div>
       {establishment && (
         <>
           <label className={row}>
             <span className="font-semibold">Secteur</span>
             <select value={sector} onChange={(e) => setSector(e.target.value as SectorId)} className="ig-input">
               <option value="">Aucun (facultatif)</option>
-              {SECTORS.filter((s) => (s.for as readonly string[]).includes(accountType)).map((s) => <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>)}
+              {SECTORS.filter((s) => (s.for as readonly string[]).includes(accountType)).map((s) => <option key={s.id} value={s.id}> {s.label}</option>)}
             </select>
           </label>
           <label className={row}>

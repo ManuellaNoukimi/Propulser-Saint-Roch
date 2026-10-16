@@ -11,6 +11,7 @@ import type { Invitation } from "@/lib/types";
 import { AuthPrompt } from "./AuthPrompt";
 import { Avatar } from "./Avatar";
 import { InvitationBanner } from "./PostDetail";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 const STATUS = {
   pending: { label: "En attente", className: "bg-soft text-muted", icon: Clock },
@@ -68,7 +69,7 @@ export function ActivityView() {
       {data && tab === "recues" && (
         <div className="animate-fade-in space-y-4">
           {pending.length === 0 && answered.length === 0 && (
-            <Empty icon="📭" title="Aucune invitation pour l'instant" text="Quand une idée aura besoin de toi, elle apparaîtra ici (avec une notification)." />
+            <Empty icon={<InterfaceIcon symbol="📭" size={32} />} title="Aucune invitation pour l'instant" text="Quand une idée aura besoin de toi, elle apparaîtra ici (avec une notification)." />
           )}
           {pending.map((i) => (
             <div key={i.id}>
@@ -90,7 +91,7 @@ export function ActivityView() {
       {data && tab === "envoyees" && (
         <div className="animate-fade-in space-y-4">
           {byIdea.size === 0 && (
-            <Empty icon="💡" title="Tu n'as encore invité personne" text="Lance une idée : Complices te propose les bons complices à inviter." cta />
+            <Empty icon={<InterfaceIcon symbol="💡" size={32} />} title="Tu n'as encore invité personne" text="Lance une idée : Complices te propose les bons complices à inviter." cta />
           )}
           {[...byIdea.entries()].map(([ideaId, list]) => {
             const yes = list.filter((i) => i.status === "accepted").length;
@@ -117,14 +118,14 @@ function InviteRow({ i, who }: { i: Invitation; who: Invitation["from"] }) {
       <Avatar user={who} size={36} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold">{who.displayName}</span>
-        <span className="block truncate text-xs text-muted">{c?.emoji} {c?.label} · {timeAgo(i.createdAt)}</span>
+        <span className="block truncate text-xs text-muted"> {c?.label} · {timeAgo(i.createdAt)}</span>
       </span>
       <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.className}`}><s.icon size={12} /> {s.label}</span>
     </li>
   );
 }
 
-function Empty({ icon, title, text, cta = false }: { icon: string; title: string; text: string; cta?: boolean }) {
+function Empty({ icon, title, text, cta = false }: { icon: import("react").ReactNode; title: string; text: string; cta?: boolean }) {
   return (
     <div className="surface-card px-6 py-12 text-center">
       <p className="text-4xl">{icon}</p>

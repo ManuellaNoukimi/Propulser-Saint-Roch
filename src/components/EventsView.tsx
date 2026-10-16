@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ExternalLink, Landmark, MapPin, Navigation } from "lucide-react";
 import type { CityEvent } from "@/lib/city-events";
-import { CATEGORIES, categoryOf } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/constants";
 import { dateParts } from "@/lib/format";
 import { loginHref, useSession } from "@/lib/session";
 import type { Idea } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { Chips } from "./Chips";
 import { JoinSheet } from "./JoinSheet";
+import { JoinedTag } from "./JoinedTag";
 import { useIdeas } from "./useIdeas";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 
@@ -75,7 +77,7 @@ export function EventsView() {
       )}
       {ideas && groups.length === 0 && (
         <div className="p-10 text-center">
-          <p className="text-4xl">📅</p>
+          <p className="text-4xl"><InterfaceIcon symbol="📅" size={24} /></p>
           <p className="mt-2 font-semibold">Aucun événement à venir.</p>
           <Link href="/creer" className="ig-btn mt-4 inline-block">Créer un événement</Link>
         </div>
@@ -97,6 +99,7 @@ function EventRow({ idea }: { idea: Idea }) {
   const { user } = useSession();
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(idea.complicesCount);
+  const [joined, setJoined] = useState<string[]>(idea.myContributions ?? []);
   const p = dateParts(idea.startsAt!);
   return (
     <li className="flex gap-4 rounded-2xl border border-line bg-bg p-4 transition hover:border-muted/50">
@@ -106,7 +109,7 @@ function EventRow({ idea }: { idea: Idea }) {
       </Link>
       <div className="min-w-0 flex-1">
         <Link href={`/p/${idea.id}`} className="block font-semibold leading-snug hover:opacity-70">
-          {categoryOf(idea.category)?.emoji} {idea.title}
+           {idea.title}
         </Link>
         <p className="mt-0.5 text-sm text-muted">{p.weekday} · {p.time}</p>
         <p className="flex items-center gap-1 truncate text-sm text-muted"><MapPin size={13} /> {idea.place}</p>
@@ -114,14 +117,18 @@ function EventRow({ idea }: { idea: Idea }) {
           <span className="flex min-w-0 items-center gap-2 text-xs">
             <Avatar user={idea.organizer} size={20} />
             <span className="truncate">{idea.organizer.displayName}</span>
-            <span className="shrink-0 text-muted">· 🤝 {count}</span>
+            <span className="shrink-0 text-muted">· {count}</span>
           </span>
-          <button type="button" onClick={() => (user ? setOpen(true) : router.push(loginHref()))} className="ig-btn shrink-0 px-3 py-1 text-xs">
-            Je me propose
-          </button>
+          {joined.length ? (
+            <span className="flex w-full sm:w-auto"><JoinedTag size="sm" ideaId={idea.id} contributions={joined} onLeft={(n) => { setJoined([]); setCount((c) => Math.max(0, c - n)); }} /></span>
+          ) : (
+            <button type="button" onClick={() => (user ? setOpen(true) : router.push(loginHref()))} className="ig-btn shrink-0 px-3 py-1 text-xs">
+              Je me propose
+            </button>
+          )}
         </div>
       </div>
-      <JoinSheet ideaId={idea.id} title={idea.title} needs={idea.needs} open={open} onClose={() => setOpen(false)} onJoined={() => setCount((n) => n + 1)} />
+      <JoinSheet ideaId={idea.id} title={idea.title} needs={idea.needs} open={open} onClose={() => setOpen(false)} onJoined={(c) => { setCount((n) => n + 1); setJoined((j) => [...j, c]); }} />
     </li>
   );
 }

@@ -5,6 +5,7 @@ import { Check, Clock, MapPin } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useNow } from "@/lib/now";
 import { WEEKDAYS } from "@/lib/quartier";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 // Problème 3 : « Le Midi Complice » — des raisons concrètes de venir à Saint-Roch le midi.
 // AFFICHAGE DE DÉMO : les propositions, commerces et chiffres ci-dessous sont des exemples fictifs.
@@ -40,14 +41,14 @@ export function MidiView() {
   function toggleSeat(i: Item) {
     const on = seated.includes(i.id);
     setSeated((s) => (on ? s.filter((x) => x !== i.id) : [...s, i.id]));
-    if (!on) toast(i.kind === "table" ? `🍽️ Place réservée : ${i.title}` : `🎯 À tout à l'heure : ${i.title}`);
+    if (!on) toast(i.kind === "table" ? ` Place réservée : ${i.title}` : ` À tout à l'heure : ${i.title}`);
   }
 
   return (
     <div className="mx-auto max-w-[1000px] space-y-6 px-4 py-5 md:px-7 md:py-8">
       <header className="midi-banner relative overflow-hidden rounded-3xl border border-line px-6 py-7 md:px-8">
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-muted">Problème 3 · Moins de monde au quotidien</p>
-        <h1 className="text-[28px] font-bold leading-[1.12] tracking-tight md:text-[36px]">🍽️ Le Midi Complice</h1>
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-muted">Ta pause à Saint-Roch</p>
+        <h1 className="text-[28px] font-bold leading-[1.12] tracking-tight md:text-[36px]"> Le Midi Complice</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">Des raisons concrètes de venir à Saint-Roch le midi : un dîner partagé avec tes voisins de bureau, une pause active de 20 minutes et des rabais travailleurs.</p>
         <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-bg/80 px-3 py-2 text-xs font-semibold"><span className="rounded-md bg-ig-blue px-2 py-0.5 text-[10px] font-bold text-white">Action 3.2</span> Rabais partenaires entre commerces et travailleurs</p>
       </header>
@@ -73,7 +74,7 @@ export function MidiView() {
             if (!list.length) return null;
             return (
               <section key={kind}>
-                <h3 className="mb-3 text-sm font-bold">{kind === "table" ? "🍽️ Tables complices" : "🎯 Pauses actives (30 minutes max)"}</h3>
+                <h3 className="mb-3 text-sm font-bold">{kind === "table" ? " Tables complices" : " Pauses actives (30 minutes max)"}</h3>
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {list.map((i) => {
                     const on = seated.includes(i.id);
@@ -104,11 +105,11 @@ export function MidiView() {
           })}
 
           <section>
-            <h3 className="mb-3 text-sm font-bold">💳 Rabais travailleurs : {offers.length} commerces ce midi</h3>
+            <h3 className="mb-3 text-sm font-bold"> Rabais travailleurs : {offers.length} commerces ce midi</h3>
             <ul className="divide-y divide-sep rounded-2xl border border-line bg-bg">
               {offers.map((o) => (
                 <li key={o.who + o.title} className="flex items-center gap-3 p-4">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-soft text-xl">{o.emoji}</span>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-soft text-xl"><InterfaceIcon symbol={o.emoji} size={22} /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold">{o.who}</span>
                     <span className="block text-xs text-muted">{o.title}</span>

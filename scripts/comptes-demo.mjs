@@ -26,7 +26,7 @@ const ACCOUNTS = [
     ],
   },
   {
-    email: "amina@demo", displayName: "Amina Diallo", accountType: "etudiant", description: "Étudiante à l'ENAP, j'habite Saint-Roch.",
+    email: "amina@demo", displayName: "Camille Bergeron", accountType: "etudiant", description: "Étudiante à l'ENAP, j'habite Saint-Roch.",
     ideas: [
       { title: "Échange de plantes et de boutures", category: "environnement", place: "Jardin Jean-Paul-L'Allier", startsAt: at(19, 14), needs: ["participants"],
         description: "Apporte une bouture ou une plante dont tu veux te débarrasser, repars avec une autre. Pothos, monstera, fines herbes… tout est bienvenu 🌱" },

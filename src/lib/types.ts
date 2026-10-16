@@ -47,6 +47,7 @@ export type Idea = {
   createdAt: string;
   source: PublicationSource; // F3 : « manuel » par défaut, sinon page liée (le type promo / nouveauté est dans postType)
   complicesCount: number;
+  myContributions?: string[]; // comment la personne connectée participe (vide = pas inscrite)
   kind?: "activite" | "entreprise"; // espace : Vie Saint-Roch ou Entreprises
   postType?: string | null; // type de publication d'entreprise (promo, emploi…)
 };

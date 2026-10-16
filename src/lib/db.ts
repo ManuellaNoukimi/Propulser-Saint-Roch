@@ -244,6 +244,7 @@ type IdeaRow = {
   kind?: string; post_type?: string | null;
   source: string; external_id: string | null; hidden: number;
   complices_count: number;
+  my_contributions?: string | null; // façons dont la personne connectée participe (« Inscrit·e »)
   o_name: string; o_type: string; o_sector: string | null; o_address: string | null; o_description: string | null;
 };
 
@@ -251,6 +252,7 @@ type IdeaRow = {
 const IDEA_SELECT = `
   SELECT i.*,
          (SELECT COUNT(*) FROM complices c WHERE c.idea_id = i.id) AS complices_count,
+         (SELECT GROUP_CONCAT(c2.contribution) FROM complices c2 WHERE c2.idea_id = i.id AND c2.user_id = @viewer) AS my_contributions,
          u.display_name AS o_name, u.account_type AS o_type, u.sector AS o_sector, u.address AS o_address, u.description AS o_description
   FROM ideas i JOIN users u ON u.id = i.organizer_id`;
 
@@ -271,6 +273,7 @@ function toIdea(r: IdeaRow): Idea {
     createdAt: r.created_at,
     source: (r.source as Idea["source"]) ?? "manuel",
     complicesCount: r.complices_count,
+    myContributions: r.my_contributions ? r.my_contributions.split(",") : [],
     kind: r.kind === "entreprise" ? "entreprise" : "activite",
     postType: r.post_type ?? null,
   };
@@ -362,6 +365,11 @@ export function listComplices(ideaId: string): CompliceRow[] {
        FROM complices c JOIN users u ON u.id = c.user_id WHERE c.idea_id = ? ORDER BY c.created_at ASC`,
     )
     .all(ideaId) as CompliceRow[];
+}
+
+/** Se désinscrire d'une activité : retire toutes les façons dont la personne y participait. Renvoie le nombre retiré. */
+export function leaveIdea(ideaId: string, userId: string): number {
+  return getDb().prepare(`DELETE FROM complices WHERE idea_id = ? AND user_id = ?`).run(ideaId, userId).changes;
 }
 
 export function alreadyJoined(ideaId: string, userId: string, contribution: string): boolean {

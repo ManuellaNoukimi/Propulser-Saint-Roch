@@ -1,0 +1,56 @@
+/* ---------- Interactions : transitions courtes, sans deplacement du contenu ---------- */
+:root { --motion-fast: 140ms; --motion-normal: 200ms; --motion-ease: cubic-bezier(.2, .7, .2, 1); }
+:where(button, a, summary, input, textarea, select) {
+  transition-property: color, background-color, border-color, box-shadow, opacity, filter;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease);
+}
+:where(button, summary):not(:disabled):active { filter: brightness(.95); }
+:where(button, a, summary, input, textarea, select):focus-visible { outline-offset: 3px; }
+.feed-search:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 14%, transparent);
+}
+.feed-search input:focus,
+.feed-search input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+:where(button, summary, a):disabled { cursor: default; }
+.side-nav a, nav[aria-label="Contenu du profil"] button { transition-duration: var(--motion-normal); }
+.ig-btn, .ig-btn-secondary { transition-property: color, background-color, border-color, box-shadow, opacity, transform; }
+.ig-btn:not(:disabled):active, .ig-btn-secondary:not(:disabled):active { transform: scale(.985); }
+.feed-filters[open] > div { transform-origin: top right; animation: interface-menu-in 160ms var(--motion-ease) both; }
+.profile-badges-details, [role="tabpanel"] { animation: interface-content-in var(--motion-normal) var(--motion-ease) both; }
+::view-transition { pointer-events: none; }
+::view-transition-old(root) { display: none; }
+::view-transition-new(root) { animation: none; }
+::view-transition-old(.page-swap) { animation: interface-page-out 100ms ease-out both; }
+::view-transition-new(.page-swap) { animation: interface-page-in 220ms var(--motion-ease) both; }
+::view-transition-group(.page-swap) { animation-duration: 220ms; animation-timing-function: var(--motion-ease); }
+::view-transition-old(.content-swap) { animation: interface-page-out 100ms ease-out both; }
+::view-transition-new(.content-swap) { animation: interface-content-in var(--motion-normal) var(--motion-ease) both; }
+::view-transition-group(.content-swap) { animation-duration: var(--motion-normal); }
+@keyframes interface-page-out { to { opacity: 0; } }
+@keyframes interface-page-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes interface-content-in { from { opacity: .3; } to { opacity: 1; } }
+@keyframes interface-menu-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@supports (transition-behavior: allow-discrete) {
+  .join-dialog {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity var(--motion-normal) var(--motion-ease), transform var(--motion-normal) var(--motion-ease), display var(--motion-normal) allow-discrete, overlay var(--motion-normal) allow-discrete;
+  }
+  .join-dialog[open] { opacity: 1; transform: none; animation: none; }
+  .join-dialog::backdrop { opacity: 0; transition: opacity var(--motion-normal), display var(--motion-normal) allow-discrete, overlay var(--motion-normal) allow-discrete; }
+  .join-dialog[open]::backdrop { opacity: 1; }
+  @starting-style {
+    .join-dialog[open] { opacity: 0; transform: translateY(8px); }
+    .join-dialog[open]::backdrop { opacity: 0; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; animation-delay: 0s !important; scroll-behavior: auto !important; }
+  .ig-btn:active, .ig-btn-secondary:active, .join-dialog { transform: none; }
+  ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) { animation-duration: 0s !important; animation-delay: 0s !important; }
+}

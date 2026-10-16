@@ -4,12 +4,28 @@ import { CATEGORY_PALETTES } from "@/lib/ui";
 import type { Idea } from "@/lib/types";
 
 const ICONS = { culturel: Palette, communautaire: HeartHandshake, benevolat: HandHeart, recrutement: Megaphone, sport: Volleyball, commerce: Store, environnement: Sprout };
+const ILLUSTRATIONS: Partial<Record<Idea["category"], string>> = {
+  culturel: "art",
+  communautaire: "tech",
+  benevolat: "atelier",
+  sport: "jeux",
+  commerce: "marche",
+  environnement: "marche",
+};
 
-/** Aperçu d’affiche : papier pastel, titre composé et symbole de la catégorie. */
+/** Illustration de categorie en l'absence de photo publiee, sinon affiche composee. */
 export function IdeaPoster({ idea, compact = false }: { idea: Pick<Idea, "title" | "category">; compact?: boolean }) {
   const category = categoryOf(idea.category);
   const palette = CATEGORY_PALETTES[idea.category];
   const Icon = ICONS[idea.category];
+  const illustration = ILLUSTRATIONS[idea.category];
+
+  if (illustration) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={`/images/activities/${illustration}.jpg`} alt="" loading="lazy" className="h-full w-full object-cover" />
+    );
+  }
 
   return (
     <div className={`idea-poster ${compact ? "idea-poster--compact" : ""}`} style={{ background: palette.background, color: palette.ink }}>

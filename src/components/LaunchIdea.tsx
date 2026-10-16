@@ -146,14 +146,14 @@ export function LaunchIdea() {
   return (
     <div className="mx-auto max-w-[860px] px-4 py-5 md:px-7 md:py-8">
       <header className="gallery-intro rounded-3xl border border-line px-6 py-7 md:px-8">
-        <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-muted"><Sparkles size={12} /> Problème 1 · Lancer une idée</p>
+        <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-muted"><Sparkles size={12} /> Lancer une idée</p>
         <h1 className="text-[28px] font-bold leading-[1.12] tracking-tight md:text-[34px]">Ton idée. <span className="text-ig-blue">Ton équipe en 5 secondes.</span></h1>
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">Écris ou dicte ton idée en une phrase : Complices te propose qui peut t&apos;aider, où, avec quoi, quand, et le lien avec le Plan de la Ville.</p>
       </header>
 
       {phase === "idea" && (
         <form onSubmit={find} className="surface-card mt-6 animate-fade-in p-5 md:p-6">
-          <label htmlFor="idee" className="text-sm font-semibold">💡 Ton idée pour Saint-Roch</label>
+          <label htmlFor="idee" className="text-sm font-semibold"> Ton idée pour Saint-Roch</label>
           <div className="relative mt-2">
             <textarea id="idee" rows={4} maxLength={500} value={text} onChange={(e) => setText(e.target.value)}
               placeholder="Ex. : Je veux organiser une vente-trottoir avec les friperies de la rue Saint-Joseph."
@@ -197,7 +197,7 @@ export function LaunchIdea() {
         <div className="mt-6 animate-fade-in space-y-4 pb-28">
           <section className="surface-card p-5 md:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-ig-blue/10 px-2.5 py-1 text-[11px] font-semibold text-ig-blue">{result.activity.emoji} {result.activity.label}</span>
+              <span className="rounded-md bg-ig-blue/10 px-2.5 py-1 text-[11px] font-semibold text-ig-blue"> {result.activity.label}</span>
               <button type="button" onClick={() => setPhase("idea")} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-fg"><RotateCcw size={13} /> Modifier mon idée</button>
             </div>
             <label className="mt-3 block">
@@ -224,7 +224,7 @@ export function LaunchIdea() {
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-2">
                             <span className="truncate font-semibold">{h.user.displayName}</span>
-                            {c && <span className="shrink-0 rounded-full bg-soft px-2 py-0.5 text-[10px] font-semibold">{c.emoji} {c.label}</span>}
+                            {c && <span className="shrink-0 rounded-full bg-soft px-2 py-0.5 text-[10px] font-semibold"> {c.label}</span>}
                           </span>
                           {h.why.map((w) => <span key={w} className="mt-0.5 block text-xs text-muted">• {w}</span>)}
                         </span>
@@ -255,7 +255,7 @@ export function LaunchIdea() {
           <section className="surface-card p-5 md:p-6">
             <h2 className="flex items-center gap-2 text-lg font-bold"><PackageOpen size={20} className="text-ig-blue" /> Ce qu&apos;il te faut</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {result.needs.map((n) => <span key={n} className="rounded-full border border-line px-3 py-1.5 text-xs">{needOf(n)?.emoji} {needOf(n)?.label}</span>)}
+              {result.needs.map((n) => <span key={n} className="rounded-full border border-line px-3 py-1.5 text-xs"> {needOf(n)?.label}</span>)}
             </div>
             <ul className="mt-4 divide-y divide-sep">
               {result.logistics.map((l) => (

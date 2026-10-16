@@ -35,3 +35,9 @@ Les données importées restent sous `data/`, ignoré par Git ; elles ne sont pa
 node --conditions=react-server --test tests/sdc-import.test.cjs tests/vacancies.test.cjs
 node --conditions=react-server tests/vacancies-http.cjs
 ```
+
+## Ajout du 15 oct. au soir (Danny, avec Claude) : locaux affichés dans l'app
+
+- `/vitrines` a maintenant deux onglets (`src/components/VitrinesPage.tsx`) : **Locaux vacants** (`VitrinesView`, ouvert par défaut) et **Besoins des résidents** (`ResidentNeedsView`). Les deux écrans sont ceux de Manuella.
+- Les locaux sans position vérifiée sont **regroupés par rue** sur la carte : une pastille orange au milieu de la rue dans Saint-Roch, avec le nombre de locaux (ex. 41 sur Saint-Joseph Est). Le point de la rue vient des adresses officielles de la Ville (`donnees-ouvertes/adresses-quebec.json`, données ouvertes) via `GET /api/rues-saint-roch` (`src/lib/saint-roch-streets.ts`). C'est la position de la **rue**, jamais l'adresse d'un local : aucune coordonnée n'est ajoutée aux locaux ni à `/api/vacancies`.
+- Les deux cartes utilisent le fond commun de l'app (`src/lib/map-tiles.ts`) et restent bloquées sur Saint-Roch.

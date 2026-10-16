@@ -1,16 +1,14 @@
 "use client";
 import { notifyResidentProgress } from "@/lib/resident-feedback";
 
-import "leaflet/dist/leaflet.css";
-import type * as Leaflet from "leaflet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, LocateFixed, Plus, Heart } from "lucide-react";
 import { loginHref, useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
-import { addBaseTiles } from "@/lib/map-tiles";
 import { isInSaintRoch } from "@/lib/geo";
-import { SAINT_ROCH_ATTRIBUTION, SAINT_ROCH_GEOMETRY } from "@/lib/saint-roch-boundary";
+import { ResidentNeedsMap } from "./vitrines/ResidentNeedsMap";
+import { FeedFilters } from "./FeedFilters";
 import { RESIDENT_NEED_CATEGORIES, approximateResidentPoint, residentZonesOverlap, residentZoneLabel, type ResidentNeed, type ResidentZone } from "@/lib/resident-need-options";
 
 type Payload = { needs: ResidentNeed[]; dailyLimit: number; remaining: number | null };
@@ -100,17 +98,17 @@ function ResidentNeedsContent() {
   const similar = needs.filter((need) => zone && residentZonesOverlap(need.zone, zone) && need.category === draftCategory);
   const myCount = needs.filter((need) => need.mySupport).length;
 
-  return <div className="mx-auto max-w-[1200px] space-y-5 px-4 py-5 md:px-7 md:py-8">
-    <header className="gallery-intro rounded-3xl border border-line px-6 py-7">
-      <h1 className="text-3xl font-bold tracking-tight">Vitrine</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">Dis-nous ce qui manque près de chez toi et soutiens les besoins de tes voisins.</p>
+  return <div className="mx-auto max-w-[1240px] space-y-9 px-4 py-7 md:px-8 lg:px-10">
+    <header>
+      <h2 className="text-lg font-semibold">Besoins des résidents</h2>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Dis-nous ce qui manque près de chez toi et soutiens les besoins de tes voisins.</p>
       <div className="mt-5 flex flex-wrap gap-3">
         <button type="button" className="ig-btn min-h-11" onClick={() => { if (signedIn()) { setCompose(true); setMine(false); setActionError(null); } }}><Plus size={17} /> Exprimer un besoin</button>
         <a href="#besoins-residents" className="ig-btn-secondary min-h-11" onClick={() => { setMine(false); setCompose(false); }}>Voir les besoins près de moi</a>
       </div>
     </header>
 
-    <section id="zone-resident" className="surface-card scroll-mt-5 space-y-4 p-4 md:p-5" aria-label="Choisir ma zone">
+    <section id="zone-resident" className="vitrines-section scroll-mt-5 space-y-6" aria-label="Choisir ma zone">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-bold">Ma zone</h2>
         <div className="flex flex-wrap gap-2">
@@ -118,23 +116,31 @@ function ResidentNeedsContent() {
           <button type="button" className="ig-btn-secondary min-h-11" onClick={() => setPoint(null)}>Voir tout le quartier</button>
         </div>
       </div>
-      <p className="text-sm text-muted">Clique où tu le souhaites dans Saint-Roch, puis ajuste le rayon. Tu peux déplacer le repère pour changer le centre de ta zone.</p>
-      <label className="block text-sm font-semibold">Rayon de ma zone
-        <select className="ig-input mt-2" value={radiusMeters} onChange={(event) => setRadiusMeters(Number(event.target.value))}>
-          {[100, 200, 300, 500, 750, 1000].map((radius) => <option key={radius} value={radius}>{radius < 1000 ? `${radius} m` : "1 km"}</option>)}
-        </select>
-      </label>
-      <p role="status" className="text-sm">{zone ? residentZoneLabel(zone) : "Aucune zone sélectionnée. Clique sur la carte pour la définir."}</p>
-      <div className="relative isolate z-0 overflow-hidden rounded-2xl border border-line">
-        <ResidentNeedsMap needs={needs.filter((need) => category === "all" || need.category === category)} zone={zone} onPick={choosePoint} />
+      <div className="grid items-start gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="space-y-5">
+          <p className="text-sm leading-relaxed text-muted">Clique où tu le souhaites dans Saint-Roch, puis ajuste le rayon. Tu peux déplacer le repère pour changer le centre de ta zone.</p>
+          <label className="block text-sm font-semibold">Rayon de ma zone
+            <select className="ig-input mt-2" value={radiusMeters} onChange={(event) => setRadiusMeters(Number(event.target.value))}>
+              {[100, 200, 300, 500, 750, 1000].map((radius) => <option key={radius} value={radius}>{radius < 1000 ? `${radius} m` : "1 km"}</option>)}
+            </select>
+          </label>
+          <p role="status" className="text-sm">{zone ? residentZoneLabel(zone) : "Aucune zone sélectionnée. Clique sur la carte pour la définir."}</p>
+          <p className="text-xs leading-relaxed text-muted">Le centre est arrondi pour afficher une zone approximative, pas une adresse personnelle.</p>
+        </div>
+        <div className="min-w-0 space-y-4">
+          <ResidentNeedsMap needs={needs.filter((need) => category === "all" || need.category === category)} zone={zone} onPick={choosePoint} />
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted" aria-label="Légende des zones">
+            <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#0096d6]" /> Ma zone</span>
+            <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#ffad36]" /> Besoins exprimés</span>
+          </div>
+        </div>
       </div>
-      <p className="text-xs text-muted">Le centre est arrondi pour afficher une zone approximative, pas une adresse personnelle. Le cercle violet représente ta sélection ; les cercles orange, les besoins exprimés.</p>
     </section>
 
     {actionError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{actionError}</p>}
     {error && <div role="alert" className="rounded-xl border border-line p-3 text-sm">{error} <button type="button" className="font-semibold text-ig-blue" onClick={() => { void load().catch(() => setError("Impossible de charger la liste. Réessaie.")); }}>Réessayer</button></div>}
 
-    {compose && <section className="surface-card space-y-4 p-5" aria-labelledby="exprimer-besoin">
+    {compose && <section className="vitrines-section space-y-4" aria-labelledby="exprimer-besoin">
       <h2 id="exprimer-besoin" className="scroll-mt-6 text-lg font-bold">J’aimerais trouver ici…</h2>
       <p className="text-sm text-muted">{zone ? residentZoneLabel(zone) : "Choisis d’abord ta zone sur la carte."}</p>
       <form className="space-y-4" onSubmit={(event) => {
@@ -144,7 +150,7 @@ function ResidentNeedsContent() {
         <a href="#zone-resident" className="inline-block text-sm font-semibold text-ig-blue">{zone ? "Modifier ma zone sur la carte" : "Choisir ma zone sur la carte"}</a>
         <label className="block text-sm font-semibold">Type de commerce ou de service
           <select className="ig-input mt-2" value={draftCategory} onChange={(event) => setDraftCategory(event.target.value)}>
-            {RESIDENT_NEED_CATEGORIES.map((item) => <option key={item.id} value={item.id}>{item.emoji} {item.label}</option>)}
+            {RESIDENT_NEED_CATEGORIES.map((item) => <option key={item.id} value={item.id}> {item.label}</option>)}
           </select>
         </label>
         {draftCategory === "autre" && <label className="block text-sm font-semibold">Quel service souhaites-tu ?
@@ -160,7 +166,6 @@ function ResidentNeedsContent() {
             <span>{need.label} · {need.supporters} soutien(s)</span>
             <button type="button" className="ig-btn-secondary text-xs" disabled={busy} onClick={() => { void mutate(`/api/resident-needs/${need.id}/support`, "PUT", { frequency }, "Ton soutien est enregistré."); }}>{need.mySupport ? "Actualiser mon soutien" : "Soutenir ce besoin"}</button>
           </li>)}</ul>
-          <p className="mt-2 text-xs text-muted">Les demandes identiques dans la même zone sont regroupées automatiquement.</p>
         </div>}
         <div className="flex flex-wrap gap-2">
           <button className="ig-btn min-h-11" type="submit" disabled={busy || !zone || (draftCategory === "autre" && label.trim().length < 2)}>{busy ? "Enregistrement…" : "Enregistrer mon besoin"}</button>
@@ -169,17 +174,16 @@ function ResidentNeedsContent() {
       </form>
     </section>}
 
-    <section id="besoins-residents" className="scroll-mt-5 space-y-4" aria-labelledby="titre-besoins">
+    <section id="besoins-residents" className="vitrines-section scroll-mt-5 space-y-6" aria-labelledby="titre-besoins">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="titre-besoins" className="text-xl font-bold">{mine ? "Mes besoins et mes soutiens" : "Les priorités des voisins"}</h2>
-        <button type="button" className="ig-btn-secondary text-sm" aria-pressed={mine} onClick={() => { if (signedIn()) { setMine(!mine); setCompose(false); } }}>{mine ? "Voir tous les besoins" : `Mes contributions (${myCount})`}</button>
+        <div className="flex items-center gap-3">
+          <button type="button" className="ig-btn-secondary text-sm" aria-pressed={mine} onClick={() => { if (signedIn()) { setMine(!mine); setCompose(false); } }}>{mine ? "Voir tous les besoins" : `Mes contributions (${myCount})`}</button>
+          <FeedFilters count={Number(category !== "all")} onReset={() => setCategory("all")} fields={[
+            { label: "Filtrer par besoin", value: category, onChange: setCategory, options: [{ id: "all", label: "Tous les services" }, ...RESIDENT_NEED_CATEGORIES] },
+          ]} />
+        </div>
       </div>
-      <label className="block text-sm font-semibold">Filtrer par besoin
-        <select className="ig-input mt-2" value={category} onChange={(event) => setCategory(event.target.value)}>
-          <option value="all">Tous les services</option>
-          {RESIDENT_NEED_CATEGORIES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-        </select>
-      </label>
       <p className="text-sm text-muted">{visible.length} besoin(s) · classement par nombre de soutiens{user && payload ? ` · ${payload.remaining} nouveau(x) soutien(s) disponible(s) aujourd’hui` : ""}.</p>
       {!payload && !error && <p role="status" className="text-sm text-muted">Chargement des besoins…</p>}
       {payload && !visible.length && <div className="surface-card p-6 text-sm text-muted">{mine ? "Aucune contribution dans cette sélection. Tu peux soutenir un besoin ou exprimer ce qui manque près de toi." : "Aucun besoin dans cette sélection pour le moment. Exprime le premier !"}</div>}
@@ -188,7 +192,6 @@ function ResidentNeedsContent() {
           onSupport={(value) => { void mutate(`/api/resident-needs/${need.id}/support`, "PUT", { frequency: value }); }}
           onWithdraw={() => { void mutate(`/api/resident-needs/${need.id}/support`, "DELETE", undefined, "Ton soutien a été retiré."); }} />)}
       </div>
-      <p className="text-xs leading-relaxed text-muted">Un soutien par compte et par besoin. Trois nouveaux soutiens par jour ; les modifications et retraits restent possibles. Les visites sont des intentions déclarées : « 3 et plus » compte pour au moins 3 visites, « de temps en temps » n’ajoute pas de visite hebdomadaire.</p>
     </section>
   </div>;
 }
@@ -198,10 +201,9 @@ function FrequencySelect({ frequency, onChange, label }: { frequency: number; on
 }
 function ResidentNeedCard({ need, busy, onSupport, onWithdraw }: { need: ResidentNeed; busy: boolean; onSupport: (frequency: number) => void; onWithdraw: () => void }) {
   const [frequency, setFrequency] = useState(need.mySupport?.frequency ?? 1);
-  const category = RESIDENT_NEED_CATEGORIES.find((item) => item.id === need.category)!;
   return <article className="surface-card space-y-3 p-5">
     <p className="flex items-center gap-1 text-xs text-muted"><MapPin size={13} /> {residentZoneLabel(need.zone)}</p>
-    <h3 className="text-lg font-bold">{category.emoji} {need.label}</h3>
+    <h3 className="text-lg font-bold"> {need.label}</h3>
     <p className="text-sm"><strong>{need.supporters} soutien(s)</strong> · au moins {need.visitsPerWeek} visite(s) par semaine déclarée(s)</p>
     {need.mySupport && <p className="text-sm font-semibold text-ig-blue">Tu soutiens ce besoin.</p>}
     <label className="block text-sm">Ma fréquence de visite souhaitée
@@ -212,46 +214,4 @@ function ResidentNeedCard({ need, busy, onSupport, onWithdraw }: { need: Residen
       {need.mySupport && <button type="button" className="ig-btn-secondary min-h-10 text-sm" disabled={busy} onClick={onWithdraw}>Retirer mon soutien</button>}
     </div>
   </article>;
-}
-
-function ResidentNeedsMap({ needs, zone, onPick }: { needs: ResidentNeed[]; zone: ResidentZone | null; onPick: (lat: number, lng: number) => void }) {
-  const element = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<Leaflet.Map | null>(null);
-  const leafletRef = useRef<typeof Leaflet | null>(null);
-  const layer = useRef<Leaflet.LayerGroup | null>(null);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    void import("leaflet").then((module) => {
-      if (cancelled || !element.current) return;
-      const L = module.default; leafletRef.current = L;
-      const map = L.map(element.current, { scrollWheelZoom: true, touchZoom: true, doubleClickZoom: true, minZoom: 10, maxZoom: 19 });
-      mapRef.current = map;
-      addBaseTiles(L, map); // même fond de carte que le reste de l'app (src/lib/map-tiles.ts)
-      map.attributionControl.setPrefix(false).addAttribution(SAINT_ROCH_ATTRIBUTION);
-      const ring = SAINT_ROCH_GEOMETRY.coordinates[0].map(([lng, lat]) => [lat, lng] as [number, number]);
-      L.polygon(ring, { color: "#7552de", weight: 2, dashArray: "6 6", fillOpacity: 0.04, interactive: false }).addTo(map);
-      map.fitBounds(L.latLngBounds(ring).pad(0.05));
-      map.on("click", (event: Leaflet.LeafletMouseEvent) => onPick(event.latlng.lat, event.latlng.lng));
-      layer.current = L.layerGroup().addTo(map); setReady(true);
-    }).catch(() => { if (!cancelled) setError(true); });
-    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
-  }, [onPick]);
-  useEffect(() => {
-    const L = leafletRef.current;
-    if (!ready || !L || !layer.current) return;
-    layer.current.clearLayers();
-    for (const need of needs) {
-      const circle = L.circle([need.zone.lat, need.zone.lng], { radius: need.zone.radiusMeters, bubblingMouseEvents: false, color: "#e07000", fillColor: "#ff8a00", fillOpacity: 0.12, weight: 2 });
-      const text = document.createElement("span"); text.textContent = `${need.label} · ${need.supporters} soutien(s) · rayon ${need.zone.radiusMeters} m`;
-      circle.bindTooltip(text).on("click", () => onPick(need.zone.lat, need.zone.lng)).addTo(layer.current);
-    }
-    if (zone) {
-      L.circle([zone.lat, zone.lng], { radius: zone.radiusMeters, color: "#7552de", fillOpacity: 0.2, weight: 3, interactive: false }).addTo(layer.current);
-      const marker = L.marker([zone.lat, zone.lng], { draggable: true, title: "Déplacer le centre de ma zone", icon: L.divIcon({ className: "", html: '<span style="display:block;width:24px;height:24px;background:#7552de;border:3px solid white;border-radius:50%;box-shadow:0 1px 5px #333"></span>', iconSize: [24,24], iconAnchor: [12,12] }) });
-      marker.on("dragend", () => { const position = marker.getLatLng(); onPick(position.lat, position.lng); }).addTo(layer.current);
-    }
-  }, [ready, needs, zone, onPick]);
-  return <div><div ref={element} className="h-[340px] w-full bg-soft md:h-[420px]" aria-label="Carte de sélection libre de ma zone à Saint-Roch" />{error && <p role="alert" className="p-3 text-sm">Carte indisponible. Réessaie pour choisir une zone.</p>}</div>;
 }

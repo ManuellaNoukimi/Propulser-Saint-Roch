@@ -57,20 +57,34 @@ export async function createMap3D(
   });
   if (opts.controls) map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
   try {
+    // On continue dès que le STYLE est prêt (« style.load ») : inutile d'attendre toutes les tuiles (« load »), qui
+    // peut ne jamais arriver si l'onglet est en arrière-plan (le navigateur suspend le dessin) ou si une tuile traîne.
+    // Le délai ne compte que lorsque l'onglet est visible ; à l'échéance, si le style est là, on continue quand même.
     await new Promise<void>((resolve, reject) => {
+      let timeout: ReturnType<typeof setTimeout> | undefined;
       const finish = (error?: Error) => {
         clearTimeout(timeout);
         map.off("load", loaded);
+        map.off("style.load", loaded);
+        document.removeEventListener("visibilitychange", arm);
         opts.signal?.removeEventListener("abort", aborted);
         if (error) reject(error);
         else resolve();
       };
       const loaded = () => finish();
       const aborted = () => finish(new DOMException("Chargement annulé", "AbortError"));
-      const timeout = setTimeout(() => finish(new Error("Délai de chargement de la carte dépassé")), 20_000);
+      const expire = () => (map.isStyleLoaded() ? finish() : finish(new Error("Délai de chargement de la carte dépassé")));
+      function arm() {
+        clearTimeout(timeout);
+        if (!document.hidden) timeout = setTimeout(expire, 20_000);
+      }
       map.once("load", loaded);
+      map.once("style.load", loaded);
+      document.addEventListener("visibilitychange", arm);
+      arm();
       opts.signal?.addEventListener("abort", aborted, { once: true });
       if (opts.signal?.aborted) aborted();
+      else if (map.isStyleLoaded()) loaded();
     });
 
     // 1) Ciel & horizon immersif en 3D
@@ -161,8 +175,14 @@ export function setSatelliteMode(map: MlMap, active: boolean) {
 
   if (!active) {
     setTimeout(() => {
-      if (map && map.getLayer(SATELLITE_LAYER_ID) && map.getPaintProperty(SATELLITE_LAYER_ID, "raster-opacity") === 0) {
-        map.setLayoutProperty(SATELLITE_LAYER_ID, "visibility", "none");
+      // La carte a pu être fermée entre-temps (changement de page) : plus de style, on ne touche à rien.
+      if (!map.isStyleLoaded()) return;
+      try {
+        if (map.getLayer(SATELLITE_LAYER_ID) && map.getPaintProperty(SATELLITE_LAYER_ID, "raster-opacity") === 0) {
+          map.setLayoutProperty(SATELLITE_LAYER_ID, "visibility", "none");
+        }
+      } catch {
+        // carte retirée pendant la transition
       }
     }, 400);
   }
@@ -220,7 +240,7 @@ function addBuildings3D(map: MlMap, dark: boolean, isSatellite = false) {
 
 /** Limite officielle de Saint-Roch : léger voile violet et contour en pointillés. */
 function addBoundary(map: MlMap) {
-  const accent = getComputedStyle(document.documentElement).getPropertyValue("--blue").trim() || "#7552de";
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--blue").trim() || "#0096d6";
   map.addSource("saint-roch", { type: "geojson", data: { type: "Feature", properties: {}, geometry: SAINT_ROCH_GEOMETRY as unknown as GeoJSON.Polygon } });
   map.addLayer({ id: "saint-roch-fill", type: "fill", source: "saint-roch", paint: { "fill-color": accent, "fill-opacity": 0.06 } });
   map.addLayer({ id: "saint-roch-line", type: "line", source: "saint-roch", paint: { "line-color": accent, "line-width": 2.5, "line-dasharray": [2, 2] } });
@@ -296,7 +316,7 @@ export function pingMarkerHtml(label?: string, detail?: string): string {
     ${safeLabel ? `
     <div class="ya-ping-tooltip">
       <div class="ya-ping-badge">
-        <span class="ya-ping-badge-icon">📍</span>
+        <span class="ya-ping-badge-icon"><img src="/icons/marker-pin.svg" width="16" height="16" alt="" /></span>
         <div class="ya-ping-badge-text">
           <span class="ya-ping-title">${safeLabel}</span>
           ${safeDetail ? `<span class="ya-ping-sub">${safeDetail}</span>` : ""}

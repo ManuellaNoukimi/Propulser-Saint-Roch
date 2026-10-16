@@ -18,7 +18,6 @@ export function Chips({ options, value, onChange, label }: { options: ChipOption
             onClick={() => onChange(o.id)}
             className={`min-h-10 shrink-0 rounded-full border px-3.5 py-2 text-xs font-medium transition active:scale-95 ${on ? "border-fg bg-fg text-bg shadow-sm" : "border-line bg-bg hover:border-muted"}`}
           >
-            {o.emoji ? `${o.emoji} ` : ""}
             {o.label}
           </button>
         );

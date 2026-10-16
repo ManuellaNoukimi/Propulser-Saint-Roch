@@ -1,0 +1,25 @@
+/* ---------- Profil : distinctions discretes, sans cartes ni emojis ---------- */
+.profile-badges-summary { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; padding: 24px 0; list-style: none; }
+.profile-badges-summary > li { display: flex; min-height: 36px; min-width: 0; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+.profile-badges-summary > li > svg { flex-shrink: 0; }
+.profile-badges-summary > li > span:not(.sr-only) { overflow-wrap: anywhere; }
+.profile-badges-summary > li[data-earned="true"] { color: #38643c; font-weight: 600; }
+.profile-badges-details { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; margin: 0; padding: 8px 0 24px; list-style: none; }
+.profile-badges-details > li { display: flex; min-width: 0; align-items: flex-start; gap: 16px; padding: 22px 0; border-bottom: 1px solid var(--border); }
+.profile-badge-icon { flex-shrink: 0; margin-top: 2px; color: var(--text-2); }
+.profile-badges-details > li[data-earned="true"] .profile-badge-icon { color: #38643c; }
+.profile-badge-content { min-width: 0; flex: 1; }
+.profile-badge-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.profile-badge-heading > h2 { margin: 0; color: var(--text); font-size: 15px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.profile-badge-state { display: inline-flex; align-items: center; gap: 5px; color: var(--text-2); font-size: 12px; line-height: 1.5; }
+.profile-badge-state > svg { flex-shrink: 0; }
+.profile-badges-details > li[data-earned="true"] .profile-badge-state { color: #38643c; }
+.profile-badge-content > p { margin: 6px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
+@media (min-width: 768px) { .profile-badges-details { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639px) {
+  .profile-badges-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; padding-block: 20px; }
+  .profile-badges-summary > li { font-size: 12px; gap: 6px; }
+}
+@media (max-width: 359px) {
+  .profile-badges-summary { grid-template-columns: minmax(0, 1fr); }
+}

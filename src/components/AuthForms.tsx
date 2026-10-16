@@ -8,6 +8,7 @@ import { ACCOUNT_GROUPS, SECTORS, isEstablishment, isGuest, type ActorTypeId, ty
 import { isResidentAccount } from "@/lib/resident-progress-options";
 import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 /** Où aller après connexion : ?next=… (lu au moment de l'envoi, pour éviter useSearchParams). */
 function nextUrl(fallback: string) {
@@ -40,12 +41,12 @@ export function LoginForm() {
     setSending(null);
     if (!res?.ok) return setError(d?.error ?? (res ? `Erreur du serveur (${res.status}). Réessaie dans un instant.` : "Pas de connexion au serveur."));
     await refresh();
-    toast(d.created ? `Bienvenue, ${d.user.displayName} 👋` : `Bon retour, ${d.user.displayName} 👋`);
+    toast(d.created ? `Bienvenue, ${d.user.displayName} ` : `Bon retour, ${d.user.displayName} `);
     router.push(nextUrl("/"));
   }
 
   return (
-    <div className="mx-auto flex max-w-[420px] flex-col items-center gap-4 px-4 py-6 sm:py-12">
+    <div className="auth-page mx-auto flex max-w-[480px] flex-col items-center gap-4 px-4 py-6 sm:py-12">
       <Card>
         <h1 className="text-center font-logo text-[42px] leading-tight">Complices<span className="text-ig-blue">.</span></h1>
         <p className="mb-7 mt-2 text-center text-sm text-muted">Ton quartier a hâte de te retrouver.</p>
@@ -61,7 +62,7 @@ export function LoginForm() {
           <span className="h-px flex-1 bg-line" /> OU <span className="h-px flex-1 bg-line" />
         </div>
         <form onSubmit={(e) => { e.preventDefault(); enter({ guest: true, name: guestName.trim() }, "invite"); }} className="space-y-2">
-          <p className="text-sm font-semibold">👋 Juste visiter ?</p>
+          <p className="text-sm font-semibold"> Juste visiter ?</p>
           <p className="text-xs text-muted">En invité·e, tu vois les publications et tu rejoins les activités, mais tu ne publies pas.</p>
           <div className="flex gap-2">
             <input aria-label="Ton nom (invité·e)" maxLength={60} value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Ton nom" className="ig-input min-w-0 flex-1" />
@@ -122,12 +123,12 @@ export function SignupForm() {
     setSending(false);
     if (!res?.ok) return setError(d?.error ?? (res ? `Erreur du serveur (${res.status}). Réessaie dans un instant.` : "Pas de connexion au serveur."));
     await refresh();
-    toast(`Bienvenue chez les complices, ${d.user.displayName} 🎉`);
+    toast(`Bienvenue chez les complices, ${d.user.displayName} `);
     router.push(nextUrl(establishment ? `/u/${d.user.id}` : "/"));
   }
 
   return (
-    <div className="mx-auto flex max-w-[460px] flex-col items-center gap-4 px-4 py-6 sm:py-10">
+    <div className="auth-page mx-auto flex max-w-[480px] flex-col items-center gap-4 px-4 py-6 sm:py-10">
       <Card>
         <h1 className="text-center font-logo text-[42px] leading-tight">Complices<span className="text-ig-blue">.</span></h1>
         <p className="mb-6 mt-2 text-center text-sm text-muted">Une petite idée. De belles rencontres.</p>
@@ -145,7 +146,7 @@ export function SignupForm() {
             {ACCOUNT_GROUPS.map((g) => (
               <button key={g.id} type="button" onClick={() => setAccountType(g.id === "personnel" ? "habitant" : g.id === "etablissement" ? "entreprise" : "invite")}
                 className="flex w-full items-center gap-4 rounded-2xl border border-line p-4 text-left transition hover:-translate-y-0.5 hover:border-ig-blue/40 hover:bg-soft active:scale-[0.99]">
-                <span className="text-3xl">{g.emoji}</span>
+                <span className="text-3xl"><InterfaceIcon symbol={g.emoji} size={22} /></span>
                 <span>
                   <span className="block font-semibold">{g.label}</span>
                   <span className="block text-xs leading-relaxed text-muted">{g.description}</span>
@@ -159,7 +160,7 @@ export function SignupForm() {
         {accountType && (
           <form onSubmit={submit} className="animate-fade-in space-y-3">
             <button type="button" onClick={() => { setAccountType(null); setError(null); }} className="mb-2 flex items-center gap-1 text-sm text-muted hover:text-fg">
-              <ArrowLeft size={16} /> {choice?.emoji} {choice?.label}
+              <ArrowLeft size={16} />  {choice?.label}
             </button>
             <input aria-label={establishment ? "Nom de l’entreprise" : "Ton nom"} autoComplete={establishment ? "organization" : "name"} required maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)}
               placeholder={establishment ? "Nom de l'entreprise" : "Ton prénom ou ton nom"} className="ig-input" />
@@ -177,7 +178,7 @@ export function SignupForm() {
                 <select aria-label="Secteur d’activité, facultatif" value={sector} onChange={(e) => setSector(e.target.value as SectorId)} className="ig-input">
                   <option value="">Secteur d&apos;activité (facultatif)</option>
                   {SECTORS.map((s) => (
-                    <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>
+                    <option key={s.id} value={s.id}> {s.label}</option>
                   ))}
                 </select>
                 <input aria-label="Adresse de l’entreprise, facultatif" maxLength={120} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Adresse (facultatif)" className="ig-input" />
@@ -187,7 +188,7 @@ export function SignupForm() {
             )}
             <button type="submit" disabled={sending} className="ig-btn mt-2 w-full text-sm">{sending && <LoaderCircle size={16} className="animate-spin" />}{sending ? "Inscription…" : guest ? "Entrer en invité·e" : "Rejoindre les complices"}</button>
             {error && <p role="alert" className="rounded-xl bg-ig-red/10 p-3 text-center text-sm text-ig-red">{error}</p>}
-            <p className="pt-2 text-center text-[10px] text-muted">{guest ? "Juste ton nom : tu vois les publications et tu rejoins les activités, sans publier." : "Aucune règle de format : n'importe quel courriel et n'importe quel mot de passe sont acceptés."}</p>
+            {guest && <p className="pt-2 text-center text-[10px] text-muted">Juste ton nom : tu vois les publications et tu rejoins les activités, sans publier.</p>}
           </form>
         )}
       </Card>

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getCurrentUser, NOT_LOGGED_IN } from "@/lib/auth";
-import { alreadyJoined, ideaExists, insertComplice } from "@/lib/db";
+import { alreadyJoined, ideaExists, insertComplice, leaveIdea } from "@/lib/db";
 import { moderate } from "@/lib/moderation";
 import { firstError, joinSchema } from "@/lib/validation";
 
@@ -27,4 +27,15 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/ideas/[id]/
     }
     throw error;
   }
+}
+
+// DELETE /api/ideas/:id/complices : se désinscrire (retire sa participation, son aide, son matériel… pour cette activité)
+export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/ideas/[id]/complices">) {
+  const me = await getCurrentUser();
+  if (!me) return Response.json(NOT_LOGGED_IN, { status: 401 });
+  const { id } = await ctx.params;
+  if (!ideaExists(id)) return Response.json({ error: "Cette publication n'existe pas (ou plus)." }, { status: 404 });
+  const removed = leaveIdea(id, me.id);
+  if (!removed) return Response.json({ error: "Tu n'étais pas inscrit·e à cette activité." }, { status: 404 });
+  return Response.json({ removed });
 }

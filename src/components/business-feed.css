@@ -1,0 +1,30 @@
+/* ---------- Entreprises : cartes professionnelles et hierarchie sobre ---------- */
+.business-feed .business-publication { box-shadow: none; }
+.business-feed .business-publication:hover { border-color: #c8d6dc; box-shadow: 0 4px 16px rgb(31 58 77 / 5%); }
+.business-card-header { display: flex; min-height: 84px; align-items: center; padding: 18px 22px; }
+.business-card-company { display: flex; min-width: 0; width: 100%; align-items: center; gap: 12px; }
+.business-company-name { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 14px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+.business-company-sector { display: block; margin-top: 3px; font-size: 12px; line-height: 1.5; color: var(--text-2); overflow-wrap: anywhere; }
+.business-publication-media { border-block: 1px solid var(--border); }
+.business-feed .business-publication .publication-body { min-height: 296px; gap: 18px; padding: 22px; }
+.business-post-meta { display: flex; min-height: 28px; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.business-post-type { border: 0; background: #edf5f8; color: #2b5e75; }
+.business-post-type[data-type="promo"], .business-post-type[data-type="offre"] { background: #edf4e8; color: #41652f; }
+.business-post-type[data-type="emploi"] { background: #eff1f5; color: #42536b; }
+.business-post-time { font-size: 12px; line-height: 1.6; color: var(--text-2); overflow-wrap: anywhere; }
+.business-feed .business-publication .publication-title { margin: 0; min-height: 52px; font-size: 19px; font-weight: 600; line-height: 1.4; }
+.business-post-description { font-size: 14px; line-height: 1.75; }
+.business-post-description button { min-height: 32px; color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.business-card-footer { display: flex; min-height: 61px; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 16px; }
+.business-company-address { display: flex; min-width: 0; align-items: flex-start; gap: 7px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+.business-company-address > svg { flex-shrink: 0; margin-top: 2px; }
+.business-company-address > span { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.business-post-skeleton { min-height: 610px; }
+@media (max-width: 639px) {
+  .business-card-header { min-height: 76px; padding: 16px 20px; }
+  .business-feed .business-publication .publication-body { min-height: 0; padding: 20px; }
+}
+@media (max-width: 379px) {
+  .business-card-header { padding-inline: 16px; }
+  .business-feed .business-publication .publication-body { padding: 16px; }
+}

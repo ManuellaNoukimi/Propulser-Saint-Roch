@@ -1,6 +1,7 @@
 "use client";
 import { notifyResidentProgress } from "@/lib/resident-feedback";
 import Link from "next/link";
+import { LogoutButton } from "./LogoutButton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "@/lib/session";
 import type { getResidentProgress } from "@/lib/resident-progress";
@@ -15,7 +16,6 @@ export function ResidentProgressView() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
-  const [code, setCode] = useState("");
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/resident-progress", { cache: "no-store" });
@@ -91,12 +91,15 @@ export function ResidentProgressView() {
             Tes petits gestes font grandir le quartier.
           </p>
         </div>
-        <Link
-          className="rounded-xl border border-line px-4 py-2"
-          href="/moi/modifier"
-        >
-          Modifier mon compte
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            className="rounded-xl border border-line px-4 py-2"
+            href="/moi/modifier"
+          >
+            Modifier mon compte
+          </Link>
+          <LogoutButton />
+        </div>
       </header>
       {error && (
         <p role="alert" className="rounded-xl bg-soft p-3 text-ig-red">
@@ -141,7 +144,7 @@ export function ResidentProgressView() {
               className={`rounded-xl border border-line p-4 ${b.earned ? "bg-soft" : "opacity-60"}`}
             >
               <p className="font-semibold">
-                {b.emoji} {b.label}
+                 {b.label}
               </p>
               <p className="mt-1 text-sm text-muted">{b.description}</p>
               <p className="mt-2 text-xs">
@@ -263,11 +266,9 @@ export function ResidentProgressView() {
       )}
       <div className="grid gap-6 lg:grid-cols-2">
         <section className={panel}>
-          <h2 className="text-xl font-bold">Check-in QR · simulation</h2>
+          <h2 className="text-xl font-bold">Check-in QR</h2>
           <p className="mt-2 text-sm text-muted">
-            +10 points, une seule fois par activité et au maximum une fois par
-            lieu et par jour. Cette démonstration ne prouve pas une présence
-            réelle.
+            +10 points pour chaque activité où tu participes.
           </p>
           <ul className="mt-4 max-h-60 space-y-3 overflow-auto">
             {data.activities.map((a) => (
@@ -286,44 +287,18 @@ export function ResidentProgressView() {
             <p className="mt-4">Aucune activité disponible.</p>
           )}
         </section>
-        <section className={panel}>
-          <h2 className="text-xl font-bold">Midi Complice · simulation</h2>
-          <p className="mt-2 text-sm text-muted">
-            +10 points, une fois par jour. Code de démonstration : MIDI-DEMO.
-          </p>
-          <form
-            className="mt-4 flex flex-wrap gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void act("/midi", { code });
-            }}
-          >
-            <input
-              className="min-w-0 flex-1 rounded-xl border border-line bg-bg p-3"
-              aria-label="Code Midi Complice"
-              value={code}
-              maxLength={80}
-              onChange={(e) => setCode(e.target.value)}
-              required
-            />
-            <button className={button} disabled={busy}>
-              Valider
-            </button>
-          </form>
-        </section>
       </div>
       <section className={panel}>
         <h2 className="text-xl font-bold">
-          Ma carte récompense · démonstration
+          Ma carte récompense
         </h2>
-        <p className="mt-2">100 points : exemple de rabais de 10 %.</p>
+        <p className="mt-2">À 100 points, tu obtiens une carte de 10 % de rabais.</p>
         <p className="mt-2 text-sm text-muted">
-          Carte simulée, sans valeur en caisse. Aucune offre commerciale réelle
-          n’est activée. Tes points sont conservés.
+          Tes points sont conservés.
         </p>
         {data.reward.card ? (
           <div className="mt-4 rounded-xl bg-soft p-5">
-            <p className="text-xl font-bold">10 % · DÉMO</p>
+            <p className="text-xl font-bold">10 % de rabais</p>
             <code>{data.reward.card.code}</code>
           </div>
         ) : (
@@ -333,7 +308,7 @@ export function ResidentProgressView() {
             onClick={() => void act("/reward")}
           >
             {data.reward.available
-              ? "Créer ma carte de démonstration"
+              ? "Obtenir ma carte"
               : `Encore ${100 - data.score} points`}
           </button>
         )}

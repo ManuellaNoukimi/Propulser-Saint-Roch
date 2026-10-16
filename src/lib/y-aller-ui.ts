@@ -2,14 +2,14 @@
 import type { Mode, Parking } from "./y-aller-types";
 
 export const MODES: { id: Mode; label: string; emoji: string; color: string }[] = [
-  { id: "auto", label: "Auto", emoji: "🚗", color: "#7552de" },
+  { id: "auto", label: "Auto", emoji: "🚗", color: "#0096d6" },
   { id: "bus", label: "Bus", emoji: "🚌", color: "#f08c00" },
   { id: "velo", label: "Vélo", emoji: "🚲", color: "#22a06b" },
   { id: "marche", label: "À pied", emoji: "🚶", color: "#1a73e8" },
 ];
 export const modeOf = (id: Mode) => MODES.find((m) => m.id === id)!;
 
-export const PARKING_COLOR: Record<Parking["kind"], string> = { ville: "#7552de", public: "#1a73e8", clients: "#64748b", inconnu: "#9ca3af" };
+export const PARKING_COLOR: Record<Parking["kind"], string> = { ville: "#0096d6", public: "#1a73e8", clients: "#64748b", inconnu: "#9ca3af" };
 export const PARKING_KIND: Record<Parking["kind"], string> = { ville: "Municipal", public: "Public", clients: "Clientèle", inconnu: "Accès à vérifier" };
 export const PARKING_TYPE: Record<Parking["type"], string> = { interieur: "Intérieur", etage: "Étagé", souterrain: "Souterrain", surface: "Extérieur", rue: "Dans la rue" };
 

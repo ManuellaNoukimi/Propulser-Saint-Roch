@@ -43,7 +43,7 @@ export function FeedFilters({ fields, count, onReset }: { fields: FilterField[];
   }, []);
 
   return (
-    <details ref={menu} onToggle={() => fitMenu(menu.current)} className="group relative shrink-0">
+    <details ref={menu} onToggle={() => fitMenu(menu.current)} className="feed-filters group relative shrink-0">
       <summary title="Filtres" aria-label={count ? `Filtres (${count} actifs)` : "Filtres"} className={`relative grid h-11 w-11 list-none place-items-center rounded-lg border transition [&::-webkit-details-marker]:hidden ${count ? "border-ig-blue bg-ig-blue/10 text-ig-blue" : "border-line bg-bg hover:bg-soft"} group-open:border-ig-blue group-open:text-ig-blue`}>
         <Menu size={20} />
         {count > 0 && <span aria-hidden="true" className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-ig-blue px-1 text-[10px] font-bold text-white">{count}</span>}

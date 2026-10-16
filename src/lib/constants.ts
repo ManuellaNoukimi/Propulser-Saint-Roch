@@ -40,6 +40,7 @@ export const SECTORS = [
   { id: "hebergement", label: "Hébergement", emoji: "🛏️", for: ["commerce"] },
   { id: "bureau", label: "Bureau / services professionnels", emoji: "🗂️", for: ["entreprise"] },
   { id: "tech", label: "Tech / jeux vidéo / créatif", emoji: "🎮", for: ["entreprise"] },
+  { id: "construction", label: "Construction / architecture / immobilier", emoji: "🏗️", for: ["entreprise", "commerce"] },
   { id: "economie-sociale", label: "Coopérative / économie sociale", emoji: "🤝", for: ["entreprise", "organisme"] },
   { id: "institution", label: "Institution / gouvernement / école", emoji: "🏛️", for: ["entreprise", "organisme"] },
   { id: "communautaire", label: "Communautaire / social", emoji: "💛", for: ["organisme"] },

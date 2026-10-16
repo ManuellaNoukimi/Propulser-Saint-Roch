@@ -10,6 +10,7 @@ import { AuthPrompt } from "./AuthPrompt";
 import { Avatar } from "./Avatar";
 import { ImagePicker } from "./ImagePicker";
 import { SocialImport } from "./SocialImport";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 // Publier dans l'onglet « Entreprises » (comptes Entreprise seulement). Une activité se publie dans « Vie Saint-Roch ».
 export function BusinessPostForm() {
@@ -27,7 +28,7 @@ export function BusinessPostForm() {
   if (!isEstablishment(user.accountType))
     return (
       <div className="mx-auto my-12 max-w-sm px-6 text-center">
-        <p className="text-4xl">🏪</p>
+        <p className="text-4xl"><InterfaceIcon symbol="🏪" size={24} /></p>
         <h1 className="mt-4 text-lg font-semibold">Réservé aux comptes Entreprise</h1>
         <p className="mt-2 text-sm text-muted">L&apos;onglet Entreprises sert aux commerces, restos, entreprises et organismes. Pour proposer une activité, utilise « Vie Saint-Roch ».</p>
         <Link href="/creer" className="ig-btn mt-6 inline-flex">Proposer une activité</Link>
@@ -46,7 +47,7 @@ export function BusinessPostForm() {
     const d = await res?.json().catch(() => ({}));
     setSending(false);
     if (!res?.ok) return setError(d?.error ?? "Publication impossible. Vérifie ta connexion.");
-    toast("Publié dans l'onglet Entreprises 🏪");
+    toast("Publié dans l'onglet Entreprises ");
     router.push("/entreprises");
   }
 
@@ -62,7 +63,7 @@ export function BusinessPostForm() {
         <Avatar user={user} size={36} />
         <div className="leading-tight">
           <p className="font-semibold">{user.displayName}</p>
-          <p className="text-xs text-muted">Visible dans l&apos;onglet 🏪 Entreprises</p>
+          <p className="text-xs text-muted">Visible dans l&apos;onglet Entreprises</p>
         </div>
       </div>
 
@@ -74,7 +75,7 @@ export function BusinessPostForm() {
           {BUSINESS_POST_TYPES.map((t) => (
             <button key={t.id} type="button" aria-pressed={postType === t.id} onClick={() => setPostType(t.id)}
               className={`rounded-xl border px-3 py-2.5 text-left text-sm transition active:scale-[0.98] ${postType === t.id ? "border-ig-blue bg-ig-blue/10 font-semibold" : "border-line"}`}>
-              {t.emoji} {t.label}
+               {t.label}
               <span className="block text-[11px] font-normal text-muted">{t.hint}</span>
             </button>
           ))}

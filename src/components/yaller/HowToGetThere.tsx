@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import "./compact-markers.css";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Bike, Bus, Footprints, Navigation } from "lucide-react";
@@ -46,12 +47,12 @@ export function HowToGetThere({ place }: { place: string }) {
       const icon = (html: string, w: number, h: number, ay = h / 2) => L.divIcon({ html, className: "", iconSize: [w, h], iconAnchor: [w / 2, ay] });
       const pts: [number, number][] = [[p.lat, p.lng]];
       for (const k of data.parkings ?? []) {
-        L.marker([k.lat, k.lng], { icon: icon(`<div class="ya-p" style="--c:${PARKING_COLOR[k.kind]}"><b>P</b></div>`, 28, 28), interactive: false }).addTo(map);
+        L.marker([k.lat, k.lng], { icon: icon(`<div class="ya-p" style="--c:${PARKING_COLOR[k.kind]}"><b>P</b></div>`, 20, 20), interactive: false }).addTo(map);
         pts.push([k.lat, k.lng]);
       }
-      for (const s of data.busStops?.slice(0, 1) ?? []) L.marker([s.lat, s.lng], { icon: icon('<div class="ya-bus"></div>', 16, 16), interactive: false }).addTo(map);
-      for (const b of data.bikeStations?.slice(0, 1) ?? []) L.marker([b.lat, b.lng], { icon: icon(`<div class="ya-bike"><span>🚲</span><b>${b.bikes ?? ""}</b></div>`, 30, 26), interactive: false }).addTo(map);
-      L.marker([p.lat, p.lng], { icon: icon('<div class="ya-to"><span></span></div>', 36, 46, 44), interactive: false, zIndexOffset: 1000 }).addTo(map);
+      for (const s of data.busStops?.slice(0, 1) ?? []) L.marker([s.lat, s.lng], { icon: icon('<div class="ya-bus"></div>', 10, 10), interactive: false }).addTo(map);
+      for (const b of data.bikeStations?.slice(0, 1) ?? []) L.marker([b.lat, b.lng], { icon: icon(`<div class="ya-bike"><img src="/icons/marker-bike.svg" width="14" height="14" alt="" /><b>${b.bikes ?? ""}</b></div>`, 36, 20), interactive: false }).addTo(map);
+      L.marker([p.lat, p.lng], { icon: icon('<div class="ya-to"><span></span></div>', 18, 18), interactive: false, zIndexOffset: 1000 }).addTo(map);
       map.fitBounds(L.latLngBounds(pts), { padding: [28, 28], maxZoom: 17 });
     })();
     return () => {
@@ -67,7 +68,7 @@ export function HowToGetThere({ place }: { place: string }) {
   return (
     <section className="surface-card p-5 md:p-6" aria-labelledby="y-aller-titre">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="y-aller-titre" className="text-lg font-bold">🧭 Comment y aller</h2>
+        <h2 id="y-aller-titre" className="text-lg font-bold"> Comment y aller</h2>
         <Link href={href} className="ig-btn min-h-10 px-4 text-sm"><Navigation size={15} /> Itinéraire</Link>
       </div>
 
@@ -81,7 +82,7 @@ export function HowToGetThere({ place }: { place: string }) {
       ) : (
         <>
           <Link href={href} aria-label="Ouvrir l'itinéraire" className="relative mt-3 block h-36 overflow-hidden rounded-2xl border border-line">
-            <div ref={box} className="pointer-events-none absolute inset-0 z-0 bg-soft" />
+            <div ref={box} className="map-points pointer-events-none absolute inset-0 z-0 bg-soft" />
           </Link>
           <ul className="mt-3 space-y-2">
             {data.parkings?.slice(0, 2).map((p) => (

@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { CalendarDays, Compass, House, LogIn, MapPin, Navigation, Sparkles, SquarePlus, Store } from "lucide-react";
+import { BookOpen, CalendarDays, Compass, Handshake, House, LayoutDashboard, LogIn, MapPin, Navigation, ShieldCheck, Sparkles, SquarePlus, Store } from "lucide-react";
 import { isEstablishment } from "@/lib/constants";
 import { useSession } from "@/lib/session";
 import { rememberSpace, spaceOfPath, useSpace } from "@/lib/space";
+import { useIsSdc } from "@/lib/use-sdc";
 import { ActivityBell } from "./ActivityBell";
 import { Avatar } from "./Avatar";
 
@@ -18,12 +19,19 @@ const VIE_ITEMS: Item[] = [
   { href: "/y-aller", label: "Y aller", icon: Navigation },
   { href: "/evenements", label: "Événements", icon: CalendarDays },
   { href: "/vitrines", label: "Vitrines", icon: Store },
+  { href: "/annuaire", label: "Annuaire", icon: BookOpen, desktopOnly: true },
   { href: "/fonctionnalites", label: "À découvrir", icon: Compass, desktopOnly: true },
 ];
 const BUSINESS_ITEMS: Item[] = [
   { href: "/entreprises", label: "Accueil", icon: House },
   { href: "/entreprises/publier", label: "Publier", icon: SquarePlus },
+  { href: "/entreprises/collaborer", label: "Collaborer", icon: Handshake },
+  { href: "/entreprises/tableau", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/annuaire", label: "Annuaire", icon: BookOpen },
 ];
+// Seulement pour le compte de la SDC (vérifié par le serveur) : la demande par local des vitrines.
+const SDC_ITEM: Item = { href: "/sdc/vitrines", label: "Vue SDC", icon: ShieldCheck };
+const ESTABLISHMENT_ONLY = new Set(["/entreprises/publier", "/entreprises/collaborer", "/entreprises/tableau"]);
 const PRIMARY = new Set(["/lancer", "/entreprises/publier"]); // bouton mis en avant (couleur d'accent)
 const SPACE_HOMES = new Set(["/vie", "/entreprises"]);
 const isActive = (path: string | null, href: string) => path !== null && (path === href || (!SPACE_HOMES.has(href) && path.startsWith(`${href}/`)));
@@ -37,9 +45,11 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
     if (fromPath) rememberSpace(fromPath);
   }, [pathname]);
   const canPublish = !!user && isEstablishment(user.accountType);
-  const items = space === "entreprises"
-    ? BUSINESS_ITEMS.filter((item) => item.href !== "/entreprises/publier" || canPublish)
-    : VIE_ITEMS;
+  const isSdc = useIsSdc();
+  const items = [
+    ...(space === "entreprises" ? BUSINESS_ITEMS.filter((item) => !ESTABLISHMENT_ONLY.has(item.href) || canPublish) : VIE_ITEMS),
+    ...(isSdc ? [{ ...SDC_ITEM, desktopOnly: space !== "entreprises" }] : []),
+  ];
   // Entreprise : sa page publique. Résident·e : son espace privé de progression (points, niveau, badges).
   const profileHref = user ? (isEstablishment(user.accountType) ? `/u/${user.id}` : "/moi") : "/connexion";
   const profileActive = pathname !== null && (pathname === profileHref || pathname.startsWith("/moi") || (!user && ["/connexion", "/inscription"].includes(pathname)));
@@ -52,8 +62,8 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
           return (
             <li key={href} className="min-w-0 flex-1">
               <Link href={href} aria-label={label} aria-current={active ? "page" : undefined} className={`flex h-[60px] flex-col items-center justify-center gap-1 rounded-xl transition active:scale-90 ${active ? "text-fg" : "text-muted"}`}>
-                <span className={`grid h-8 w-10 place-items-center rounded-xl ${PRIMARY.has(href) ? "bg-ig-blue text-white shadow-sm" : active ? "bg-sep" : ""}`}><Icon size={23} strokeWidth={active ? 2.4 : 1.8} /></span>
-                <span className={`text-[9px] leading-none ${active ? "font-bold" : "font-medium"}`}>{label}</span>
+                <span className={`grid h-8 w-10 place-items-center rounded-xl ${PRIMARY.has(href) ? "bg-ig-green text-[#173045] shadow-sm" : active ? "bg-sep" : ""}`}><Icon size={23} strokeWidth={active ? 2.4 : 1.8} /></span>
+                <span className={`mobile-nav-label ${active ? "font-bold" : "font-medium"}`}>{label}</span>
               </Link>
             </li>
           );
@@ -61,7 +71,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
         <li className="min-w-0 flex-1">
           <Link href={profileHref} aria-label={user ? "Mon profil" : "Se connecter"} aria-current={profileActive ? "page" : undefined} className={`flex h-[60px] flex-col items-center justify-center gap-1 rounded-xl transition active:scale-90 ${profileActive ? "text-fg" : "text-muted"}`}>
             <span className="grid h-8 place-items-center">{user ? <span className={`rounded-full ${profileActive ? "ring-2 ring-fg ring-offset-2 ring-offset-bg" : ""}`}><Avatar user={user} size={25} /></span> : <LogIn size={23} strokeWidth={1.8} />}</span>
-            <span className="text-[9px] font-medium leading-none">{user ? "Profil" : "Connexion"}</span>
+            <span className="mobile-nav-label font-medium">{user ? "Profil" : "Connexion"}</span>
           </Link>
         </li>
       </ul>
@@ -69,7 +79,7 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
   );
 
   return (
-    <nav aria-label="Navigation principale" className="no-scrollbar fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col overflow-y-auto border-r border-line bg-bg px-3 pb-5 pt-7 md:flex xl:w-[244px] xl:px-5">
+    <nav aria-label="Navigation principale" className="side-nav no-scrollbar fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col overflow-y-auto border-r border-line bg-bg px-3 pb-5 pt-7 md:flex xl:w-[244px] xl:px-5">
       <Link href="/" aria-label="Complices, accueil" className="mb-3 flex h-14 items-center gap-2 px-1 xl:px-3">
         <span className="story-ring grid h-10 w-10 shrink-0 place-items-center rounded-[14px] font-logo text-3xl text-white shadow-sm xl:hidden">C</span>
         <span className="hidden font-logo text-[28px] leading-none xl:block">Complices<span className="text-ig-blue">.</span></span>
@@ -80,10 +90,9 @@ export function NavBar({ variant, pathname }: { variant: "side" | "bottom"; path
           const active = isActive(pathname, href);
           return (
             <li key={href}>
-              <Link href={href} aria-label={label} title={label} aria-current={active ? "page" : undefined} className={`group flex min-h-12 items-center justify-center gap-3 rounded-xl p-3 transition xl:justify-start ${active ? "bg-soft font-bold" : "hover:bg-soft"}`}>
+              <Link href={href} aria-label={label} title={label} aria-current={active ? "page" : undefined} className={`group flex min-h-12 items-center justify-center gap-3 rounded-xl p-3 transition xl:justify-start ${PRIMARY.has(href) ? "side-nav-primary" : ""} ${active ? "bg-soft font-bold" : "hover:bg-soft"}`}>
                 <Icon size={24} strokeWidth={active ? 2.5 : 1.8} className={`shrink-0 transition group-hover:scale-110 ${PRIMARY.has(href) ? "text-ig-blue" : ""}`} />
                 <span className="hidden text-[15px] xl:inline">{label}</span>
-                {active && <span className="ml-auto hidden h-1.5 w-1.5 rounded-full bg-ig-blue xl:block" />}
               </Link>
             </li>
           );

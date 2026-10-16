@@ -3,6 +3,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./map3d.css";
 import "./travel-map.css";
+import "./compact-markers.css";
 import type { GeoJSONSource, Map as MlMap, Marker } from "maplibre-gl";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Cuboid, Globe, LocateFixed, LoaderCircle, Map as MapIcon } from "lucide-react";
@@ -150,14 +151,14 @@ export function GoMap({
     const add = (p: LatLng, html: string, title: string, onClick?: () => void, z = 1) => list.push(htmlMarker(L, map, p, html, { title, onClick, z }));
 
     if (show.bus && detailZoom >= 14) {
-      const size = detailZoom >= 16 ? 18 : 12;
+      const size = detailZoom >= 16 ? 12 : 8;
       for (const b of layers.busStops) add(b, `<div class="ya-bus${b.id === selectedId ? " is-on" : ""}" style="width:${size}px;height:${size}px"></div>`, `Arrêt ${b.name}`, () => onSelectRef.current({ kind: "bus", item: b }));
     }
     if (show.velo && detailZoom >= 16) for (const r of layers.bikeRacks) add(r, '<div class="ya-rack"></div>', "Support à vélos");
-    if (show.bornes) for (const c of layers.chargers) add(c, `<div class="ya-ev${c.id === selectedId ? " is-on" : ""}">⚡</div>`, c.name, () => onSelectRef.current({ kind: "charger", item: c }));
+    if (show.bornes) for (const c of layers.chargers) add(c, `<div class="ya-ev${c.id === selectedId ? " is-on" : ""}"><img src="/icons/marker-charge.svg" width="14" height="14" alt="" /></div>`, c.name, () => onSelectRef.current({ kind: "charger", item: c }));
     if (show.velo) {
       for (const b of layers.bikeStations) {
-        add(b, `<div class="ya-bike${b.bikes === 0 ? " is-empty" : ""}${b.id === selectedId ? " is-on" : ""}"><span>🚲</span><b>${b.bikes ?? ""}</b></div>`, `àVélo ${b.name}`, () => onSelectRef.current({ kind: "bike", item: b }), 2);
+        add(b, `<div class="ya-bike${b.bikes === 0 ? " is-empty" : ""}${b.id === selectedId ? " is-on" : ""}"><img src="/icons/marker-bike.svg" width="14" height="14" alt="" /><b>${b.bikes ?? ""}</b></div>`, `àVélo ${b.name}`, () => onSelectRef.current({ kind: "bike", item: b }), 2);
       }
     }
     if (show.parkings) {
@@ -219,17 +220,12 @@ export function GoMap({
     eventMarkers.current.forEach((m) => m.remove());
     eventMarkers.current = [];
     if (!show.events) return;
-    const seen = new Map<string, number>(); // même lieu : on décale un peu les pastilles
     events.forEach((ev, i) => {
-      const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
-      const k = seen.get(key) ?? 0;
-      seen.set(key, k + 1);
-      const at = { lat: ev.lat + (k ? Math.sin(k * 2.1) * 0.00022 * Math.ceil(k / 3) : 0), lng: ev.lng + (k ? Math.cos(k * 2.1) * 0.0003 * Math.ceil(k / 3) : 0) };
       const on = ev.id === selectedId;
       eventMarkers.current.push(
-        htmlMarker(L, map, at, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${i + 1}</span></div>`, {
+        htmlMarker(L, map, ev, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${i + 1}</span></div>`, {
           title: ev.title,
-          anchor: "bottom",
+          anchor: "center",
           z: on ? 30 : ev.status === "live" ? 20 : 10,
           onClick: () => onSelectRef.current({ kind: "event", item: ev, n: i + 1 }),
         }),
@@ -347,7 +343,7 @@ export function GoMap({
   }
 
   return (
-    <div className="ya-3d-map absolute inset-0" style={{ "--ya-map-inset": bottomInset + "px" } as CSSProperties}>
+    <div className="ya-3d-map map-points absolute inset-0" style={{ "--ya-map-inset": bottomInset + "px" } as CSSProperties}>
       <div ref={box} className="ya-map3d-canvas z-0 bg-soft" role="application" aria-label="Carte 3D : stationnements, vélos, bus et trajet vers Saint-Roch" />
       <div className="ya-3d-controls" role="group" aria-label="Commandes de la carte">
         <button

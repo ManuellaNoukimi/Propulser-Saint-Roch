@@ -1,7 +1,11 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { ComingSoon } from "@/components/ComingSoon";
+import { featureBySlug } from "@/lib/features";
 
-// « Signaler » est retiré de l'app (demande de Danny, 15 oct. soir) : l'ancienne adresse renvoie à l'accueil.
-// Le code reste en place (ReportMap.tsx, /api/reports/*) pour pouvoir le remettre : rétablir <ReportMap /> ici.
+export const metadata: Metadata = { title: `${featureBySlug("signaler").title} · Complices` };
+
+// Fonctionnalité retirée de l'app par l'équipe (16 oct.) : présentée seulement, comme les autres « Bientôt ».
+// L'ancien écran reste dans le code (ReportMap.tsx, /api/reports/*) pour pouvoir le remettre.
 export default function ReportPage() {
-  redirect("/vie");
+  return <ComingSoon slug="signaler" />;
 }

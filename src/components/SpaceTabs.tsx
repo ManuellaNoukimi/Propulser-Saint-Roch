@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 // En haut de chaque espace : rappel de l'espace actuel + retour à la page de choix (« / »).
-const LABELS = { vie: "🎉 Vie Saint-Roch", entreprises: "🏪 Entreprises" } as const;
+const LABELS = { vie: " Vie Saint-Roch", entreprises: " Entreprises" } as const;
 
 export function SpaceTabs({ active }: { active: "vie" | "entreprises" }) {
   return (

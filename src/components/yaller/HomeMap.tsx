@@ -2,17 +2,19 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./map3d.css";
+import "./compact-markers.css";
 import type { Map as MlMap, Marker } from "maplibre-gl";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, CalendarDays, ExternalLink, Globe, MapPin, Navigation, X } from "lucide-react";
 import { BEARING_3D, PITCH_3D, createMap3D, htmlMarker, setSatelliteMode, type MapLib } from "@/lib/map3d";
 import type { GoEvent } from "@/lib/y-aller-types";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 const FILTERS = [
   { id: "tout", label: "Tout" },
-  { id: "live", label: "🔴 En direct" },
-  { id: "upcoming", label: "🟣 À venir" },
+  { id: "live", label: " En direct" },
+  { id: "upcoming", label: " À venir" },
 ] as const;
 type Filter = (typeof FILTERS)[number]["id"];
 
@@ -85,17 +87,12 @@ export function HomeMap() {
     if (!ready || !L || !map) return;
     pins.current.forEach((m) => m.remove());
     pins.current = [];
-    const seen = new Map<string, number>(); // même lieu : on décale un peu les pastilles
     for (const { ev, n } of visible) {
-      const key = `${ev.lat.toFixed(4)},${ev.lng.toFixed(4)}`;
-      const k = seen.get(key) ?? 0;
-      seen.set(key, k + 1);
-      const at = { lat: ev.lat + (k ? Math.sin(k * 2.1) * 0.00022 * Math.ceil(k / 3) : 0), lng: ev.lng + (k ? Math.cos(k * 2.1) * 0.0003 * Math.ceil(k / 3) : 0) };
       const on = ev.id === selected;
       pins.current.push(
-        htmlMarker(L, map, at, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${n}</span></div>`, {
+        htmlMarker(L, map, ev, `<div class="ya-evt${ev.status === "live" ? " is-live" : ""}${on ? " is-on" : ""}"><span>${n}</span></div>`, {
           title: ev.title,
-          anchor: "bottom",
+          anchor: "center",
           z: on ? 30 : ev.status === "live" ? 20 : 10,
           onClick: () => setSelected(ev.id),
         }),
@@ -143,7 +140,7 @@ export function HomeMap() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="relative h-[340px] overflow-hidden rounded-3xl border border-line md:h-[420px]">
+        <div className="map-points relative h-[340px] overflow-hidden rounded-3xl border border-line md:h-[420px]">
           <div ref={box} className="ya-map3d-canvas z-0 bg-soft" role="application" aria-label="Carte 3D des activités de Saint-Roch" />
           <div className="absolute bottom-3 right-3 z-10 flex gap-2">
             <button
@@ -177,8 +174,8 @@ export function HomeMap() {
                 <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black text-white ${sel.ev.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}>{sel.n}</span>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold leading-snug">{sel.ev.title}</p>
-                  <p className="mt-0.5 text-xs text-muted">{sel.ev.status === "live" ? "🔴 " : "📅 "}{when(sel.ev)}</p>
-                  <p className="mt-0.5 truncate text-xs text-muted">📍 {sel.ev.place}</p>
+                  <p className="mt-0.5 text-xs text-muted">{sel.ev.status === "live" ? " " : " "}{when(sel.ev)}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted"><InterfaceIcon symbol="📍" size={14} /> {sel.ev.place}</p>
                 </div>
                 <button type="button" onClick={() => setSelected(null)} aria-label="Fermer" className="grid h-8 w-8 shrink-0 place-items-center rounded-full hover:bg-soft"><X size={16} /></button>
               </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, MapPin, Plus, RefreshCw, Search, Store, X } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Handshake, MapPin, Megaphone, Plus, RefreshCw, Search, Send, Sparkles, Store, Tag, X } from "lucide-react";
 import { BUSINESS_POST_TYPES, SECTORS, businessPostTypeOf, isEstablishment, sectorOf } from "@/lib/constants";
 import { publicationSourceOf } from "@/lib/quartier"; // « via Facebook » sur une publication importée (F3, Stelle)
 import { normalizeSearch, timeAgo } from "@/lib/format";
@@ -12,6 +12,14 @@ import type { Idea } from "@/lib/types";
 import { Avatar } from "./Avatar";
 import { FeedFilters } from "./FeedFilters";
 import { PostMedia } from "./PostMedia";
+import "./business-feed.css";
+
+const POST_ICONS = { promo: Tag, nouveaute: Sparkles, emploi: BriefcaseBusiness, offre: Handshake, annonce: Megaphone };
+const SECTOR_ILLUSTRATIONS: Partial<Record<NonNullable<Idea["organizer"]["sector"]>, string>> = {
+  culture: "art", tech: "tech", bureau: "tech", institution: "tech",
+  services: "atelier", boutique: "atelier", communautaire: "tech",
+  "economie-sociale": "tech", "sport-loisir": "jeux",
+};
 
 // Onglet « Entreprises » : seulement les publications des commerces, restos, entreprises et organismes.
 export function BusinessFeed() {
@@ -50,14 +58,14 @@ export function BusinessFeed() {
   const filterCount = Number(type !== "tous") + Number(sector !== "tous");
 
   return (
-    <div className="mx-auto max-w-[1240px] space-y-8 px-4 py-7 md:px-8 md:py-10 lg:px-10 [&_.idea-grid]:gap-7 md:[&_.idea-grid]:gap-8">
+    <div className="feed-page business-feed mx-auto max-w-[1240px] space-y-8 px-4 py-7 md:px-8 md:py-10 lg:px-10">
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <h1 className="text-2xl font-bold md:text-3xl">Entreprises</h1>
         <Link href="/" className="inline-flex min-h-10 items-center gap-2 text-xs font-medium text-muted hover:text-fg"><ArrowLeft size={14} /> Changer d&apos;espace</Link>
       </header>
 
-      <section aria-label="Rechercher et filtrer les publications" className="flex items-center gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-bg px-3 focus-within:border-ig-blue">
+      <section aria-label="Rechercher et filtrer les publications" className="feed-toolbar flex items-center gap-3">
+        <div className="feed-search flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-bg px-3 focus-within:border-ig-blue">
           <Search size={17} className="shrink-0 text-muted" />
           <input type="search" aria-label="Rechercher un commerce ou une offre" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Un commerce, une promo, un emploi…" className="min-w-0 flex-1 bg-transparent py-2.5 text-base outline-none placeholder:text-muted md:text-sm" />
           {query && <button type="button" aria-label="Effacer" onClick={() => setQuery("")} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-soft"><X size={14} /></button>}
@@ -69,7 +77,7 @@ export function BusinessFeed() {
       </section>
 
       {error && <div role="alert" className="surface-card px-6 py-12 text-center"><RefreshCw size={28} className="mx-auto text-muted" /><p className="mt-3 font-semibold">Les publications reviennent bientôt.</p></div>}
-      {!posts && !error && <div className="idea-grid">{Array.from({ length: 3 }, (_, k) => <div key={k} className="h-80 animate-pulse rounded-2xl bg-hov" />)}</div>}
+      {!posts && !error && <div className="idea-grid" aria-label="Chargement des publications">{Array.from({ length: 3 }, (_, k) => <div key={k} className="business-post-skeleton animate-pulse rounded-lg border border-line bg-soft" />)}</div>}
       {posts && visible.length === 0 && (
         <div className="surface-card px-6 py-12 text-center">
           <Store size={30} className="mx-auto text-ig-blue" />
@@ -93,34 +101,44 @@ function BusinessPostCard({ post }: { post: Idea }) {
   const t = businessPostTypeOf(post.postType);
   const org = post.organizer;
   const long = post.description.length > 180;
+  const TypeIcon = t ? POST_ICONS[t.id] : Megaphone;
+  const illustration = (org.sector && SECTOR_ILLUSTRATIONS[org.sector]) || "marche";
   return (
-    <article className="idea-card flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-bg">
-      {post.images.length > 0 && <PostMedia idea={post} aspect="landscape" />}
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-2">
-          {t && <span className="rounded-full bg-soft px-2.5 py-1 text-[11px] font-semibold">{t.emoji} {t.label}</span>}
-          <span className="text-[11px] text-muted">{post.source && post.source !== "manuel" ? `${publicationSourceOf(post.source)?.label} · ` : ""}{timeAgo(post.createdAt)}</span>
+    <article className="idea-card publication-card business-publication flex h-full flex-col overflow-hidden border border-line bg-bg">
+      <header className="business-card-header">
+        <Link href={`/u/${org.id}`} className="business-card-company hover:text-ig-blue">
+          <Avatar user={org} size={36} />
+          <span className="min-w-0">
+            <span title={org.displayName} className="business-company-name">{org.displayName}</span>
+            <span className="business-company-sector">{sectorOf(org.sector)?.label ?? "Entreprise"}</span>
+          </span>
+        </Link>
+      </header>
+      <div className="business-publication-media">
+        {post.images.length > 0 ? <PostMedia idea={post} aspect="landscape" /> : (
+          <div className="relative overflow-hidden bg-soft">
+            {/* Illustration generique ; les photos publiees restent prioritaires. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/images/activities/${illustration}.jpg`} alt="" loading="lazy" className="h-full w-full object-cover" />
+          </div>
+        )}
+      </div>
+      <div className="publication-body flex flex-1 flex-col gap-4">
+        <div className="business-post-meta">
+          {t && <span className="publication-tag business-post-type" data-type={t.id}><TypeIcon size={14} aria-hidden="true" />{t.label}</span>}
+          <span className="business-post-time">{post.source && post.source !== "manuel" ? `${publicationSourceOf(post.source)?.label} · ` : ""}{timeAgo(post.createdAt)}</span>
         </div>
-        <h3 className="text-lg font-bold leading-snug">{post.title}</h3>
+        <h2 className="publication-title">{post.title}</h2>
         {post.description && (
-          <p className="whitespace-pre-line text-sm leading-relaxed text-muted">
+          <p className="business-post-description whitespace-pre-line text-sm leading-relaxed text-muted">
             {open || !long ? post.description : `${post.description.slice(0, 180)}… `}
             {long && !open && <button type="button" onClick={() => setOpen(true)} className="font-semibold text-fg">lire la suite</button>}
           </p>
         )}
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3">
-          <Link href={`/u/${org.id}`} className="flex min-w-0 items-center gap-2 hover:text-ig-blue">
-            <Avatar user={org} size={28} />
-            <span className="min-w-0 leading-tight">
-              <span className="block truncate text-xs font-semibold">{org.displayName}</span>
-              <span className="flex items-center gap-1 truncate text-[11px] text-muted">
-                {sectorOf(org.sector)?.label ?? "Entreprise"}
-                {org.address && <><MapPin size={10} /> {org.address}</>}
-              </span>
-            </span>
-          </Link>
-          <button type="button" onClick={share} className="ig-btn-secondary shrink-0 px-3 py-1.5 text-xs">Partager</button>
-        </div>
+        <footer className="business-card-footer mt-auto">
+          {org.address && <p className="business-company-address"><MapPin size={15} aria-hidden="true" /><span title={org.address}>{org.address}</span></p>}
+          <button type="button" onClick={share} aria-label="Partager" title="Partager" className="publication-share ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-line text-muted hover:bg-soft hover:text-fg"><Send size={17} /></button>
+        </footer>
       </div>
     </article>
   );

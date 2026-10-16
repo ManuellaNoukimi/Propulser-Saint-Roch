@@ -11,6 +11,7 @@ import { MODES, PARKING_COLOR, PARKING_KIND, PARKING_TYPE, charge, clock, durati
 import type { GoEvent, Layers, Mode, NearParking, Place, Trip } from "@/lib/y-aller-types";
 import { GoMap, type Selected, type Show } from "./GoMap";
 import { PlaceField } from "./PlaceField";
+import { InterfaceIcon } from "@/components/InterfaceIcon";
 
 type TripState = Trip | "loading" | "error";
 const MODE_ICON = { auto: Car, bus: Bus, velo: Bike, marche: Footprints } as const;
@@ -296,7 +297,7 @@ export function YAller({ initialTo }: { initialTo: Place | null }) {
         <details ref={filtersRef} className="ya-map-layers">
           <summary><LayersIcon size={17} strokeWidth={1.8} /> Afficher</summary>
           <div className="ya-layers-menu">
-          <LayerToggle on={show.parkings} onClick={() => setShow((s) => ({ ...s, parkings: !s.parkings }))} label="Stationnements" icon={<SquareParking size={16} />} color="#7552de" />
+          <LayerToggle on={show.parkings} onClick={() => setShow((s) => ({ ...s, parkings: !s.parkings }))} label="Stationnements" icon={<SquareParking size={16} />} color="#0096d6" />
           <LayerToggle on={show.velo} onClick={() => setShow((s) => ({ ...s, velo: !s.velo }))} label="Vélos" icon={<Bike size={16} />} color="#22a06b" />
           <LayerToggle on={show.bus} onClick={() => setShow((s) => ({ ...s, bus: !s.bus }))} label="Bus" icon={<Bus size={16} />} color="#f08c00" />
           <LayerToggle on={show.bornes} onClick={() => setShow((s) => ({ ...s, bornes: !s.bornes }))} label="Bornes" icon={<Zap size={16} />} color="#e0a800" />
@@ -337,7 +338,7 @@ function Explore({ layers, show, setShow }: { layers: Layers | null; show: Show;
       <div className="space-y-4 pt-3">
       <div>
         <div className="grid grid-cols-2 gap-2">
-          <Stat on={show.parkings} onClick={() => setShow((x) => ({ ...x, parkings: !x.parkings }))} color="#7552de" icon={<SquareParking size={18} />}
+          <Stat on={show.parkings} onClick={() => setShow((x) => ({ ...x, parkings: !x.parkings }))} color="#0096d6" icon={<SquareParking size={18} />}
             value={s ? s.villePlaces.toLocaleString("fr-CA") : "…"} label={s ? `places dans ${s.villeLots} stationnements municipaux` : "stationnements municipaux"} />
           <Stat on={show.parkings} onClick={() => setShow((x) => ({ ...x, parkings: !x.parkings }))} color="#1a73e8" icon={<SquareParking size={18} />}
             value={s ? `+ ${s.otherLots}` : "…"} label={s ? `autres stationnements publics (≈ ${s.otherPlaces.toLocaleString("fr-CA")} places)` : "autres stationnements"} />
@@ -371,7 +372,7 @@ function Legend() {
       <span className="flex items-center gap-2"><span className="ya-evt is-legend"><span>2</span></span> À venir</span>
       <span className="flex items-center gap-2"><span className="ya-p is-legend" style={{ "--c": PARKING_COLOR.ville } as React.CSSProperties}><b>P</b></span> Municipal</span>
       <span className="flex items-center gap-2"><span className="ya-p is-legend" style={{ "--c": PARKING_COLOR.public } as React.CSSProperties}><b>P</b></span> Public</span>
-      <span className="flex items-center gap-2"><span className="ya-bike is-legend"><span>🚲</span><b>5</b></span> Vélos libres</span>
+      <span className="flex items-center gap-2"><span className="ya-bike is-legend"><span><InterfaceIcon symbol="🚲" size={12} /></span><b>5</b></span> Vélos libres</span>
       <span className="flex items-center gap-2"><span className="ya-bus is-legend" /> Arrêt de bus</span>
     </div>
   );
@@ -392,10 +393,10 @@ function TripDetails({ trip, now, busIndex, onBus, onParking }: { trip: Trip; no
               {trip.mode === "auto" && trip.parking ? ` · dont ${trip.parking.walkMin} min à pied` : ""}
             </p>
           </div>
-          <span className="text-3xl" aria-hidden>{m.emoji}</span>
+          <span className="text-3xl" aria-hidden><InterfaceIcon symbol={m.emoji} size={22} /></span>
         </div>
       )}
-      {trip.approx && <p className="rounded-xl bg-soft px-3 py-2 text-xs text-muted">Trajet estimé à vol d&apos;oiseau (le service de trajets ne répond pas).</p>}
+      {trip.approx && <p className="rounded-xl bg-soft px-3 py-2 text-xs text-muted">Trajet estimé à vol d&apos;oiseau.</p>}
       {trip.message && <p className="rounded-2xl bg-soft p-4 text-sm text-muted">{trip.message}</p>}
 
       {trip.mode === "auto" && trip.parkings && trip.parkings.length > 0 && (
@@ -470,7 +471,7 @@ function TripDetails({ trip, now, busIndex, onBus, onParking }: { trip: Trip; no
         </div>
       )}
 
-      {trip.mode === "marche" && trip.ok && <p className="rounded-2xl bg-soft p-3 text-xs text-muted">Le trajet à pied suit les rues et les sentiers (OpenStreetMap).</p>}
+      {trip.mode === "marche" && trip.ok && <p className="rounded-2xl bg-soft p-3 text-xs text-muted">Le trajet à pied suit les rues et les sentiers.</p>}
 
       <a href={trip.externalUrl} target="_blank" rel="noopener noreferrer" className="ig-btn-secondary flex w-full items-center justify-center gap-2 text-sm">
         <ExternalLink size={15} /> {trip.mode === "bus" ? "Itinéraire détaillé (correspondances)" : "Ouvrir dans Google Maps"}
@@ -525,7 +526,7 @@ function SelectedCard({ sel, canPark, onClose, onGo, onPark, panelRef }: { sel: 
     }
     case "bike": {
       const b = sel.item;
-      icon = <span className="grid h-11 w-11 place-items-center rounded-full bg-[#22a06b] text-xl">🚲</span>;
+      icon = <span className="grid h-11 w-11 place-items-center rounded-full bg-[#22a06b] text-xl"><InterfaceIcon symbol="🚲" size={24} /></span>;
       title = `àVélo · ${b.name}`;
       lines = [b.bikes != null ? `${b.bikes} vélo${b.bikes > 1 ? "s" : ""} et ${b.docks ?? "?"} place${(b.docks ?? 0) > 1 ? "s" : ""} libres${b.live ? " (en direct)" : ""}` : "Disponibilité inconnue", b.capacity ? `${b.capacity} bornes` : null];
       break;
@@ -548,7 +549,7 @@ function SelectedCard({ sel, canPark, onClose, onGo, onPark, panelRef }: { sel: 
       const e = sel.item;
       icon = <span className={`grid h-11 w-11 place-items-center rounded-full text-base font-black text-white ${e.status === "live" ? "bg-ig-red" : "bg-ig-blue"}`}>{sel.n}</span>;
       title = e.title;
-      lines = [e.status === "live" ? "🔴 En direct" : e.startsAt ? `📅 ${new Intl.DateTimeFormat("fr-CA", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }).format(new Date(e.startsAt))}` : null, `📍 ${e.place}`, e.type, e.cost ? `💲 ${e.cost}` : null];
+      lines = [e.status === "live" ? " En direct" : e.startsAt ? ` ${new Intl.DateTimeFormat("fr-CA", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }).format(new Date(e.startsAt))}` : null, ` ${e.place}`, e.type, e.cost ? ` ${e.cost}` : null];
       actions = (
         <>
           {go(e.title, e.place, "evenement")}

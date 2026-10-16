@@ -61,15 +61,15 @@ export function Feed() {
   const filtered = category !== "toutes" || query.trim().length > 0 || actor !== "tous" || date !== "toutes";
 
   return (
-    <div className="mx-auto max-w-[1240px] space-y-8 px-4 py-7 md:px-8 md:py-10 lg:px-10 [&_.idea-grid]:gap-7 md:[&_.idea-grid]:gap-8">
+    <div className="feed-page mx-auto max-w-[1240px] space-y-8 px-4 py-7 md:px-8 md:py-10 lg:px-10">
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <h1 className="text-2xl font-bold md:text-3xl">Vie Saint-Roch</h1>
         <Link href="/" className="inline-flex min-h-10 items-center gap-2 text-xs font-medium text-muted hover:text-fg"><ArrowLeft size={14} /> Changer d&apos;espace</Link>
       </header>
 
       <section aria-label="Activités du quartier" className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-bg px-3 focus-within:border-ig-blue focus-within:ring-2 focus-within:ring-ig-blue/10">
+          <div className="feed-toolbar flex items-center gap-3">
+            <div className="feed-search flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-bg px-3 focus-within:border-ig-blue focus-within:ring-2 focus-within:ring-ig-blue/10">
               <Search size={17} className="shrink-0 text-muted" />
               <input type="search" aria-label="Rechercher une idée" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher une idée…" className="min-w-0 flex-1 bg-transparent py-2.5 text-base outline-none placeholder:text-muted md:text-sm" />
               {query && <button type="button" aria-label="Effacer la recherche" onClick={() => setQuery("")} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg hover:bg-soft"><X size={14} /></button>}

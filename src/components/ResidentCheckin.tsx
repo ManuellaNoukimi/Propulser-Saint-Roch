@@ -40,7 +40,7 @@ export function ResidentCheckin({ id }: { id: string }) {
     return (
       <AuthPrompt
         title="Check-in résident"
-        text="Connecte-toi pour enregistrer ta participation simulée."
+        text="Connecte-toi pour enregistrer ta participation."
         next={`/checkin/${id}`}
       />
     );
@@ -55,7 +55,7 @@ export function ResidentCheckin({ id }: { id: string }) {
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      setResult(`Check-in simulé enregistré : +${d.points} points.`);
+      setResult(`Check-in enregistré : +${d.points} points.`);
       notifyResidentProgress();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Connexion impossible.");
@@ -65,10 +65,7 @@ export function ResidentCheckin({ id }: { id: string }) {
   }
   return (
     <section className="mx-auto max-w-lg space-y-5 p-8">
-      <h1 className="text-3xl font-bold">Check-in simulé</h1>
-      <p className="text-muted">
-        Démonstration : ce QR ne prouve pas une présence réelle.
-      </p>
+      <h1 className="text-3xl font-bold">Check-in</h1>
       {error && <p role="alert">{error}</p>}
       {activity && (
         <>
@@ -76,12 +73,11 @@ export function ResidentCheckin({ id }: { id: string }) {
           <p>{activity.place}</p>
           {url && (
             <div className="inline-block rounded-xl bg-white p-5">
-              <QRCodeSVG value={url} size={220} title="QR du check-in simulé" />
+              <QRCodeSVG value={url} size={220} title="QR du check-in" />
             </div>
           )}
           <p>
-            +10 points. Un seul check-in par activité, au maximum une fois par
-            lieu et par jour, dans la limite de 100 points quotidiens.
+            +10 points pour ta participation.
           </p>
           {result ? (
             <p role="status">{result}</p>
@@ -91,7 +87,7 @@ export function ResidentCheckin({ id }: { id: string }) {
               disabled={busy}
               onClick={() => void submit()}
             >
-              Enregistrer mon check-in simulé
+              Enregistrer mon check-in
             </button>
           )}
         </>

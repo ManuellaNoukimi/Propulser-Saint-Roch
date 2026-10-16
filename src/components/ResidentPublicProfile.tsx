@@ -35,7 +35,7 @@ export function ResidentPublicProfile({ id }: { id: string }) {
             {data.badges.map((b) => (
               <li key={b.id} className="rounded-xl border border-line p-4">
                 <strong>
-                  {b.emoji} {b.label}
+                   {b.label}
                 </strong>
                 <p className="mt-2 text-sm text-muted">{b.description}</p>
               </li>
