@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ACTOR_TYPES, CATEGORIES, CONTRIBUTIONS, MAX_IMAGES, NEEDS, REPORT_CATEGORIES, REPORT_MOMENTS, SECTORS } from "./constants";
+import { PUBLICATION_KINDS } from "./quartier";
 
 const ids = <T extends readonly { id: string }[]>(list: T) => list.map((x) => x.id) as [T[number]["id"], ...T[number]["id"][]];
 
@@ -54,6 +55,8 @@ export const createIdeaSchema = z.object({
     .optional()
     .transform((v) => v ?? null),
   needs: z.array(z.enum(ids(NEEDS))).max(NEEDS.length).default([]),
+  // F3 : promo / nouveauté / événement. Facultatif : les résident·e·s ne choisissent pas de type.
+  kind: z.enum(ids(PUBLICATION_KINDS)).nullable().optional().transform((v) => v ?? null),
   images: z
     .array(z.string().regex(/^\/api\/uploads\/[a-f0-9-]+\.(jpg|png|webp)$/, "Image invalide."))
     .max(MAX_IMAGES, `${MAX_IMAGES} images maximum.`)

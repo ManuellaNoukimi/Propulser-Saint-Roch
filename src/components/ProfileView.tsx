@@ -8,6 +8,7 @@ import { useSession } from "@/lib/session";
 import { toast } from "@/lib/toast";
 import type { PublicProfile } from "@/lib/types";
 import { Avatar } from "./Avatar";
+import { LinkedPages } from "./LinkedPages";
 import { PostGrid } from "./PostGrid";
 
 type Tab = "publications" | "complice" | "badges";
@@ -18,6 +19,7 @@ export function ProfileView({ id }: { id: string }) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("publications");
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     fetch(`/api/users/${id}`, { cache: "no-store" })
@@ -27,7 +29,7 @@ export function ProfileView({ id }: { id: string }) {
         setProfile(d);
       })
       .catch((e) => setError(e instanceof Error && e.message ? e.message : "Chargement impossible."));
-  }, [id, me?.id]);
+  }, [id, me?.id, reload]);
 
   if (error) return <p className="p-10 text-center font-semibold">{error}</p>;
   if (!profile)
@@ -108,6 +110,11 @@ export function ProfileView({ id }: { id: string }) {
           <li key={s.label} className="leading-tight"><span className="block font-semibold">{s.n}</span><span className="text-muted">{s.label}</span></li>
         ))}
       </ul>
+
+      {/* F3 : lier ses pages sociales (seulement sur son propre profil d'établissement). */}
+      {isMe && isEstablishment(user.accountType) && (
+        <div className="pt-6"><LinkedPages onChange={() => setReload((n) => n + 1)} /></div>
+      )}
 
       {/* Cartes de badges du profil. */}
       <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-3 lg:grid-cols-5">
