@@ -2,13 +2,22 @@
   "name": "complices",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "demo": "next build && next start -H 0.0.0.0",
     "reset-db": "node -e \"require('fs').rmSync('data',{recursive:true,force:true}); console.log('Base effacée')\"",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --conditions=react-server --test tests/*.test.cjs",
+    "test:http": "node scripts/test-http.cjs",
+    "db:prepare": "node --env-file-if-exists=.env.local --conditions=react-server scripts/prepare-db.cjs",
+    "demo:seed": "node --env-file-if-exists=.env.local --conditions=react-server scripts/recruiter-demo.cjs",
+    "check:repository": "node scripts/check-repository.cjs"
   },
   "dependencies": {
     "@turf/circle": "^7.4.0",
