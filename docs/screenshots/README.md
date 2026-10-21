@@ -18,4 +18,8 @@ Captures du 21 octobre 2026 depuis une installation locale isolée, avec les com
 
 ![Score et badges du résident fictif dans un écran de 390 pixels de largeur](profil-mobile.jpg)
 
+## Vie du quartier sur mobile
+
+![Fil du quartier avec navigation mobile](vie-mobile.jpg)
+
 Les fonds de carte et images illustratives conservent leurs attributions dans l'application et dans `public/images/activities/CREDITS.md`. Les vues sont des captures brutes, sans ajout d'éléments d'interface. Les nombres et noms visibles appartiennent au jeu de démonstration et ne mesurent pas l'usage réel du produit.
